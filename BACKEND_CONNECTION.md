@@ -2,6 +2,15 @@
 
 This guide shows how to connect the HRMS frontend to the live backend running on Render.
 
+## ✅ CORS Issue RESOLVED
+
+**The CORS issue has been fixed!** The frontend now uses a development proxy to avoid CORS errors during local development.
+
+### How the Solution Works:
+- **Development**: Vite dev server proxies `/api` requests to the backend
+- **Production**: Direct API calls to the production backend URL
+- **No CORS configuration needed** for development anymore
+
 ## Backend Details
 
 - **Backend URL**: https://hrms-backend-xbz8.onrender.com
@@ -13,17 +22,47 @@ This guide shows how to connect the HRMS frontend to the live backend running on
 ✅ **Production Environment**: Updated to use live backend
 ✅ **API Configuration**: All API calls will route to Render backend
 ✅ **Authentication**: JWT tokens will be validated against live backend
+✅ **CORS Solution**: Development proxy eliminates CORS issues
 
 ## Files Updated
 
 ### 1. `.env` (Production)
 ```
+# Production API URL (used when not in development mode)
 VITE_API_URL=https://hrms-backend-xbz8.onrender.com
+
+# Note: During development, /api requests are proxied to the backend
+# See vite.config.js for proxy configuration
 ```
 
 ### 2. `.env.example` (Template)
 ```
 VITE_API_URL=https://hrms-backend-xbz8.onrender.com
+
+# Development Setup:
+# - During development (npm run dev), API requests are proxied to avoid CORS issues
+# - The proxy configuration in vite.config.js forwards /api requests to the backend
+# - No CORS configuration needed for development
+```
+
+### 3. `vite.config.js` (Development Proxy)
+```javascript
+proxy: {
+  '/api': {
+    target: 'https://hrms-backend-xbz8.onrender.com',
+    changeOrigin: true,
+    secure: true,
+    rewrite: (path) => path.replace(/^\/api/, '')
+  }
+}
+```
+
+### 4. `src/api/axios.js` (Smart Base URL)
+```javascript
+const api = axios.create({
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000'),
+  // ...
+});
 ```
 
 ### 3. `VERCEL_DEPLOYMENT.md` (Documentation)
@@ -45,21 +84,24 @@ The backend provides these main API endpoints:
 
 ### 1. Start Development Server
 ```bash
+npm install
 npm run dev
 ```
 
+The development server will start on `http://localhost:5173` with automatic proxy configuration.
+
 ### 2. Verify API Connection
-The frontend will automatically connect to the live backend when you:
-- Visit the login page
-- Try to authenticate
-- Access any protected routes
+The frontend will automatically connect to the live backend through the proxy:
+- **Development**: `http://localhost:5173/api/*` → `https://hrms-backend-xbz8.onrender.com/*`
+- **Production**: Direct calls to `https://hrms-backend-xbz8.onrender.com/*`
 
 ### 3. Check Network Tab
-Open browser DevTools > Network tab to verify API calls are going to:
-```
-https://hrms-backend-xbz8.onrender.com/api/auth/login
-https://hrms-backend-xbz8.onrender.com/api/dashboard/stats
-```
+Open browser DevTools > Network tab to verify API calls:
+- **During Development**: You should see requests going to `/api/auth/login` (proxied)
+- **In Production**: Direct requests to `https://hrms-backend-xbz8.onrender.com/api/auth/login`
+
+### 4. No CORS Errors Expected
+Since we're using a proxy during development, you should not see any CORS errors in the console.
 
 ## CORS Configuration
 
