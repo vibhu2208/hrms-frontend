@@ -9,6 +9,7 @@ const EmployeeAdd = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    employeeCode: '', // Added employeeCode field
     firstName: '',
     lastName: '',
     email: '',
@@ -29,6 +30,7 @@ const EmployeeAdd = () => {
     designation: '',
     joiningDate: '',
     employmentType: 'full-time',
+    status: 'active', // Added status field with default value
     salary: {
       basic: '',
       hra: '',
@@ -129,6 +131,7 @@ const EmployeeAdd = () => {
     // Prepare data for backend (convert salary fields to numbers)
     const submitData = {
       ...formData,
+      ...(formData.employeeCode && formData.employeeCode.trim() ? { employeeCode: formData.employeeCode } : {}),
       salary: {
         basic: parseFloat(formData.salary.basic) || 0,
         hra: parseFloat(formData.salary.hra) || 0,
@@ -139,10 +142,13 @@ const EmployeeAdd = () => {
     };
 
     try {
-      await api.post('/employees', submitData);
+      const response = await api.post('/employees', submitData);
       toast.success('Employee added successfully');
+      console.log('Employee created:', response.data);
       navigate('/employees');
     } catch (error) {
+      console.error('Employee creation error details:', error);
+      
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error.response?.status === 400) {
@@ -151,6 +157,8 @@ const EmployeeAdd = () => {
         toast.error('You are not authorized to add employees');
       } else if (error.response?.status === 403) {
         toast.error('Access denied. Admin or HR permissions required');
+      } else if (error.response?.status === 500) {
+        toast.error('Server error. Please check if MongoDB is running and properly connected.');
       } else {
         toast.error('Failed to add employee. Please try again.');
       }
@@ -181,6 +189,19 @@ const EmployeeAdd = () => {
         <div className="card">
           <h2 className="text-lg font-semibold text-white mb-4">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Employee Code *
+              </label>
+              <input
+                type="text"
+                name="employeeCode"
+                value={formData.employeeCode}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="Leave blank for auto-generation"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 First Name *
@@ -235,7 +256,7 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Date of Birth
+                Date of Birth (Optional)
               </label>
               <input
                 type="date"
@@ -247,7 +268,7 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Gender
+                Gender (Optional)
               </label>
               <select
                 name="gender"
@@ -262,7 +283,7 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Blood Group
+                Blood Group (Optional)
               </label>
               <select
                 name="bloodGroup"
@@ -283,7 +304,7 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Marital Status
+                Marital Status (Optional)
               </label>
               <select
                 name="maritalStatus"
@@ -299,7 +320,7 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Alternate Phone
+                Alternate Phone (Optional)
               </label>
               <input
                 type="tel"
@@ -361,7 +382,7 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Employment Type
+                Employment Type (Optional)
               </label>
               <select
                 name="employmentType"
