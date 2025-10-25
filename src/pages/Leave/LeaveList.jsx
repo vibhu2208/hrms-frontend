@@ -28,7 +28,7 @@ const LeaveList = () => {
 
   const handleApprove = async (id) => {
     try {
-      await api.put(`/api/leave/${id}/approve`);
+      await api.put(`/leave/${id}/approve`);
       toast.success('Leave approved successfully');
       fetchLeaves();
     } catch (error) {
@@ -41,7 +41,7 @@ const LeaveList = () => {
     if (!reason) return;
 
     try {
-      await api.put(`/api/leave/${id}/reject`, { rejectionReason: reason });
+      await api.put(`/leave/${id}/reject`, { rejectionReason: reason });
       toast.success('Leave rejected');
       fetchLeaves();
     } catch (error) {

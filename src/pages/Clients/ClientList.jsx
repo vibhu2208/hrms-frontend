@@ -28,7 +28,7 @@ const ClientList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       try {
-        await api.delete(`/api/clients/${id}`);
+        await api.delete(`/clients/${id}`);
         toast.success('Client deleted successfully');
         fetchClients();
       } catch (error) {

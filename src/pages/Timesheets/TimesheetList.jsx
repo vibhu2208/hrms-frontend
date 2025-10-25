@@ -27,7 +27,7 @@ const TimesheetList = () => {
 
   const handleApprove = async (id) => {
     try {
-      await api.put(`/api/timesheets/${id}/approve`);
+      await api.put(`/timesheets/${id}/approve`);
       toast.success('Timesheet approved successfully');
       fetchTimesheets();
     } catch (error) {
@@ -40,7 +40,7 @@ const TimesheetList = () => {
     if (!reason) return;
 
     try {
-      await api.put(`/api/timesheets/${id}/reject`, { rejectionReason: reason });
+      await api.put(`/timesheets/${id}/reject`, { rejectionReason: reason });
       toast.success('Timesheet rejected');
       fetchTimesheets();
     } catch (error) {

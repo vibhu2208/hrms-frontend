@@ -72,7 +72,7 @@ const Offboarding = () => {
 
   const advanceStage = async (id) => {
     try {
-      await api.post(`/api/offboarding/${id}/advance`);
+      await api.post(`/offboarding/${id}/advance`);
       toast.success('Stage advanced successfully');
       fetchList();
     } catch (e) {

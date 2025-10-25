@@ -2,8 +2,7 @@ import axios from 'axios';
 import config from '../config/api.config';
 
 const api = axios.create({
-  baseURL: config.apiBaseUrl,
-  timeout: config.apiTimeout,
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api'),
   headers: {
     'Content-Type': 'application/json',
   },

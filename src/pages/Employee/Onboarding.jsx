@@ -71,7 +71,7 @@ const Onboarding = () => {
 
   const advanceStage = async (id) => {
     try {
-      await api.post(`/api/onboarding/${id}/advance`);
+      await api.post(`/onboarding/${id}/advance`);
       toast.success('Stage advanced successfully');
       fetchList();
     } catch (e) {
@@ -84,7 +84,7 @@ const Onboarding = () => {
     if (!val) return;
     
     try {
-      await api.post(`/api/onboarding/${id}/joining`, { joiningDate: val });
+      await api.post(`/onboarding/${id}/joining`, { joiningDate: val });
       toast.success('Joining date set successfully');
       fetchList();
     } catch (e) {
