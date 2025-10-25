@@ -13,7 +13,7 @@ const Assets = () => {
 
   const fetchAssets = async () => {
     try {
-      const response = await api.get('/api/assets');
+      const response = await api.get('/assets');
       setAssets(response.data.data);
     } catch (error) {
       toast.error('Failed to load assets');

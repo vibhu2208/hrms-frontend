@@ -16,7 +16,7 @@ const ClientList = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await api.get('/api/clients');
+      const response = await api.get('/clients');
       setClients(response.data.data);
     } catch (error) {
       toast.error('Failed to load clients');
@@ -28,7 +28,7 @@ const ClientList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       try {
-        await api.delete(`/api/clients/${id}`);
+        await api.delete(`/clients/${id}`);
         toast.success('Client deleted successfully');
         fetchClients();
       } catch (error) {

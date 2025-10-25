@@ -15,6 +15,9 @@ const EmployeeAdd = () => {
     phone: '',
     dateOfBirth: '',
     gender: 'male',
+    bloodGroup: '',
+    maritalStatus: 'single',
+    alternatePhone: '',
     address: {
       street: '',
       city: '',
@@ -37,7 +40,8 @@ const EmployeeAdd = () => {
       accountNumber: '',
       bankName: '',
       ifscCode: '',
-      accountHolderName: ''
+      accountHolderName: '',
+      branch: ''
     },
     emergencyContact: {
       name: '',
@@ -52,24 +56,57 @@ const EmployeeAdd = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await api.get('/api/departments');
+      const response = await api.get('/departments');
       setDepartments(response.data.data);
     } catch (error) {
       toast.error('Failed to load departments');
     }
   };
 
+  const calculateTotalSalary = (basic, hra, allowances, deductions) => {
+    const basicNum = parseFloat(basic) || 0;
+    const hraNum = parseFloat(hra) || 0;
+    const allowancesNum = parseFloat(allowances) || 0;
+    const deductionsNum = parseFloat(deductions) || 0;
+    return basicNum + hraNum + allowancesNum - deductionsNum;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
+      if (parent === 'salary') {
+        setFormData(prev => {
+          const updatedSalary = {
+            ...prev.salary,
+            [child]: value
+          };
+
+          // Auto-calculate total salary when salary fields change
+          const total = calculateTotalSalary(
+            updatedSalary.basic,
+            updatedSalary.hra,
+            updatedSalary.allowances,
+            updatedSalary.deductions
+          );
+
+          return {
+            ...prev,
+            salary: {
+              ...updatedSalary,
+              total: total.toString()
+            }
+          };
+        });
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [parent]: {
+            ...prev[parent],
+            [child]: value
+          }
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
@@ -82,12 +119,42 @@ const EmployeeAdd = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Basic validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.department || !formData.designation || !formData.joiningDate) {
+      toast.error('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
+
+    // Prepare data for backend (convert salary fields to numbers)
+    const submitData = {
+      ...formData,
+      salary: {
+        basic: parseFloat(formData.salary.basic) || 0,
+        hra: parseFloat(formData.salary.hra) || 0,
+        allowances: parseFloat(formData.salary.allowances) || 0,
+        deductions: parseFloat(formData.salary.deductions) || 0,
+        total: parseFloat(formData.salary.total) || 0
+      }
+    };
+
     try {
-      await api.post('/api/employees', formData);
+      await api.post('/employees', submitData);
       toast.success('Employee added successfully');
       navigate('/employees');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add employee');
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.status === 400) {
+        toast.error('Please check all required fields and try again');
+      } else if (error.response?.status === 401) {
+        toast.error('You are not authorized to add employees');
+      } else if (error.response?.status === 403) {
+        toast.error('Access denied. Admin or HR permissions required');
+      } else {
+        toast.error('Failed to add employee. Please try again.');
+      }
+      console.error('Employee creation error:', error);
     } finally {
       setLoading(false);
     }
@@ -113,7 +180,7 @@ const EmployeeAdd = () => {
         {/* Personal Information */}
         <div className="card">
           <h2 className="text-lg font-semibold text-white mb-4">Personal Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 First Name *
@@ -192,6 +259,55 @@ const EmployeeAdd = () => {
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Blood Group
+              </label>
+              <select
+                name="bloodGroup"
+                value={formData.bloodGroup}
+                onChange={handleChange}
+                className="input-field"
+              >
+                <option value="">Select Blood Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Marital Status
+              </label>
+              <select
+                name="maritalStatus"
+                value={formData.maritalStatus}
+                onChange={handleChange}
+                className="input-field"
+              >
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="widowed">Widowed</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Alternate Phone
+              </label>
+              <input
+                type="tel"
+                name="alternatePhone"
+                value={formData.alternatePhone}
+                onChange={handleChange}
+                className="input-field"
+              />
             </div>
           </div>
         </div>
@@ -304,12 +420,91 @@ const EmployeeAdd = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Total Salary
+                Deductions
+              </label>
+              <input
+                type="number"
+                name="salary.deductions"
+                value={formData.salary.deductions}
+                onChange={handleChange}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Total Salary (Auto-calculated)
               </label>
               <input
                 type="number"
                 name="salary.total"
                 value={formData.salary.total}
+                className="input-field bg-gray-700 cursor-not-allowed"
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bank Details */}
+        <div className="card">
+          <h2 className="text-lg font-semibold text-white mb-4">Bank Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Account Number
+              </label>
+              <input
+                type="text"
+                name="bankDetails.accountNumber"
+                value={formData.bankDetails.accountNumber}
+                onChange={handleChange}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Bank Name
+              </label>
+              <input
+                type="text"
+                name="bankDetails.bankName"
+                value={formData.bankDetails.bankName}
+                onChange={handleChange}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                IFSC Code
+              </label>
+              <input
+                type="text"
+                name="bankDetails.ifscCode"
+                value={formData.bankDetails.ifscCode}
+                onChange={handleChange}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Account Holder Name
+              </label>
+              <input
+                type="text"
+                name="bankDetails.accountHolderName"
+                value={formData.bankDetails.accountHolderName}
+                onChange={handleChange}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Branch
+              </label>
+              <input
+                type="text"
+                name="bankDetails.branch"
+                value={formData.bankDetails.branch}
                 onChange={handleChange}
                 className="input-field"
               />

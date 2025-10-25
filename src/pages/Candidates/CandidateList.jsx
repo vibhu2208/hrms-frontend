@@ -14,7 +14,7 @@ const CandidateList = () => {
 
   const fetchCandidates = async () => {
     try {
-      const response = await api.get('/api/candidates');
+      const response = await api.get('/candidates');
       setCandidates(response.data.data);
     } catch (error) {
       toast.error('Failed to load candidates');

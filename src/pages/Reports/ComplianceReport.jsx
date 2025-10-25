@@ -13,7 +13,7 @@ const ComplianceReport = () => {
 
   const fetchReport = async () => {
     try {
-      const response = await api.get('/api/reports/compliance');
+      const response = await api.get('/reports/compliance');
       setReport(response.data.data);
     } catch (error) {
       toast.error('Failed to load compliance report');

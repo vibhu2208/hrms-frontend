@@ -14,7 +14,7 @@ const ProjectList = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await api.get('/api/projects');
+      const response = await api.get('/projects');
       setProjects(response.data.data);
     } catch (error) {
       toast.error('Failed to load projects');

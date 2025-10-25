@@ -15,7 +15,7 @@ const AttendanceMark = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/api/employees?status=active');
+      const response = await api.get('/employees?status=active');
       setEmployees(response.data.data);
       setAttendanceData(response.data.data.map(emp => ({
         employee: emp._id,
@@ -41,7 +41,7 @@ const AttendanceMark = () => {
 
     try {
       const promises = attendanceData.map(data => 
-        api.post('/api/attendance', {
+        api.post('/attendance', {
           ...data,
           date,
           checkIn: `${date}T${data.checkIn}`,

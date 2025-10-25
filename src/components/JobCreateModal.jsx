@@ -31,7 +31,7 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
   const fetchDepartments = async () => {
     try {
       console.log('Fetching departments...');
-      const response = await api.get('/api/departments');
+      const response = await api.get('/departments');
       console.log('Departments response:', response.data);
       setDepartments(response.data.data || []);
     } catch (error) {
@@ -118,7 +118,7 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
         closingDate: formData.closingDate || undefined
       };
 
-      const response = await api.post('/api/jobs', submitData);
+      const response = await api.post('/jobs', submitData);
 
       toast.success('Job posting created successfully');
       onJobCreated(response.data.data);

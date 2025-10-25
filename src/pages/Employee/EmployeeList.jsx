@@ -16,7 +16,7 @@ const EmployeeList = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/api/employees');
+      const response = await api.get('/employees');
       setEmployees(response.data.data);
     } catch (error) {
       toast.error('Failed to load employees');
@@ -28,7 +28,7 @@ const EmployeeList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        await api.delete(`/api/employees/${id}`);
+        await api.delete(`/employees/${id}`);
         toast.success('Employee deleted successfully');
         fetchEmployees();
       } catch (error) {

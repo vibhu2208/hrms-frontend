@@ -17,7 +17,7 @@ const JobDesk = () => {
 
   const fetchJobs = async () => {
     try {
-      const response = await api.get('/api/jobs');
+      const response = await api.get('/jobs');
       setJobs(response.data.data);
     } catch (error) {
       toast.error('Failed to load job postings');

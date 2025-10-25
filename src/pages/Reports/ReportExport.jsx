@@ -11,7 +11,7 @@ const ReportExport = () => {
     
     try {
       const queryString = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/reports/export/${reportType}?${queryString}`, {
+      const response = await api.get(`/reports/export/${reportType}?${queryString}`, {
         responseType: 'blob'
       });
 
