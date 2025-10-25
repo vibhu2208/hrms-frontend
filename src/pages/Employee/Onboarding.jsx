@@ -60,7 +60,7 @@ const Onboarding = () => {
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/api/onboarding');
+      const res = await api.get('/onboarding');
       setList(res?.data?.data || []);
     } catch (e) {
       toast.error(e?.response?.data?.message || 'Failed to load onboarding list');

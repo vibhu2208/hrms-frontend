@@ -14,7 +14,7 @@ const ComplianceList = () => {
 
   const fetchCompliances = async () => {
     try {
-      const response = await api.get('/api/compliance');
+      const response = await api.get('/compliance');
       setCompliances(response.data.data);
     } catch (error) {
       toast.error('Failed to load compliance records');

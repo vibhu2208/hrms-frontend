@@ -13,7 +13,7 @@ const ExitProcessList = () => {
 
   const fetchExitProcesses = async () => {
     try {
-      const response = await api.get('/api/exit-process');
+      const response = await api.get('/exit-process');
       setExitProcesses(response.data.data);
     } catch (error) {
       toast.error('Failed to load exit processes');

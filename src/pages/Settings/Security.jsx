@@ -20,7 +20,7 @@ const Security = () => {
 
     setLoading(true);
     try {
-      await api.put('/api/auth/updatepassword', {
+      await api.put('/auth/updatepassword', {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });

@@ -16,7 +16,7 @@ const ClientList = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await api.get('/api/clients');
+      const response = await api.get('/clients');
       setClients(response.data.data);
     } catch (error) {
       toast.error('Failed to load clients');

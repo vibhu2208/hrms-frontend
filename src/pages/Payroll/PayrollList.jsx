@@ -14,7 +14,7 @@ const PayrollList = () => {
 
   const fetchPayrolls = async () => {
     try {
-      const response = await api.get('/api/payroll');
+      const response = await api.get('/payroll');
       setPayrolls(response.data.data);
     } catch (error) {
       toast.error('Failed to load payroll');

@@ -13,7 +13,7 @@ const Departments = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await api.get('/api/departments');
+      const response = await api.get('/departments');
       setDepartments(response.data.data);
     } catch (error) {
       toast.error('Failed to load departments');

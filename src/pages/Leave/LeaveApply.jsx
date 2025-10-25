@@ -46,7 +46,7 @@ const LeaveApply = () => {
     }
 
     try {
-      await api.post('/api/leave', {
+      await api.post('/leave', {
         ...formData,
         numberOfDays: days,
         employee: user.employeeId
