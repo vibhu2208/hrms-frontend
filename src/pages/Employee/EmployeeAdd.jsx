@@ -52,7 +52,7 @@ const EmployeeAdd = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await api.get('/api/departments');
+      const response = await api.get('/departments');
       setDepartments(response.data.data);
     } catch (error) {
       toast.error('Failed to load departments');
@@ -83,7 +83,7 @@ const EmployeeAdd = () => {
     setLoading(true);
 
     try {
-      await api.post('/api/employees', formData);
+      await api.post('/employees', formData);
       toast.success('Employee added successfully');
       navigate('/employees');
     } catch (error) {

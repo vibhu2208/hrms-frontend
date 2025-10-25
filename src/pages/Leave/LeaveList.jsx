@@ -17,7 +17,7 @@ const LeaveList = () => {
 
   const fetchLeaves = async () => {
     try {
-      const response = await api.get('/api/leave');
+      const response = await api.get('/leave');
       setLeaves(response.data.data);
     } catch (error) {
       toast.error('Failed to load leaves');

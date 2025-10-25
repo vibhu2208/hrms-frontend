@@ -15,7 +15,7 @@ const DocumentList = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await api.get('/api/documents');
+      const response = await api.get('/documents');
       setDocuments(response.data.data);
     } catch (error) {
       toast.error('Failed to load documents');

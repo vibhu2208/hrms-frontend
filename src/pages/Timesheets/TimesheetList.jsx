@@ -16,7 +16,7 @@ const TimesheetList = () => {
 
   const fetchTimesheets = async () => {
     try {
-      const response = await api.get('/api/timesheets');
+      const response = await api.get('/timesheets');
       setTimesheets(response.data.data);
     } catch (error) {
       toast.error('Failed to load timesheets');

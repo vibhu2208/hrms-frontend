@@ -16,7 +16,7 @@ const EmployeeList = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/api/employees');
+      const response = await api.get('/employees');
       setEmployees(response.data.data);
     } catch (error) {
       toast.error('Failed to load employees');

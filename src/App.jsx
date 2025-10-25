@@ -12,6 +12,7 @@ import Login from './pages/Login';
 // Dashboard Pages
 import Dashboard from './pages/Dashboard';
 import JobDesk from './pages/JobDesk';
+import ViewApplicants from './pages/ViewApplicants';
 
 // Employee Pages
 import EmployeeList from './pages/Employee/EmployeeList';
@@ -90,6 +91,7 @@ function App() {
           >
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="job-desk" element={<JobDesk />} />
+            <Route path="job-desk/:jobId/applicants" element={<ViewApplicants />} />
 
             {/* Employee Routes */}
             <Route path="employees" element={<EmployeeList />} />

@@ -19,7 +19,7 @@ const AttendanceList = () => {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       
-      const response = await api.get('/api/attendance', { params });
+      const response = await api.get('/attendance', { params });
       setAttendance(response.data.data);
     } catch (error) {
       toast.error('Failed to load attendance');

@@ -13,7 +13,7 @@ const FeedbackList = () => {
 
   const fetchFeedbacks = async () => {
     try {
-      const response = await api.get('/api/feedback');
+      const response = await api.get('/feedback');
       setFeedbacks(response.data.data);
     } catch (error) {
       toast.error('Failed to load feedback');
