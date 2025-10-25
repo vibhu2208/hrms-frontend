@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye, Briefcase } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import JobCreateModal from '../components/JobCreateModal';
 
 const JobDesk = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,7 +144,10 @@ const JobDesk = () => {
             </div>
 
             <div className="flex items-center space-x-2 pt-4 border-t border-dark-800">
-              <button className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1">
+              <button 
+                onClick={() => navigate(`/job-desk/${job._id}/applicants`)}
+                className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"
+              >
                 <Eye size={16} />
                 <span>View</span>
               </button>
