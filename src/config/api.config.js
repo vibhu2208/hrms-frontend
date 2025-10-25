@@ -27,8 +27,8 @@ const getCurrentEnvironment = () => {
 // API Base URLs for different environments
 const API_BASE_URLS = {
   [ENV.DEVELOPMENT]: '/api', // Proxied through Vite dev server
-  [ENV.PRODUCTION]: import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com',
-  [ENV.STAGING]: import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com'
+  [ENV.PRODUCTION]: (import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com') + '/api',
+  [ENV.STAGING]: (import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com') + '/api'
 };
 
 // Frontend URLs for different environments
