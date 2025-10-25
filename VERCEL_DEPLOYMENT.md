@@ -32,10 +32,8 @@ git push origin main
 In your Vercel dashboard, go to Project Settings > Environment Variables and add:
 
 ```
-VITE_API_URL=https://your-backend-api.vercel.app
+VITE_API_URL=https://hrms-backend-xbz8.onrender.com
 ```
-
-Replace with your actual backend API URL.
 
 ## Files Created/Modified for Vercel
 
