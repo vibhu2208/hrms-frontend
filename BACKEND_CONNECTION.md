@@ -68,48 +68,6 @@ const api = axios.create({
 ### 3. `VERCEL_DEPLOYMENT.md` (Documentation)
 Updated deployment guide with correct backend URL.
 
-## API Endpoints Available
-
-The backend provides these main API endpoints:
-
-- `POST /api/auth/login` - User authentication
-- `POST /api/auth/register` - User registration
-- `GET /api/employees` - Employee management
-- `GET /api/dashboard/stats` - Dashboard statistics
-- `POST /api/leave` - Leave management
-- `POST /api/attendance` - Attendance tracking
-- `GET /api/payroll` - Payroll operations
-
-## Testing the Connection
-
-### 1. Start Development Server
-```bash
-npm install
-npm run dev
-```
-
-The development server will start on `http://localhost:5173` with automatic proxy configuration.
-
-### 2. Verify API Connection
-The frontend will automatically connect to the live backend through the proxy:
-- **Development**: `http://localhost:5173/api/*` → `https://hrms-backend-xbz8.onrender.com/*`
-- **Production**: Direct calls to `https://hrms-backend-xbz8.onrender.com/*`
-
-### 3. Check Network Tab
-Open browser DevTools > Network tab to verify API calls:
-- **During Development**: You should see requests going to `/api/auth/login` (proxied)
-- **In Production**: Direct requests to `https://hrms-backend-xbz8.onrender.com/api/auth/login`
-
-### 4. No CORS Errors Expected
-Since we're using a proxy during development, you should not see any CORS errors in the console.
-
-## CORS Configuration
-
-The backend is configured to accept requests from:
-- Local development (http://localhost:5173)
-- Vercel deployments (*.vercel.app)
-- Custom domains
-
 ## Deployment to Vercel
 
 When deploying to Vercel, make sure to set the environment variable:
@@ -121,20 +79,53 @@ When deploying to Vercel, make sure to set the environment variable:
 
 ## Troubleshooting
 
-### Connection Issues
-1. **Check Backend Status**: Visit https://hrms-backend-xbz8.onrender.com/health
-2. **Verify API URL**: Ensure no trailing slashes or /api prefixes
-3. **Check CORS**: Verify the domain is allowed by the backend
+### Connection Issues (Development)
+1. **Check Development Server**: Ensure `npm run dev` is running on port 5173
+2. **Verify Proxy**: Check that the proxy configuration in `vite.config.js` is correct
+3. **Backend Status**: Visit https://hrms-backend-xbz8.onrender.com/health in a new tab
+4. **Network Tab**: Look for failed API requests in browser DevTools
+
+### Connection Issues (Production)
+1. **Environment Variables**: Verify `VITE_API_URL` is set correctly in Vercel
+2. **Backend URL**: Ensure the production backend is accessible
+3. **CORS Headers**: Check that the backend allows your production domain
 
 ### Authentication Issues
 1. **Clear Storage**: Clear localStorage and sessionStorage
 2. **Hard Refresh**: Do a hard refresh (Ctrl+Shift+R)
 3. **Check Tokens**: Verify JWT tokens are being sent correctly
+4. **Login Test**: Try logging in with known credentials
 
 ### API Errors
 1. **Check Network Tab**: Look for failed API requests
 2. **Verify Endpoints**: Ensure backend endpoints match frontend calls
 3. **Check Response**: Look at error messages from backend
+4. **Status Codes**: Check HTTP status codes for clues
+
+### CORS Issues (If They Reappear)
+If you encounter CORS errors again:
+1. **Development**: The proxy should handle this automatically
+2. **Production**: Ensure your domain is whitelisted in the backend
+3. **Check Headers**: Verify the backend sends proper CORS headers
+
+## Backend CORS Configuration
+
+If you need to modify the backend CORS settings, update the backend server configuration to allow:
+
+```javascript
+// Example CORS configuration for backend
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',        // Development
+    'http://localhost:3000',        // Alternative dev port
+    /\.vercel\.app$/,               // All Vercel deployments
+    'https://yourdomain.com'        // Your production domain
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+```
 
 ## Next Steps
 
