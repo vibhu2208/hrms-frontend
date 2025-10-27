@@ -28,7 +28,9 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      toast.success('Login successful!');
+      toast.success('Login successful!', {
+        duration: 5000
+      });
       navigate('/dashboard');
     } else {
       toast.error(result.message);

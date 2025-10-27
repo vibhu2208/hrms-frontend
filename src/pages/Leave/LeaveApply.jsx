@@ -51,7 +51,9 @@ const LeaveApply = () => {
         numberOfDays: days,
         employee: user.employeeId
       });
-      toast.success('Leave application submitted successfully');
+      toast.success('Leave application submitted successfully', {
+        duration: 5000
+      });
       navigate('/leave');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to apply leave');
