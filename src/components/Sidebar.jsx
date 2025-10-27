@@ -175,12 +175,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-dark-900 border-r border-dark-800 z-50 transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-screen bg-dark-900 border-r border-dark-800 z-50 transition-transform duration-300 overflow-y-auto overflow-x-hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 w-64`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-dark-800">
+        <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-6 border-b border-dark-800 bg-dark-900">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">H</span>
@@ -196,7 +196,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
+        <nav className="flex-1 py-4 px-3">
           {menuItems.map((item) => (
             <div key={item.key} className="mb-1">
               {item.submenu ? (

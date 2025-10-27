@@ -98,3 +98,25 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-dark-600;
 }
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for sidebar */
+aside::-webkit-scrollbar {
+  width: 6px;
+}
+
+aside::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+aside::-webkit-scrollbar-thumb {
+  @apply bg-dark-700/50 rounded-full;
+}
+
+aside::-webkit-scrollbar-thumb:hover {
+  @apply bg-dark-600/70;
+}
