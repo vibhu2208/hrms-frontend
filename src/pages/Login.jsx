@@ -28,9 +28,7 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      toast.success('Login successful!', {
-        duration: 5000
-      });
+      toast.success('Login successful!');
       navigate('/dashboard');
     } else {
       toast.error(result.message);
@@ -41,7 +39,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
-      <Toaster position="top-right" />
       
       <div className="w-full max-w-md">
         {/* Logo */}

@@ -106,9 +106,7 @@ const ViewApplicants = () => {
     try {
       setAnalyzing(true);
       const response = await api.post(`/ai-analysis/jobs/${jobId}/analyze`);
-      toast.success(response.data.message, {
-        duration: 5000
-      });
+      toast.success(response.data.message);
       
       // Refresh applicants and stats
       await fetchApplicants();
@@ -194,9 +192,7 @@ const ViewApplicants = () => {
 
     try {
       await api.post(`/candidates/${applicant._id}/onboarding`);
-      toast.success('Candidate moved to onboarding successfully!', {
-        duration: 5000
-      });
+      toast.success('Candidate moved to onboarding successfully!');
       // Refresh the applicants list
       fetchApplicants();
     } catch (error) {
