@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Upload } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -171,16 +171,28 @@ const EmployeeAdd = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <button
-          onClick={() => navigate('/employees')}
-          className="p-2 hover:bg-dark-800 rounded-lg"
-        >
-          <ArrowLeft size={20} className="text-gray-400" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Add New Employee</h1>
-          <p className="text-gray-400 mt-1">Fill in the employee details</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate('/employees')}
+            className="p-2 hover:bg-dark-800 rounded-lg"
+          >
+            <ArrowLeft size={20} className="text-gray-400" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Add New Employee</h1>
+            <p className="text-gray-400 mt-1">Fill in the employee details</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/employees/bulk-upload')}
+            className="btn-outline flex items-center space-x-2"
+            title="Bulk Upload Employees"
+          >
+            <Upload size={20} />
+            <span>Bulk Upload</span>
+          </button>
         </div>
       </div>
 

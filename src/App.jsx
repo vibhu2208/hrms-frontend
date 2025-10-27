@@ -21,6 +21,7 @@ import EmployeeAdd from './pages/Employee/EmployeeAdd';
 import EmployeeDetail from './pages/Employee/EmployeeDetail';
 import Onboarding from './pages/Employee/Onboarding';
 import Offboarding from './pages/Employee/Offboarding';
+import BulkEmployeeUpload from './pages/Employee/BulkEmployeeUpload';
 
 // Leave Pages
 import LeaveList from './pages/Leave/LeaveList';
@@ -120,6 +121,7 @@ function App() {
             {/* Employee Routes */}
             <Route path="employees" element={<EmployeeList />} />
             <Route path="employees/add" element={<EmployeeAdd />} />
+            <Route path="employees/bulk-upload" element={<BulkEmployeeUpload />} />
             <Route path="employees/:id" element={<EmployeeDetail />} />
             <Route path="employees/onboarding" element={<Onboarding />} />
             <Route path="employees/offboarding" element={<Offboarding />} />
