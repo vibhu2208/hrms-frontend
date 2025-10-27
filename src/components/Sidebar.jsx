@@ -26,10 +26,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [expandedMenus, setExpandedMenus] = useState({});
 
   const toggleMenu = (key) => {
-    setExpandedMenus(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setExpandedMenus(prev => {
+      // Create a new object with all menus closed
+      const newState = {};
+
+      // If the clicked menu was already open, keep it closed
+      // If it was closed, open only this one
+      if (!prev[key]) {
+        newState[key] = true;
+      }
+      // If it was already open, it will remain closed (newState[key] stays undefined/false)
+
+      return newState;
+    });
   };
 
   const isActive = (path) => location.pathname === path;
@@ -182,10 +191,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Logo */}
         <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-6 border-b border-dark-800 bg-dark-900">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">H</span>
-            </div>
-            <span className="text-xl font-bold text-white">HRMS</span>
+            <img
+              src="/logo.png"
+              alt="HRMS Logo"
+              className="w-17 h-12 rounded-lg object-cover"
+            />
+            
           </div>
           <button
             onClick={() => setIsOpen(false)}
