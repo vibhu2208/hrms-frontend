@@ -9,6 +9,9 @@ import DashboardLayout from './layouts/DashboardLayout';
 // Auth Pages
 import Login from './pages/Login';
 
+// Public Pages
+import CareersPage from './pages/Public/CareersPage';
+
 // Dashboard Pages
 import Dashboard from './pages/Dashboard';
 import JobDesk from './pages/JobDesk';
@@ -63,6 +66,9 @@ import ComplianceList from './pages/Compliance/ComplianceList';
 // Recruitment Pages
 import CandidateList from './pages/Candidates/CandidateList';
 
+// Talent Pool Pages
+import TalentPoolList from './pages/TalentPool/TalentPoolList';
+
 // Performance Pages
 import FeedbackList from './pages/Feedback/FeedbackList';
 import ExitProcessList from './pages/ExitProcess/ExitProcessList';
@@ -102,6 +108,8 @@ function App() {
           <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/jobs" element={<CareersPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Protected Routes */}
@@ -160,6 +168,9 @@ function App() {
 
             {/* Recruitment Routes */}
             <Route path="candidates" element={<CandidateList />} />
+
+            {/* Talent Pool Routes */}
+            <Route path="talent-pool" element={<TalentPoolList />} />
 
             {/* Performance Routes */}
             <Route path="feedback" element={<FeedbackList />} />

@@ -12,6 +12,7 @@ const JobDesk = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
 
   useEffect(() => {
     fetchJobs();
@@ -30,6 +31,44 @@ const JobDesk = () => {
 
   const handleJobCreated = (newJob) => {
     setJobs(prev => [newJob, ...prev]);
+    setShowCreateModal(false);
+  };
+
+  const handleJobUpdated = (updatedJob) => {
+    setJobs(prev => prev.map(job => job._id === updatedJob._id ? updatedJob : job));
+    setShowCreateModal(false);
+    setEditingJob(null);
+  };
+
+  const handleEdit = (job) => {
+    setEditingJob(job);
+    setShowCreateModal(true);
+  };
+
+  const handleDelete = async (jobId) => {
+    if (!window.confirm('Are you sure you want to delete this job posting?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/jobs/${jobId}`);
+      setJobs(prev => prev.filter(job => job._id !== jobId));
+      toast.success('Job posting deleted successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete job posting');
+    }
+  };
+
+  const handleStatusChange = async (jobId, newStatus) => {
+    try {
+      const response = await api.put(`/jobs/${jobId}/status`, { status: newStatus });
+      setJobs(prev => prev.map(job => 
+        job._id === jobId ? response.data.data : job
+      ));
+      toast.success(`Job status updated to ${newStatus}`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update job status');
+    }
   };
 
   const filteredJobs = jobs.filter(job => {
@@ -44,7 +83,8 @@ const JobDesk = () => {
       active: 'badge-success',
       draft: 'badge-warning',
       closed: 'badge-danger',
-      'on-hold': 'badge-info'
+      'on-hold': 'badge-info',
+      archived: 'bg-gray-600 text-gray-300'
     };
     return badges[status] || 'badge-default';
   };
@@ -97,6 +137,7 @@ const JobDesk = () => {
             <option value="draft">Draft</option>
             <option value="closed">Closed</option>
             <option value="on-hold">On Hold</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
       </div>
@@ -115,9 +156,18 @@ const JobDesk = () => {
                   <p className="text-sm text-gray-400">{job.department?.name}</p>
                 </div>
               </div>
-              <span className={`badge ${getStatusBadge(job.status)}`}>
-                {job.status}
-              </span>
+              <select
+                value={job.status}
+                onChange={(e) => handleStatusChange(job._id, e.target.value)}
+                className={`badge ${getStatusBadge(job.status)} cursor-pointer hover:opacity-80`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="on-hold">On Hold</option>
+                <option value="closed">Closed</option>
+                <option value="archived">Archived</option>
+              </select>
             </div>
 
             <div className="space-y-2 mb-4">
@@ -151,11 +201,17 @@ const JobDesk = () => {
                 <Eye size={16} />
                 <span>View</span>
               </button>
-              <button className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1">
+              <button 
+                onClick={() => handleEdit(job)}
+                className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"
+              >
                 <Edit size={16} />
                 <span>Edit</span>
               </button>
-              <button className="btn-outline text-sm py-2 px-3 text-red-500 hover:bg-red-500/10">
+              <button 
+                onClick={() => handleDelete(job._id)}
+                className="btn-outline text-sm py-2 px-3 text-red-500 hover:bg-red-500/10"
+              >
                 <Trash2 size={16} />
               </button>
             </div>
@@ -170,11 +226,16 @@ const JobDesk = () => {
         </div>
       )}
 
-      {/* Job Creation Modal */}
+      {/* Job Creation/Edit Modal */}
       <JobCreateModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingJob(null);
+        }}
         onJobCreated={handleJobCreated}
+        onJobUpdated={handleJobUpdated}
+        editingJob={editingJob}
       />
     </div>
   );
