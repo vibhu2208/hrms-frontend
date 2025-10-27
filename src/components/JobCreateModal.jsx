@@ -3,7 +3,7 @@ import { X, Plus, Minus } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
-const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
+const JobCreateModal = ({ isOpen, onClose, onJobCreated, onJobUpdated, editingJob }) => {
   const [formData, setFormData] = useState({
     title: '',
     department: '',
@@ -16,7 +16,8 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
     responsibilities: [''],
     skills: [''],
     openings: 1,
-    closingDate: ''
+    closingDate: '',
+    status: 'draft'
   });
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,8 +26,43 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
   useEffect(() => {
     if (isOpen) {
       fetchDepartments();
+      if (editingJob) {
+        // Populate form with editing job data
+        setFormData({
+          title: editingJob.title || '',
+          department: editingJob.department?._id || '',
+          location: editingJob.location || '',
+          employmentType: editingJob.employmentType || 'full-time',
+          experience: editingJob.experience || { min: '', max: '' },
+          salary: editingJob.salary || { min: '', max: '', currency: 'USD' },
+          description: editingJob.description || '',
+          requirements: editingJob.requirements?.length > 0 ? editingJob.requirements : [''],
+          responsibilities: editingJob.responsibilities?.length > 0 ? editingJob.responsibilities : [''],
+          skills: editingJob.skills?.length > 0 ? editingJob.skills : [''],
+          openings: editingJob.openings || 1,
+          closingDate: editingJob.closingDate ? editingJob.closingDate.split('T')[0] : '',
+          status: editingJob.status || 'draft'
+        });
+      } else {
+        // Reset form for new job
+        setFormData({
+          title: '',
+          department: '',
+          location: '',
+          employmentType: 'full-time',
+          experience: { min: '', max: '' },
+          salary: { min: '', max: '', currency: 'USD' },
+          description: '',
+          requirements: [''],
+          responsibilities: [''],
+          skills: [''],
+          openings: 1,
+          closingDate: '',
+          status: 'draft'
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editingJob]);
 
   const fetchDepartments = async () => {
     try {
@@ -118,10 +154,16 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
         closingDate: formData.closingDate || undefined
       };
 
-      const response = await api.post('/jobs', submitData);
-
-      toast.success('Job posting created successfully');
-      onJobCreated(response.data.data);
+      let response;
+      if (editingJob) {
+        response = await api.put(`/jobs/${editingJob._id}`, submitData);
+        toast.success('Job posting updated successfully');
+        onJobUpdated(response.data.data);
+      } else {
+        response = await api.post('/jobs', submitData);
+        toast.success('Job posting created successfully');
+        onJobCreated(response.data.data);
+      }
       onClose();
 
       // Reset form
@@ -140,7 +182,7 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
         closingDate: ''
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create job posting');
+      toast.error(error.response?.data?.message || `Failed to ${editingJob ? 'update' : 'create'} job posting`);
     } finally {
       setLoading(false);
     }
@@ -153,7 +195,7 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
       <div className="bg-dark-900 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-dark-800">
-          <h2 className="text-xl font-bold text-white">Create New Job Posting</h2>
+          <h2 className="text-2xl font-bold text-white">{editingJob ? 'Edit Job Posting' : 'Post New Job'}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors"
@@ -258,6 +300,26 @@ const JobCreateModal = ({ isOpen, onClose, onJobCreated }) => {
                 onChange={(e) => handleChange('closingDate', e.target.value)}
                 className="input-field"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => handleChange('status', e.target.value)}
+                className="input-field"
+              >
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="on-hold">On Hold</option>
+                <option value="closed">Closed</option>
+                <option value="archived">Archived</option>
+              </select>
+              <p className="text-gray-400 text-xs mt-1">
+                Only "Active" jobs will be visible on the careers page
+              </p>
             </div>
           </div>
 

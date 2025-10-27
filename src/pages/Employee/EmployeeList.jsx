@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -73,10 +73,16 @@ const EmployeeList = () => {
           <h1 className="text-2xl font-bold text-white">Employees</h1>
           <p className="text-gray-400 mt-1">Manage your workforce</p>
         </div>
-        <Link to="/employees/add" className="btn-primary flex items-center space-x-2">
-          <Plus size={20} />
-          <span>Add Employee</span>
-        </Link>
+        <div className="flex items-center space-x-3">
+          <Link to="/employees/bulk-upload" className="btn-outline flex items-center space-x-2">
+            <Upload size={20} />
+            <span>Bulk Upload</span>
+          </Link>
+          <Link to="/employees/add" className="btn-primary flex items-center space-x-2">
+            <Plus size={20} />
+            <span>Add Employee</span>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

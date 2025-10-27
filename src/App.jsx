@@ -10,6 +10,9 @@ import EmployeeDashboardLayout from './layouts/EmployeeDashboardLayout';
 // Auth Pages
 import Login from './pages/Login';
 
+// Public Pages
+import CareersPage from './pages/Public/CareersPage';
+
 // Dashboard Pages
 import Dashboard from './pages/Dashboard';
 import JobDesk from './pages/JobDesk';
@@ -22,6 +25,7 @@ import EmployeeAdd from './pages/Employee/EmployeeAdd';
 import EmployeeDetail from './pages/Employee/EmployeeDetail';
 import Onboarding from './pages/Employee/Onboarding';
 import Offboarding from './pages/Employee/Offboarding';
+import BulkEmployeeUpload from './pages/Employee/BulkEmployeeUpload';
 
 // Leave Pages
 import LeaveList from './pages/Leave/LeaveList';
@@ -62,6 +66,9 @@ import ComplianceList from './pages/Compliance/ComplianceList';
 
 // Recruitment Pages
 import CandidateList from './pages/Candidates/CandidateList';
+
+// Talent Pool Pages
+import TalentPoolList from './pages/TalentPool/TalentPoolList';
 
 // Performance Pages
 import FeedbackList from './pages/Feedback/FeedbackList';
@@ -111,6 +118,8 @@ function App() {
           <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/jobs" element={<CareersPage />} />
           
           {/* Root redirect based on role */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -132,6 +141,7 @@ function App() {
             {/* Employee Routes */}
             <Route path="employees" element={<EmployeeList />} />
             <Route path="employees/add" element={<EmployeeAdd />} />
+            <Route path="employees/bulk-upload" element={<BulkEmployeeUpload />} />
             <Route path="employees/:id" element={<EmployeeDetail />} />
             <Route path="employees/onboarding" element={<Onboarding />} />
             <Route path="employees/offboarding" element={<Offboarding />} />
@@ -170,6 +180,9 @@ function App() {
 
             {/* Recruitment Routes */}
             <Route path="candidates" element={<CandidateList />} />
+
+            {/* Talent Pool Routes */}
+            <Route path="talent-pool" element={<TalentPoolList />} />
 
             {/* Performance Routes */}
             <Route path="feedback" element={<FeedbackList />} />
