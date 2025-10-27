@@ -143,9 +143,7 @@ const EmployeeAdd = () => {
 
     try {
       const response = await api.post('/employees', submitData);
-      toast.success('Employee added successfully', {
-        duration: 5000
-      });
+      toast.success('Employee added successfully');
       console.log('Employee created:', response.data);
       navigate('/employees');
     } catch (error) {

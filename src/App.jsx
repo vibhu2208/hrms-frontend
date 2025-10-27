@@ -75,7 +75,29 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 5000,
+              style: {
+                background: '#1e293b',
+                color: '#f1f5f9',
+                border: '1px solid #334155',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#f1f5f9',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#f1f5f9',
+                },
+              },
+            }}
+          />
           <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
