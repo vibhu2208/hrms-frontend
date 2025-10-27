@@ -182,7 +182,7 @@ const ViewApplicants = () => {
   };
 
   const handleViewCandidate = (candidateId) => {
-    navigate(`/candidates/${candidateId}`);
+    navigate(`/candidates/${candidateId}/timeline`);
   };
 
   const handleMoveToOnboarding = async (applicant, e) => {

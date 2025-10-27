@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import JobDesk from './pages/JobDesk';
 import ViewApplicants from './pages/ViewApplicants';
+import CandidateTimeline from './pages/CandidateTimeline';
 
 // Employee Pages
 import EmployeeList from './pages/Employee/EmployeeList';
@@ -92,6 +93,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="job-desk" element={<JobDesk />} />
             <Route path="job-desk/:jobId/applicants" element={<ViewApplicants />} />
+            <Route path="candidates/:candidateId/timeline" element={<CandidateTimeline />} />
 
             {/* Employee Routes */}
             <Route path="employees" element={<EmployeeList />} />
