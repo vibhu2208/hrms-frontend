@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './routes/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
+import EmployeeDashboardLayout from './layouts/EmployeeDashboardLayout';
 
 // Auth Pages
 import Login from './pages/Login';
@@ -77,6 +78,15 @@ import ExitProcessList from './pages/ExitProcess/ExitProcessList';
 import ReportExport from './pages/Reports/ReportExport';
 import ComplianceReport from './pages/Reports/ComplianceReport';
 
+// Employee Dashboard Pages
+import EmployeeHome from './pages/EmployeeDashboard/EmployeeHome';
+import EmployeeLeave from './pages/EmployeeDashboard/EmployeeLeave';
+import EmployeeAttendance from './pages/EmployeeDashboard/EmployeeAttendance';
+import EmployeePayslips from './pages/EmployeeDashboard/EmployeePayslips';
+import EmployeeProjects from './pages/EmployeeDashboard/EmployeeProjects';
+import EmployeeRequests from './pages/EmployeeDashboard/EmployeeRequests';
+import EmployeeProfile from './pages/EmployeeDashboard/EmployeeProfile';
+
 function App() {
   return (
     <ThemeProvider>
@@ -110,6 +120,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/jobs" element={<CareersPage />} />
+          
+          {/* Root redirect based on role */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Protected Routes */}
@@ -184,6 +196,24 @@ function App() {
             <Route path="settings/profile" element={<Profile />} />
             <Route path="settings/security" element={<Security />} />
             <Route path="settings/preferences" element={<Preferences />} />
+          </Route>
+
+          {/* Employee Dashboard Routes */}
+          <Route
+            path="/employee/*"
+            element={
+              <ProtectedRoute roles={['employee']}>
+                <EmployeeDashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<EmployeeHome />} />
+            <Route path="leave" element={<EmployeeLeave />} />
+            <Route path="attendance" element={<EmployeeAttendance />} />
+            <Route path="payslips" element={<EmployeePayslips />} />
+            <Route path="projects" element={<EmployeeProjects />} />
+            <Route path="requests" element={<EmployeeRequests />} />
+            <Route path="profile" element={<EmployeeProfile />} />
           </Route>
           </Routes>
         </Router>
