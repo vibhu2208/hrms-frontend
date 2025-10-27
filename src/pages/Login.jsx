@@ -29,7 +29,16 @@ const Login = () => {
 
     if (result.success) {
       toast.success('Login successful!');
-      navigate('/dashboard');
+      
+      // Get user from localStorage to check role
+      const userData = JSON.parse(localStorage.getItem('user'));
+      
+      // Role-based redirection
+      if (userData?.role === 'employee') {
+        navigate('/employee/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       toast.error(result.message);
     }
