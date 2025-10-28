@@ -263,29 +263,65 @@ const EmployeeAttendance = () => {
                   ? 'bg-green-100 dark:bg-green-900' 
                   : 'bg-red-100 dark:bg-red-900'
             }`}>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-start space-x-2">
                 {networkStatus.isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
-                    <span className="text-sm">Checking network...</span>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600 mt-0.5"></div>
+                    <div>
+                      <p className="text-sm font-medium">Checking network...</p>
+                      <p className="text-xs mt-1 text-gray-600 dark:text-gray-300">
+                        Verifying your network connection
+                      </p>
+                    </div>
                   </>
                 ) : networkStatus.isOfficeNetwork ? (
                   <>
-                    <Wifi className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span className="text-sm text-green-800 dark:text-green-200">Connected to Office Network</span>
+                    <Wifi className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        Connected to Office Network
+                      </p>
+                      {networkStatus.reason && (
+                        <p className="text-xs mt-1 text-green-700 dark:text-green-300">
+                          {networkStatus.reason}
+                        </p>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <>
-                    <WifiOff className="w-5 h-5 text-red-600 dark:text-red-400" />
-                    <span className="text-sm text-red-800 dark:text-red-200">
-                      {networkStatus.error || 'Not connected to office network'}
-                    </span>
+                    <WifiOff className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                        Network Access Required
+                      </p>
+                      <p className="text-xs mt-1 text-red-700 dark:text-red-300">
+                        {networkStatus.error || 'Please connect to the office network to mark attendance.'}
+                      </p>
+                      <button 
+                        onClick={async () => {
+                          try {
+                            const result = await checkOfficeNetwork();
+                            setNetworkStatus({
+                              ...result,
+                              lastChecked: new Date(),
+                              isLoading: false
+                            });
+                          } catch (e) {
+                            console.error('Network check failed:', e);
+                          }
+                        }}
+                        className="mt-2 text-xs bg-white dark:bg-dark-700 px-2 py-1 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                      >
+                        Retry Connection
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
-              {!networkStatus.isLoading && (
-                <p className="text-xs mt-1 text-gray-600 dark:text-gray-300">
-                  Last checked: {networkStatus.lastChecked?.toLocaleTimeString() || 'Never'}
+              {!networkStatus.isLoading && networkStatus.lastChecked && (
+                <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+                  Last checked: {new Date(networkStatus.lastChecked).toLocaleTimeString()}
                 </p>
               )}
             </div>

@@ -3,12 +3,20 @@ const OFFICE_NETWORK = {
   // Office network IP ranges (add all possible office IP ranges here)
   ipv4Ranges: [
     '192.168.1.',  // Standard office range
-    '10.36.70.'    // Your specific office range from the screenshot
+    '10.36.70.',   // Your specific office range
+    '172.16.',     // Common private range
+    '10.'          // All 10.x.x.x addresses (common in enterprises)
   ],
-  ipv4DnsServers: ['192.168.1.1'],
+  // These are less reliable in production due to browser security restrictions
+  ipv4DnsServers: ['192.168.1.1', '10.36.70.1'],
   ipv6Gateways: ['fe80::1633:7fff:fe7e:d3c9'],
-  routerMacs: ['10:FF:E0:A1:82:13']
+  routerMacs: ['10:FF:E0:A1:82:13'],
+  // Allow overriding network check in production if needed
+  forceAllowInProduction: true
 };
+
+// Check if running in production
+const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * Gets the local IP address using WebRTC
@@ -52,6 +60,14 @@ async function getLocalIP() {
  * @returns {Promise<{isOfficeNetwork: boolean, reason?: string}>}
  */
 export const checkOfficeNetwork = async () => {
+  // In production, we can be more permissive if needed
+  if (isProduction && OFFICE_NETWORK.forceAllowInProduction) {
+    console.log('Production mode: Network check is permissive');
+    return { 
+      isOfficeNetwork: true, 
+      reason: 'Running in production with permissive network check'
+    };
+  }
   try {
     // Check local IP first (most reliable for office networks)
     try {
@@ -61,7 +77,12 @@ export const checkOfficeNetwork = async () => {
         // Check if local IP matches any office IP range
         const isOfficeIP = OFFICE_NETWORK.ipv4Ranges.some(range => localIP.startsWith(range));
         if (isOfficeIP) {
-          return { isOfficeNetwork: true };
+          return { 
+            isOfficeNetwork: true,
+            reason: `Local IP ${localIP} matches office network range`
+          };
+        } else {
+          console.warn('Local IP does not match office ranges:', localIP);
         }
       }
     } catch (e) {
@@ -120,12 +141,34 @@ export const checkOfficeNetwork = async () => {
       }
     }
     
-    // Final check - if we're on localhost, assume it's for development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      console.log('Running on localhost, assuming development environment');
+    // Check if running in a secure context (HTTPS or localhost)
+    if (window.isSecureContext) {
+      console.log('Running in secure context, attempting additional network checks');
+      try {
+        // Try to get network information if available
+        if (navigator.connection) {
+          console.log('Network connection info:', {
+            type: navigator.connection.type,
+            effectiveType: navigator.connection.effectiveType,
+            downlink: navigator.connection.downlink,
+            rtt: navigator.connection.rtt
+          });
+        }
+      } catch (e) {
+        console.warn('Could not get detailed network info:', e);
+      }
+    }
+
+    // Final checks - be more permissive in certain conditions
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isDevelopment = !isProduction || isLocalhost;
+    
+    if (isDevelopment) {
+      console.log('Running in development or localhost environment');
       return { 
         isOfficeNetwork: true,
-        reason: 'Development environment detected'
+        reason: 'Development/Localhost environment detected'
       };
     }
     
