@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import {
   getTodayAttendance,
@@ -7,6 +7,7 @@ import {
   checkOut,
   requestRegularization
 } from '../../api/employeeDashboard';
+import { checkOfficeNetwork, onNetworkChange } from '../../utils/networkUtils';
 import toast from 'react-hot-toast';
 import {
   Clock,
@@ -15,7 +16,10 @@ import {
   Calendar,
   TrendingUp,
   MapPin,
-  AlertCircle
+  AlertCircle,
+  Wifi,
+  WifiOff,
+  AlertTriangle
 } from 'lucide-react';
 
 const EmployeeAttendance = () => {
@@ -27,13 +31,66 @@ const EmployeeAttendance = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [location, setLocation] = useState('office');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [networkStatus, setNetworkStatus] = useState({
+    isOnline: navigator.onLine,
+    isOfficeNetwork: false,
+    isLoading: true,
+    lastChecked: null,
+    error: null
+  });
 
+  // Check network status on component mount and when network changes
+  useEffect(() => {
+    const checkNetwork = async () => {
+      try {
+        setNetworkStatus(prev => ({ ...prev, isLoading: true }));
+        const { isOfficeNetwork, reason } = await checkOfficeNetwork();
+        setNetworkStatus({
+          isOnline: navigator.onLine,
+          isOfficeNetwork,
+          isLoading: false,
+          lastChecked: new Date(),
+          error: isOfficeNetwork ? null : (reason || 'Not connected to office network')
+        });
+      } catch (error) {
+        console.error('Network check failed:', error);
+        setNetworkStatus(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Failed to verify network. Please try again.'
+        }));
+      }
+    };
+
+    // Initial check
+    checkNetwork();
+
+    // Set up network change listener
+    const cleanup = onNetworkChange(({ isOnline, isOfficeNetwork, reason }) => {
+      setNetworkStatus({
+        isOnline,
+        isOfficeNetwork: !!isOfficeNetwork,
+        isLoading: false,
+        lastChecked: new Date(),
+        error: isOnline ? (isOfficeNetwork ? null : (reason || 'Not connected to office network')) : 'You are offline'
+      });
+    });
+
+    // Set up time update
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+
+    // Cleanup
+    return () => {
+      cleanup();
+      clearInterval(timer);
+    };
+  }, []);
+
+  // Fetch attendance data
   useEffect(() => {
     fetchTodayAttendance();
     fetchAttendanceSummary();
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  }, [networkStatus.isOfficeNetwork]);
 
   useEffect(() => {
     fetchAttendanceSummary();
@@ -198,6 +255,41 @@ const EmployeeAttendance = () => {
 
           {/* Actions */}
           <div className="flex flex-col justify-center space-y-3">
+            {/* Network Status Indicator */}
+            <div className={`p-3 rounded-lg mb-2 ${
+              networkStatus.isLoading 
+                ? 'bg-yellow-100 dark:bg-yellow-900' 
+                : networkStatus.isOfficeNetwork 
+                  ? 'bg-green-100 dark:bg-green-900' 
+                  : 'bg-red-100 dark:bg-red-900'
+            }`}>
+              <div className="flex items-center space-x-2">
+                {networkStatus.isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
+                    <span className="text-sm">Checking network...</span>
+                  </>
+                ) : networkStatus.isOfficeNetwork ? (
+                  <>
+                    <Wifi className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <span className="text-sm text-green-800 dark:text-green-200">Connected to Office Network</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    <span className="text-sm text-red-800 dark:text-red-200">
+                      {networkStatus.error || 'Not connected to office network'}
+                    </span>
+                  </>
+                )}
+              </div>
+              {!networkStatus.isLoading && (
+                <p className="text-xs mt-1 text-gray-600 dark:text-gray-300">
+                  Last checked: {networkStatus.lastChecked?.toLocaleTimeString() || 'Never'}
+                </p>
+              )}
+            </div>
+
             <div className="mb-2">
               <label className="block text-sm text-primary-100 mb-2">Location</label>
               <select
@@ -208,7 +300,7 @@ const EmployeeAttendance = () => {
                     ? 'bg-dark-700 border-dark-600 text-white'
                     : 'bg-white border-gray-300 text-gray-900'
                 } border`}
-                disabled={todayAttendance?.checkIn && !todayAttendance?.checkOut}
+                disabled={!networkStatus.isOfficeNetwork || (todayAttendance?.checkIn && !todayAttendance?.checkOut)}
               >
                 <option value="office">Office</option>
                 <option value="remote">Remote</option>
@@ -216,10 +308,25 @@ const EmployeeAttendance = () => {
                 <option value="client-site">Client Site</option>
               </select>
             </div>
-            {!todayAttendance?.checkIn ? (
+            
+            {!networkStatus.isOfficeNetwork ? (
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-start">
+                  <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    {networkStatus.error || 'Please connect to the authorized office network to mark attendance.'}
+                  </p>
+                </div>
+              </div>
+            ) : !todayAttendance?.checkIn ? (
               <button
                 onClick={handleCheckIn}
-                className="flex items-center justify-center px-6 py-3 bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-semibold"
+                disabled={!networkStatus.isOfficeNetwork}
+                className={`flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-colors ${
+                  networkStatus.isOfficeNetwork 
+                    ? 'bg-white text-primary-600 hover:bg-primary-50' 
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 <LogIn className="w-5 h-5 mr-2" />
                 Check In
@@ -227,7 +334,12 @@ const EmployeeAttendance = () => {
             ) : !todayAttendance?.checkOut ? (
               <button
                 onClick={handleCheckOut}
-                className="flex items-center justify-center px-6 py-3 bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-colors font-semibold"
+                disabled={!networkStatus.isOfficeNetwork}
+                className={`flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-colors ${
+                  networkStatus.isOfficeNetwork 
+                    ? 'bg-white text-primary-600 hover:bg-primary-50' 
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 <LogOut className="w-5 h-5 mr-2" />
                 Check Out
