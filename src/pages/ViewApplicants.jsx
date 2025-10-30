@@ -145,6 +145,7 @@ const ViewApplicants = () => {
       'offer-extended': 'bg-green-500/20 text-green-400',
       'offer-accepted': 'bg-emerald-500/20 text-emerald-400',
       'offer-rejected': 'bg-red-500/20 text-red-400',
+      'sent-to-onboarding': 'bg-orange-500/20 text-orange-400',
       'joined': 'bg-teal-500/20 text-teal-400',
       'rejected': 'bg-gray-500/20 text-gray-400'
     };
@@ -186,22 +187,108 @@ const ViewApplicants = () => {
   const handleMoveToOnboarding = async (applicant, e) => {
     e.stopPropagation();
     
-    if (!window.confirm(`Move ${applicant.firstName} ${applicant.lastName} to onboarding?`)) {
+    if (!window.confirm(`Send ${applicant.firstName} ${applicant.lastName} to comprehensive onboarding process?`)) {
       return;
     }
 
     try {
-      await api.post(`/candidates/${applicant._id}/onboarding`);
-      toast.success('Candidate moved to onboarding successfully!');
-      // Refresh the applicants list
+      const response = await api.post(`/candidates/${applicant._id}/send-to-onboarding`, {
+        notes: `Candidate sent to onboarding from job application review`
+      });
+      
+      toast.success('Candidate successfully sent to onboarding!');
+      
+      // Show additional success info
+      const onboardingData = response.data.data.onboarding;
+      toast.success(`Onboarding record created: ${onboardingData.onboardingId}`, {
+        duration: 4000
+      });
+      
+      // Refresh the applicants list to show updated status
       fetchApplicants();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to move candidate to onboarding');
+      const errorMessage = error.response?.data?.message || 'Failed to send candidate to onboarding';
+      toast.error(errorMessage);
+      console.error('Onboarding error:', error.response?.data);
     }
   };
 
-  const canMoveToOnboarding = (stage) => {
-    return ['shortlisted', 'offer-extended', 'offer-accepted'].includes(stage);
+  const canMoveToOnboarding = (applicant) => {
+    // Check if candidate is in an appropriate stage
+    const allowedStages = ['interview-completed', 'offer-extended', 'offer-accepted'];
+    
+    // Check if candidate hasn't already been sent to onboarding
+    const notAlreadySentToOnboarding = applicant.stage !== 'sent-to-onboarding';
+    
+    // Check if candidate is still active
+    const isActive = applicant.status === 'active';
+    
+    return allowedStages.includes(applicant.stage) && notAlreadySentToOnboarding && isActive;
+  };
+
+  const handleExportApplicants = () => {
+    try {
+      // Prepare CSV data
+      const headers = [
+        'Candidate Code',
+        'Name',
+        'Email',
+        'Phone',
+        'Current Location',
+        'Experience',
+        'Current Company',
+        'Current Designation',
+        'Expected CTC',
+        'Notice Period',
+        'Stage',
+        'Status',
+        'Applied On',
+        'Skills'
+      ];
+
+      const csvRows = [headers.join(',')];
+
+      applicants.forEach(applicant => {
+        const row = [
+          applicant.candidateCode || '',
+          `"${applicant.firstName} ${applicant.lastName}"`,
+          applicant.email || '',
+          applicant.phone || '',
+          `"${applicant.currentLocation || ''}"`,
+          formatExperience(applicant.experience),
+          `"${applicant.currentCompany || ''}"`,
+          `"${applicant.currentDesignation || ''}"`,
+          applicant.expectedCTC || '',
+          applicant.noticePeriod !== undefined ? applicant.noticePeriod : '',
+          applicant.stage || '',
+          applicant.status || '',
+          formatDate(applicant.createdAt),
+          `"${applicant.skills ? applicant.skills.join(', ') : ''}"`
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      // Create CSV content
+      const csvContent = csvRows.join('\n');
+      
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `applicants_${jobDetails?.title || 'job'}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Applicants exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export applicants');
+      console.error('Export error:', error);
+    }
   };
 
   if (loading) {
@@ -256,8 +343,9 @@ const ViewApplicants = () => {
             )}
           </button>
           <button
-            onClick={() => toast.success('Export feature coming soon!')}
+            onClick={handleExportApplicants}
             className="btn-outline flex items-center space-x-2"
+            disabled={applicants.length === 0}
           >
             <Download size={18} />
             <span>Export</span>
@@ -478,13 +566,14 @@ const ViewApplicants = () => {
                         <span>Resume</span>
                       </a>
                     )}
-                    {canMoveToOnboarding(applicant.stage) && applicant.status === 'active' && (
+                    {canMoveToOnboarding(applicant) && (
                       <button
                         onClick={(e) => handleMoveToOnboarding(applicant, e)}
                         className="btn-primary text-sm py-2 px-4 flex items-center space-x-2 whitespace-nowrap"
+                        title={`Send ${applicant.firstName} ${applicant.lastName} to comprehensive onboarding process`}
                       >
                         <UserPlus size={16} />
-                        <span>Move to Onboarding</span>
+                        <span>Send to Onboarding</span>
                       </button>
                     )}
                   </div>

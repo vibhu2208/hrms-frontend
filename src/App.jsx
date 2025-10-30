@@ -12,6 +12,7 @@ import Login from './pages/Login';
 
 // Public Pages
 import CareersPage from './pages/Public/CareersPage';
+import CandidateDocuments from './pages/CandidateDocuments';
 
 // Dashboard Pages
 import Dashboard from './pages/Dashboard';
@@ -120,6 +121,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/jobs" element={<CareersPage />} />
+          <Route path="/candidate-documents" element={<CandidateDocuments />} />
           
           {/* Root redirect based on role */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
