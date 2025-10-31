@@ -39,11 +39,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
-      // Apply user's theme preference
-      if (user.themePreference) {
-        localStorage.setItem('theme', user.themePreference);
-      }
-      
       setToken(token);
       setUser(user);
 
