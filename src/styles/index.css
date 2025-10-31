@@ -3,33 +3,88 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Default theme variables (dark) */
+    --color-primary: #3b82f6;
+    --color-primaryHover: #2563eb;
+    --color-background: #0f172a;
+    --color-surface: #1e293b;
+    --color-surfaceHover: #334155;
+    --color-text: #f8fafc;
+    --color-textSecondary: #94a3b8;
+    --color-border: #334155;
+    --color-accent: #3b82f6;
+    
+    /* Transition duration */
+    --theme-transition: 0.3s ease-in-out;
+  }
+
   * {
     @apply border-border;
+    transition: background-color var(--theme-transition), 
+                border-color var(--theme-transition),
+                color var(--theme-transition);
   }
+  
   body {
-    @apply bg-dark-950 text-gray-100 font-sans;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    @apply font-sans;
+  }
+
+  /* Smooth theme transitions */
+  html {
+    transition: background-color var(--theme-transition);
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+    background-color: var(--color-primary);
+    color: white;
+    @apply font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--color-primaryHover);
   }
   
   .btn-secondary {
-    @apply bg-dark-800 hover:bg-dark-700 text-gray-100 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    @apply font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--color-surfaceHover);
   }
   
   .btn-outline {
-    @apply border border-dark-700 hover:bg-dark-800 text-gray-100 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+    border: 1px solid var(--color-border);
+    background-color: transparent;
+    color: var(--color-text);
+    @apply font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-outline:hover {
+    background-color: var(--color-surface);
   }
   
   .input-field {
-    @apply w-full bg-dark-800 border border-dark-700 text-gray-100 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    @apply w-full rounded-lg px-4 py-2 focus:outline-none focus:border-transparent;
+  }
+  
+  .input-field:focus {
+    box-shadow: 0 0 0 2px var(--color-primary);
   }
   
   .card {
-    @apply bg-dark-900 border border-dark-800 rounded-lg p-6 shadow-lg;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    @apply rounded-lg p-6 shadow-lg;
   }
   
   .table-container {
@@ -78,6 +133,35 @@
   
   .badge-default {
     @apply bg-dark-800 text-gray-400 border border-dark-700;
+  }
+
+  /* Theme-aware utility classes */
+  .theme-bg {
+    background-color: var(--color-background) !important;
+  }
+
+  .theme-surface {
+    background-color: var(--color-surface) !important;
+  }
+
+  .theme-text {
+    color: var(--color-text) !important;
+  }
+
+  .theme-text-secondary {
+    color: var(--color-textSecondary) !important;
+  }
+
+  .theme-border {
+    border-color: var(--color-border) !important;
+  }
+
+  .theme-primary {
+    background-color: var(--color-primary) !important;
+  }
+
+  .theme-primary-text {
+    color: var(--color-primary) !important;
   }
 }
 

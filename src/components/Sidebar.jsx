@@ -167,6 +167,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       submenu: [
         { label: 'Profile', path: '/settings/profile' },
         { label: 'Security', path: '/settings/security' },
+        { label: 'Theme', path: '/settings/theme' },
         { label: 'Preferences', path: '/settings/preferences' }
       ]
     }
@@ -184,12 +185,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-dark-900 border-r border-dark-800 z-50 transition-transform duration-300 overflow-y-auto overflow-x-hidden ${
+        className={`fixed top-0 left-0 h-screen theme-surface border-r theme-border z-50 transition-transform duration-300 overflow-y-auto overflow-x-hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 w-64`}
+        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
       >
         {/* Logo */}
-        <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-6 border-b border-dark-800 bg-dark-900">
+        <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-6 border-b theme-border theme-surface"
+          style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
           <div className="flex items-center space-x-2">
             <img
               src="/logo.png"
@@ -216,9 +219,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     onClick={() => toggleMenu(item.key)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isParentActive(item.submenu.map(sub => sub.path))
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-400 hover:bg-dark-800 hover:text-white'
+                        ? 'text-white'
+                        : 'theme-text-secondary'
                     }`}
+                    style={isParentActive(item.submenu.map(sub => sub.path)) 
+                      ? { backgroundColor: 'var(--color-primary)' } 
+                      : {}}
+                    onMouseEnter={(e) => !isParentActive(item.submenu.map(sub => sub.path)) && (e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)')}
+                    onMouseLeave={(e) => !isParentActive(item.submenu.map(sub => sub.path)) && (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <div className="flex items-center space-x-3">
                       <item.icon size={20} />
@@ -238,9 +246,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                           to={subItem.path}
                           className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                             isActive(subItem.path)
-                              ? 'bg-primary-600/20 text-primary-400'
-                              : 'text-gray-400 hover:bg-dark-800 hover:text-white'
+                              ? 'theme-primary-text'
+                              : 'theme-text-secondary'
                           }`}
+                          style={isActive(subItem.path) 
+                            ? { backgroundColor: 'var(--color-primary)', opacity: 0.2 } 
+                            : {}}
+                          onMouseEnter={(e) => !isActive(subItem.path) && (e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)')}
+                          onMouseLeave={(e) => !isActive(subItem.path) && (e.currentTarget.style.backgroundColor = 'transparent')}
                         >
                           {subItem.label}
                         </Link>
@@ -253,9 +266,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   to={item.path}
                   className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-primary-600 text-white'
-                      : 'text-gray-400 hover:bg-dark-800 hover:text-white'
+                      ? 'text-white'
+                      : 'theme-text-secondary'
                   }`}
+                  style={isActive(item.path) 
+                    ? { backgroundColor: 'var(--color-primary)' } 
+                    : {}}
+                  onMouseEnter={(e) => !isActive(item.path) && (e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)')}
+                  onMouseLeave={(e) => !isActive(item.path) && (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
                   <item.icon size={20} />
                   <span>{item.label}</span>

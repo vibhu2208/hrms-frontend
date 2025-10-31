@@ -11,7 +11,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-950 dark:bg-dark-950 bg-gray-50">
+    <div className="min-h-screen theme-bg" style={{ backgroundColor: 'var(--color-background)' }}>
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
       <div className="lg:pl-64">
