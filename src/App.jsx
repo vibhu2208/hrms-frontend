@@ -55,7 +55,6 @@ import Assets from './pages/Assets';
 import Profile from './pages/Settings/Profile';
 import Security from './pages/Settings/Security';
 import Preferences from './pages/Settings/Preferences';
-import ThemeSettings from './pages/Settings/ThemeSettings';
 
 // Client & Project Pages
 import ClientList from './pages/Clients/ClientList';
@@ -199,7 +198,6 @@ function App() {
             <Route path="settings/profile" element={<Profile />} />
             <Route path="settings/security" element={<Security />} />
             <Route path="settings/preferences" element={<Preferences />} />
-            <Route path="settings/theme" element={<ThemeSettings />} />
           </Route>
 
           {/* Employee Dashboard Routes */}
@@ -218,7 +216,6 @@ function App() {
             <Route path="projects" element={<EmployeeProjects />} />
             <Route path="requests" element={<EmployeeRequests />} />
             <Route path="profile" element={<EmployeeProfile />} />
-            <Route path="settings/theme" element={<ThemeSettings />} />
           </Route>
           </Routes>
         </Router>

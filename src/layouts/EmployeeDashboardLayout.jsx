@@ -48,13 +48,13 @@ const EmployeeDashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen theme-bg" style={{ backgroundColor: 'var(--color-background)' }}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-dark-950' : 'bg-gray-50'}`}>
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-transform theme-surface border-r theme-border ${
+        className={`fixed top-0 left-0 z-40 h-screen transition-transform ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{ width: '260px', backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+        } ${theme === 'dark' ? 'bg-dark-900 border-dark-800' : 'bg-white border-gray-200'} border-r`}
+        style={{ width: '260px' }}
       >
         <div className="h-full px-3 py-4 overflow-y-auto">
           {/* Logo */}
@@ -185,7 +185,7 @@ const EmployeeDashboardLayout = () => {
                           My Profile
                         </Link>
                         <Link
-                          to="/employee/settings/theme"
+                          to="/employee/settings"
                           className={`block px-4 py-2 text-sm ${
                             theme === 'dark'
                               ? 'text-gray-300 hover:bg-dark-700'
@@ -194,7 +194,7 @@ const EmployeeDashboardLayout = () => {
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4 inline mr-2" />
-                          Theme Settings
+                          Settings
                         </Link>
                         <hr className={`my-1 ${theme === 'dark' ? 'border-dark-700' : 'border-gray-200'}`} />
                         <button
