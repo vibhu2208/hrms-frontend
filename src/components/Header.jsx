@@ -27,20 +27,22 @@ const Header = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-dark-900 border-b border-gray-200 dark:border-dark-800 flex items-center justify-between px-6">
+    <header className="h-16 theme-surface border-b theme-border flex items-center justify-between px-6"
+      style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
       {/* Left side */}
       <div className="flex items-center space-x-4">
         <button
           onClick={toggleSidebar}
-          className="lg:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          className="lg:hidden theme-text-secondary"
+          style={{ color: 'var(--color-textSecondary)' }}
         >
           <Menu size={24} />
         </button>
         <div className="hidden lg:block">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-semibold theme-text" style={{ color: 'var(--color-text)' }}>
             Welcome to TTS HRMS
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm theme-text-secondary" style={{ color: 'var(--color-textSecondary)' }}>
             {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -56,7 +58,10 @@ const Header = ({ toggleSidebar }) => {
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
+          className="p-2 theme-text-secondary rounded-lg transition-colors"
+          style={{ color: 'var(--color-textSecondary)' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -65,14 +70,20 @@ const Header = ({ toggleSidebar }) => {
         {/* Fullscreen Toggle */}
         <button
           onClick={toggleFullscreen}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
+          className="p-2 theme-text-secondary rounded-lg transition-colors"
+          style={{ color: 'var(--color-textSecondary)' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
         >
           {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
         </button>
 
         {/* Notifications */}
-        <button className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors">
+        <button className="relative p-2 theme-text-secondary rounded-lg transition-colors"
+          style={{ color: 'var(--color-textSecondary)' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
           <Bell size={20} />
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
@@ -81,16 +92,19 @@ const Header = ({ toggleSidebar }) => {
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
+            className="flex items-center space-x-3 p-2 rounded-lg transition-colors"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'var(--color-primary)' }}>
               <User size={18} className="text-white" />
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-medium theme-text" style={{ color: 'var(--color-text)' }}>
                 {user?.employee?.firstName} {user?.employee?.lastName}
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">{user?.role}</p>
+              <p className="text-xs theme-text-secondary capitalize" style={{ color: 'var(--color-textSecondary)' }}>{user?.role}</p>
             </div>
           </button>
 
@@ -101,14 +115,18 @@ const Header = ({ toggleSidebar }) => {
                 className="fixed inset-0 z-10"
                 onClick={() => setShowUserMenu(false)}
               />
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg shadow-lg z-20">
+              <div className="absolute right-0 mt-2 w-48 theme-surface theme-border rounded-lg shadow-lg z-20"
+                style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', borderWidth: '1px', borderStyle: 'solid' }}>
                 <div className="py-1">
                   <button
                     onClick={() => {
                       navigate('/settings/profile');
                       setShowUserMenu(false);
                     }}
-                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700"
+                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                    style={{ color: 'var(--color-text)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <User size={16} />
                     <span>Profile</span>
@@ -118,15 +136,20 @@ const Header = ({ toggleSidebar }) => {
                       navigate('/settings/security');
                       setShowUserMenu(false);
                     }}
-                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700"
+                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                    style={{ color: 'var(--color-text)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <Settings size={16} />
                     <span>Settings</span>
                   </button>
-                  <hr className="my-1 border-gray-200 dark:border-dark-700" />
+                  <hr className="my-1 theme-border" style={{ borderColor: 'var(--color-border)' }} />
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-700"
+                    className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600"
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <LogOut size={16} />
                     <span>Logout</span>
