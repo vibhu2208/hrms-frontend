@@ -88,7 +88,7 @@ const LeaveApply = () => {
               onChange={handleChange}
               className="input-field"
               required
-            >
+            > 
               <option value="casual">Casual Leave</option>
               <option value="sick">Sick Leave</option>
               <option value="earned">Earned Leave</option>

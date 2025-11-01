@@ -50,10 +50,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
       
       <div className="w-full max-w-md">
-        {/* Logo */}
+        {/* Logo and Welcome Message */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
-            <span className="text-white font-bold text-2xl">H</span>
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/logo.png" 
+              alt="Company Logo" 
+              className="h-16 w-auto rounded-2xl shadow-md border-2 border-white/10" 
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-gray-400">Sign in to your HRMS account</p>
@@ -138,15 +142,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-dark-800 rounded-lg border border-dark-700">
-            <p className="text-xs text-gray-400 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-gray-500">
-              <p>Admin: admin@hrms.com / admin123</p>
-              <p>HR: hr@hrms.com / hr123</p>
-              <p>Employee: employee@hrms.com / emp123</p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

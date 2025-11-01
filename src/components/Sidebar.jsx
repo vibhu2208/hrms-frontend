@@ -197,7 +197,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <img
               src="/logo.png"
               alt="HRMS Logo"
-              className="w-17 h-12 rounded-lg object-cover"
+              className="w-40 h-auto rounded-lg object-cover"
             />
             
           </div>
@@ -217,16 +217,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 <>
                   <button
                     onClick={() => toggleMenu(item.key)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isParentActive(item.submenu.map(sub => sub.path))
-                        ? 'text-white'
-                        : 'theme-text-secondary'
-                    }`}
-                    style={isParentActive(item.submenu.map(sub => sub.path)) 
-                      ? { backgroundColor: 'var(--color-primary)' } 
-                      : {}}
-                    onMouseEnter={(e) => !isParentActive(item.submenu.map(sub => sub.path)) && (e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)')}
-                    onMouseLeave={(e) => !isParentActive(item.submenu.map(sub => sub.path)) && (e.currentTarget.style.backgroundColor = 'transparent')}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isParentActive(item.submenu.map(sub => sub.path)) 
+                      ? 'sidebar-menu-item active' 
+                      : 'sidebar-menu-item'}`}
+                    onMouseEnter={(e) => e.currentTarget.classList.add('hover:bg-gray-800', 'hover:text-white')}
+                    onMouseLeave={(e) => e.currentTarget.classList.remove('hover:bg-gray-800', 'hover:text-white')}
                   >
                     <div className="flex items-center space-x-3">
                       <item.icon size={20} />
@@ -244,16 +239,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         <Link
                           key={subItem.path}
                           to={subItem.path}
-                          className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                            isActive(subItem.path)
-                              ? 'theme-primary-text'
-                              : 'theme-text-secondary'
-                          }`}
-                          style={isActive(subItem.path) 
-                            ? { backgroundColor: 'var(--color-primary)', opacity: 0.2 } 
-                            : {}}
-                          onMouseEnter={(e) => !isActive(subItem.path) && (e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)')}
-                          onMouseLeave={(e) => !isActive(subItem.path) && (e.currentTarget.style.backgroundColor = 'transparent')}
+                          className={`block px-3 py-2 rounded-lg text-sm transition-colors ${isActive(subItem.path)
+                            ? 'sidebar-submenu-item active' 
+                            : 'sidebar-submenu-item'}`}
+                          onMouseEnter={(e) => e.currentTarget.classList.add('hover:bg-gray-800', 'hover:text-white')}
+                          onMouseLeave={(e) => e.currentTarget.classList.remove('hover:bg-gray-800', 'hover:text-white')}
                         >
                           {subItem.label}
                         </Link>
@@ -264,16 +254,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               ) : (
                 <Link
                   to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-white'
-                      : 'theme-text-secondary'
-                  }`}
-                  style={isActive(item.path) 
-                    ? { backgroundColor: 'var(--color-primary)' } 
-                    : {}}
-                  onMouseEnter={(e) => !isActive(item.path) && (e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)')}
-                  onMouseLeave={(e) => !isActive(item.path) && (e.currentTarget.style.backgroundColor = 'transparent')}
+                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
+                    ? 'sidebar-menu-item active' 
+                    : 'sidebar-menu-item'}`}
+                  onMouseEnter={(e) => e.currentTarget.classList.add('hover:bg-gray-800', 'hover:text-white')}
+                  onMouseLeave={(e) => e.currentTarget.classList.remove('hover:bg-gray-800', 'hover:text-white')}
                 >
                   <item.icon size={20} />
                   <span>{item.label}</span>
