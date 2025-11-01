@@ -197,7 +197,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <img
               src="/logo.png"
               alt="HRMS Logo"
-              className="w-17 h-12 rounded-lg object-cover"
+              className="w-40 h-auto rounded-lg object-cover"
             />
             
           </div>
