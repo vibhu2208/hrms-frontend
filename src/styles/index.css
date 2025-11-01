@@ -197,6 +197,24 @@ aside::-webkit-scrollbar {
   width: 6px;
 }
 
+/* Sidebar active menu item styles */
+.sidebar-menu-item {
+  @apply text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200;
+}
+
+.sidebar-menu-item.active {
+  @apply bg-blue-600 text-white;
+}
+
+/* Submenu items */
+.sidebar-submenu-item {
+  @apply text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200;
+}
+
+.sidebar-submenu-item.active {
+  @apply bg-blue-600/20 text-blue-400 border-l-4 border-blue-500;
+}
+
 aside::-webkit-scrollbar-track {
   @apply bg-transparent;
 }
