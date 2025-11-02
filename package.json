@@ -12,6 +12,7 @@
     "vercel-build": "npm run build"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.12.2",
     "axios": "^1.6.0",
     "lucide-react": "^0.292.0",
     "papaparse": "^5.5.3",

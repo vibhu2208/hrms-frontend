@@ -3,10 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -46,10 +47,39 @@ const Login = () => {
     setLoading(false);
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    
+    const result = await googleLogin(credentialResponse.credential);
+    
+    if (result.success) {
+      toast.success('Login successful!');
       
-      <div className="w-full max-w-md">
+      // Get user from localStorage to check role
+      const userData = JSON.parse(localStorage.getItem('user'));
+      
+      // Role-based redirection
+      if (userData?.role === 'employee') {
+        navigate('/employee/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } else {
+      toast.error(result.message);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google login failed. Please try again.');
+  };
+
+  return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
+        <Toaster position="top-right" />
+        <div className="w-full max-w-md">
         {/* Logo and Welcome Message */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -142,6 +172,28 @@ const Login = () => {
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-dark-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-dark-900 text-gray-400">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="filled_black"
+              size="large"
+              width="100%"
+              text="signin_with"
+            />
+          </div>
+
         </div>
 
         {/* Footer */}
@@ -152,7 +204,8 @@ const Login = () => {
           </Link>
         </p>
       </div>
-    </div>
+      </div>
+    </GoogleOAuthProvider>
   );
 };
 
