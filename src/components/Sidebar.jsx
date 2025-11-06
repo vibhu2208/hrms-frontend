@@ -191,15 +191,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
       >
         {/* Logo */}
-        <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-6 border-b theme-border theme-surface"
+        <div className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 border-b theme-border theme-surface"
           style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
-          <div className="flex items-center space-x-2">
-            <img
-              src="/logo.png"
-              alt="HRMS Logo"
-              className="w-40 h-auto rounded-lg object-cover"
-            />
-            
+          <div className="flex items-center justify-center w-full py-2">
+            <span className="text-4xl font-black font-sans bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent tracking-wider">
+              HRMS
+            </span>
           </div>
           <button
             onClick={() => setIsOpen(false)}

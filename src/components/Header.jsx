@@ -40,7 +40,7 @@ const Header = ({ toggleSidebar }) => {
         </button>
         <div className="hidden lg:block">
           <h1 className="text-xl font-semibold theme-text" style={{ color: 'var(--color-text)' }}>
-            Welcome to TTS HRMS
+            Welcome to HRMS
           </h1>
           <p className="text-sm theme-text-secondary" style={{ color: 'var(--color-textSecondary)' }}>
             {new Date().toLocaleDateString('en-US', { 
