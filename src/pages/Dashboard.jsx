@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Calendar, Clock, DollarSign, Briefcase, Package, TrendingUp, TrendingDown } from 'lucide-react';
+import { Users, Calendar, Clock, DollarSign, Briefcase, Package } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
@@ -34,66 +34,44 @@ const Dashboard = () => {
     {
       title: 'Total Employees',
       value: stats?.employees?.total || 0,
-      change: '+12%',
       icon: Users,
-      color: 'bg-blue-500',
-      trend: 'up'
+      color: 'bg-blue-500'
     },
     {
       title: 'Active Employees',
       value: stats?.employees?.active || 0,
-      change: '+5%',
       icon: Users,
-      color: 'bg-green-500',
-      trend: 'up'
-    },
-    {
-      title: 'Pending Leaves',
-      value: stats?.leaves?.pending || 0,
-      change: '-3%',
-      icon: Calendar,
-      color: 'bg-yellow-500',
-      trend: 'down'
+      color: 'bg-green-500'
     },
     {
       title: 'Today Attendance',
       value: stats?.attendance?.today || 0,
-      change: '+8%',
       icon: Clock,
-      color: 'bg-purple-500',
-      trend: 'up'
+      color: 'bg-purple-500'
     },
     {
       title: 'Pending Payroll',
       value: stats?.payroll?.pending || 0,
-      change: '0%',
       icon: DollarSign,
-      color: 'bg-red-500',
-      trend: 'neutral'
+      color: 'bg-red-500'
     },
     {
       title: 'Active Jobs',
       value: stats?.jobs?.active || 0,
-      change: '+2',
       icon: Briefcase,
-      color: 'bg-indigo-500',
-      trend: 'up'
+      color: 'bg-indigo-500'
     },
     {
       title: 'Total Assets',
       value: stats?.assets?.total || 0,
-      change: '+15',
       icon: Package,
-      color: 'bg-pink-500',
-      trend: 'up'
+      color: 'bg-pink-500'
     },
     {
       title: 'Assigned Assets',
       value: stats?.assets?.assigned || 0,
-      change: '+10',
       icon: Package,
-      color: 'bg-orange-500',
-      trend: 'up'
+      color: 'bg-orange-500'
     }
   ];
 
@@ -113,20 +91,6 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm text-gray-400 mb-1">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
-                <div className="flex items-center mt-2">
-                  {stat.trend === 'up' ? (
-                    <TrendingUp size={16} className="text-green-500 mr-1" />
-                  ) : stat.trend === 'down' ? (
-                    <TrendingDown size={16} className="text-red-500 mr-1" />
-                  ) : null}
-                  <span className={`text-xs ${
-                    stat.trend === 'up' ? 'text-green-500' : 
-                    stat.trend === 'down' ? 'text-red-500' : 
-                    'text-gray-500'
-                  }`}>
-                    {stat.change}
-                  </span>
-                </div>
               </div>
               <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center`}>
                 <stat.icon size={24} className="text-white" />

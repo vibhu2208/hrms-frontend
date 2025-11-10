@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
@@ -78,7 +78,6 @@ const Login = () => {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
-        <Toaster position="top-right" />
         <div className="w-full max-w-md">
         {/* Logo and Welcome Message */}
         <div className="text-center mb-8">
