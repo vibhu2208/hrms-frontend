@@ -49,6 +49,7 @@ import PayrollSlips from './pages/Payroll/PayrollSlips';
 import Departments from './pages/Administration/Departments';
 import Roles from './pages/Administration/Roles';
 import Policies from './pages/Administration/Policies';
+import UserManagement from './pages/Administration/UserManagement';
 
 // Assets Page
 import Assets from './pages/Assets';
@@ -175,6 +176,7 @@ function App() {
             <Route path="administration/departments" element={<Departments />} />
             <Route path="administration/roles" element={<Roles />} />
             <Route path="administration/policies" element={<Policies />} />
+            <Route path="administration/users" element={<UserManagement />} />
 
             {/* Assets Route */}
             <Route path="assets" element={<Assets />} />

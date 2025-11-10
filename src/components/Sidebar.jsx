@@ -142,7 +142,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       submenu: [
         { label: 'Departments', path: '/administration/departments' },
         { label: 'Roles & Permissions', path: '/administration/roles' },
-        { label: 'Policies', path: '/administration/policies' }
+        { label: 'Policies', path: '/administration/policies' },
+        { label: 'User Management', path: '/administration/users' }
       ]
     },
     {

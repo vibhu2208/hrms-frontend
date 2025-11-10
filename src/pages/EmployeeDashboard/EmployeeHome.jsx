@@ -8,7 +8,6 @@ import {
   Clock,
   Briefcase,
   FileText,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
   Users,
@@ -61,6 +60,14 @@ const EmployeeHome = () => {
       icon: Calendar,
       color: 'blue',
       bgColor: 'bg-blue-500',
+      link: '/employee/leave'
+    },
+    {
+      title: 'Pending Leaves',
+      value: quickStats?.pendingLeaves || 0,
+      icon: CalendarDays,
+      color: 'yellow',
+      bgColor: 'bg-yellow-500',
       link: '/employee/leave'
     },
     {
@@ -128,7 +135,7 @@ const EmployeeHome = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {statsCards.map((stat, index) => {
           const Icon = stat.icon;
           return (

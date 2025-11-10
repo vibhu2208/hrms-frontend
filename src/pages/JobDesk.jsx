@@ -161,12 +161,15 @@ const JobDesk = () => {
                 onChange={(e) => handleStatusChange(job._id, e.target.value)}
                 className={`badge ${getStatusBadge(job.status)} cursor-pointer hover:opacity-80`}
                 onClick={(e) => e.stopPropagation()}
+                style={{
+                  backgroundImage: 'none'
+                }}
               >
-                <option value="draft">Draft</option>
-                <option value="active">Active</option>
-                <option value="on-hold">On Hold</option>
-                <option value="closed">Closed</option>
-                <option value="archived">Archived</option>
+                <option value="draft" className="bg-gray-800 text-white">Draft</option>
+                <option value="active" className="bg-gray-800 text-white">Active</option>
+                <option value="on-hold" className="bg-gray-800 text-white">On Hold</option>
+                <option value="closed" className="bg-gray-800 text-white">Closed</option>
+                <option value="archived" className="bg-gray-800 text-white">Archived</option>
               </select>
             </div>
 
