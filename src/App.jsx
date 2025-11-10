@@ -3,9 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
+import HomeRedirect from './components/HomeRedirect';
 import ProtectedRoute from './routes/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import EmployeeDashboardLayout from './layouts/EmployeeDashboardLayout';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 // Auth Pages
 import Login from './pages/Login';
@@ -89,6 +91,11 @@ import EmployeeProjects from './pages/EmployeeDashboard/EmployeeProjects';
 import EmployeeRequests from './pages/EmployeeDashboard/EmployeeRequests';
 import EmployeeProfile from './pages/EmployeeDashboard/EmployeeProfile';
 
+// Super Admin Pages
+import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
+import ClientManagement from './pages/SuperAdmin/ClientManagement';
+import PackageManagement from './pages/SuperAdmin/PackageManagement';
+
 function App() {
   return (
     <ThemeProvider>
@@ -125,7 +132,7 @@ function App() {
           <Route path="/candidate-documents" element={<CandidateDocuments />} />
           
           {/* Root redirect based on role */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<HomeRedirect />} />
 
           {/* Protected Routes */}
           <Route
@@ -219,6 +226,21 @@ function App() {
             <Route path="requests" element={<EmployeeRequests />} />
             <Route path="profile" element={<EmployeeProfile />} />
             <Route path="settings/theme" element={<ThemeSettings />} />
+          </Route>
+
+          {/* Super Admin Routes */}
+          <Route
+            path="/super-admin/*"
+            element={
+              <ProtectedRoute roles={['superadmin']}>
+                <SuperAdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="clients" element={<ClientManagement />} />
+            <Route path="packages" element={<PackageManagement />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
           </Routes>
         </Router>
