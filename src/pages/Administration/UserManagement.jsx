@@ -21,12 +21,11 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/employees');
-      // Filter to get users with their employee data
-      const employeesWithUsers = response.data.data.filter(emp => emp.userId);
-      setUsers(employeesWithUsers);
+      const response = await api.get('/user/all');
+      setUsers(response.data.data);
     } catch (error) {
       toast.error('Failed to load users');
+      console.error('Error loading users:', error);
     } finally {
       setLoading(false);
     }
@@ -130,35 +129,35 @@ const UserManagement = () => {
                   <td>
                     <div>
                       <p className="font-medium text-white">
-                        {user.firstName} {user.lastName}
+                        {user.employeeId ? `${user.employeeId.firstName} ${user.employeeId.lastName}` : 'N/A'}
                       </p>
-                      <p className="text-sm text-gray-400">{user.employeeCode}</p>
+                      <p className="text-sm text-gray-400">{user.employeeId?.employeeCode || 'N/A'}</p>
                     </div>
                   </td>
                   <td>
                     <div className="flex items-center space-x-2">
                       <Mail size={16} className="text-gray-400" />
-                      <span>{user.userId?.email || 'N/A'}</span>
+                      <span>{user.email}</span>
                     </div>
                   </td>
                   <td>
-                    <span className={`badge ${getRoleBadge(user.userId?.role)}`}>
-                      {user.userId?.role || 'N/A'}
+                    <span className={`badge ${getRoleBadge(user.role)}`}>
+                      {user.role}
                     </span>
                   </td>
                   <td>
-                    {user.userId?.isActive ? (
+                    {user.isActive ? (
                       <span className="badge badge-success">Active</span>
                     ) : (
                       <span className="badge badge-danger">Inactive</span>
                     )}
                   </td>
                   <td>
-                    {user.userId?.lastLogin ? (
+                    {user.lastLogin ? (
                       <div className="flex items-center space-x-2">
                         <Calendar size={16} className="text-gray-400" />
                         <span className="text-sm">
-                          {new Date(user.userId.lastLogin).toLocaleDateString()}
+                          {new Date(user.lastLogin).toLocaleDateString()}
                         </span>
                       </div>
                     ) : (
