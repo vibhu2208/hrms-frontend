@@ -35,7 +35,9 @@ const Login = () => {
       const userData = JSON.parse(localStorage.getItem('user'));
       
       // Role-based redirection
-      if (userData?.role === 'employee') {
+      if (userData?.role === 'superadmin') {
+        navigate('/super-admin/dashboard');
+      } else if (userData?.role === 'employee') {
         navigate('/employee/dashboard');
       } else {
         navigate('/dashboard');
@@ -59,7 +61,9 @@ const Login = () => {
       const userData = JSON.parse(localStorage.getItem('user'));
       
       // Role-based redirection
-      if (userData?.role === 'employee') {
+      if (userData?.role === 'superadmin') {
+        navigate('/super-admin/dashboard');
+      } else if (userData?.role === 'employee') {
         navigate('/employee/dashboard');
       } else {
         navigate('/dashboard');
