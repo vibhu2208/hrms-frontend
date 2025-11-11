@@ -62,3 +62,56 @@ export const togglePackageStatus = (id) => {
 export const deletePackage = (id) => {
   return api.delete(`/super-admin/packages/${id}`);
 };
+
+// Role Management APIs
+export const getRoleDefinitions = () => {
+  return api.get('/super-admin/roles/definitions');
+};
+
+export const getSuperAdminUsers = (params = {}) => {
+  return api.get('/super-admin/roles/users', { params });
+};
+
+export const getRoleStats = () => {
+  return api.get('/super-admin/roles/stats');
+};
+
+export const getMyPermissions = () => {
+  return api.get('/super-admin/roles/my-permissions');
+};
+
+export const createSuperAdminUser = (data) => {
+  return api.post('/super-admin/roles/users', data);
+};
+
+export const updateUserRole = (userId, data) => {
+  return api.put(`/super-admin/roles/users/${userId}`, data);
+};
+
+export const deactivateUser = (userId) => {
+  return api.patch(`/super-admin/roles/users/${userId}/deactivate`);
+};
+
+// Audit Log APIs
+export const getAuditLogs = (params = {}) => {
+  return api.get('/super-admin/audit/logs', { params });
+};
+
+export const getAuditStats = (params = {}) => {
+  return api.get('/super-admin/audit/stats', { params });
+};
+
+export const getSecurityEvents = (params = {}) => {
+  return api.get('/super-admin/audit/security-events', { params });
+};
+
+export const getComplianceLogs = (params = {}) => {
+  return api.get('/super-admin/audit/compliance', { params });
+};
+
+export const exportAuditLogs = (params = {}) => {
+  return api.get('/super-admin/audit/export', { 
+    params,
+    responseType: 'blob' // For file download
+  });
+};
