@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { getMyPermissions } from '../api/superAdmin';
 import {
   LayoutDashboard,
   Users,
@@ -13,54 +14,129 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  UserCheck,
+  FileText,
+  DollarSign,
+  Server,
+  Eye
 } from 'lucide-react';
 
 const SuperAdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userPermissions, setUserPermissions] = useState(null);
   const { user, logout } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
+  useEffect(() => {
+    fetchUserPermissions();
+  }, []);
+
+  const fetchUserPermissions = async () => {
+    try {
+      const response = await getMyPermissions();
+      
+      // Handle the nested response structure permanently
+      const userData = response.data?.data || response.data;
+      
+      if (userData && userData.modules) {
+        setUserPermissions(userData);
+        console.log('✅ User permissions loaded successfully:', userData.internalRole);
+      } else {
+        throw new Error('Invalid API response structure');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user permissions:', error);
+      
+      // Only use fallback if API completely fails - not as permanent solution
+      if (user?.role === 'superadmin') {
+        console.warn('⚠️ Using emergency fallback for super admin');
+        setUserPermissions({
+          internalRole: 'super_admin',
+          roleDefinition: { name: 'Super Admin (Owner)' },
+          permissions: {},
+          modules: ['analytics_monitoring', 'client_management', 'package_management', 'subscription_billing', 'role_management', 'audit_logs', 'system_config', 'data_management']
+        });
+      }
+    }
+  };
+
+  // All possible menu items with their required modules
+  const allMenuItems = [
     {
       title: 'Dashboard',
       icon: LayoutDashboard,
       path: '/super-admin/dashboard',
-      description: 'System overview and metrics'
+      description: 'System overview and metrics',
+      requiredModule: 'analytics_monitoring'
     },
     {
       title: 'Client Management',
       icon: Users,
       path: '/super-admin/clients',
-      description: 'Manage client accounts and subscriptions'
+      description: 'Manage client accounts and subscriptions',
+      requiredModule: 'client_management'
     },
     {
       title: 'Package Management',
       icon: Package,
       path: '/super-admin/packages',
-      description: 'Create and manage subscription packages'
+      description: 'Create and manage subscription packages',
+      requiredModule: 'package_management'
+    },
+    {
+      title: 'Subscription & Billing',
+      icon: DollarSign,
+      path: '/super-admin/billing',
+      description: 'Manage subscriptions and billing',
+      requiredModule: 'subscription_billing'
+    },
+    {
+      title: 'User Management',
+      icon: UserCheck,
+      path: '/super-admin/roles',
+      description: 'Manage all system users and permissions',
+      requiredModule: 'role_management'
+    },
+    {
+      title: 'Audit Logs',
+      icon: FileText,
+      path: '/super-admin/audit',
+      description: 'View audit trails and security logs',
+      requiredModule: 'audit_logs'
     },
     {
       title: 'Analytics & Reports',
       icon: BarChart3,
       path: '/super-admin/analytics',
-      description: 'System analytics and reporting'
+      description: 'System analytics and reporting',
+      requiredModule: 'analytics_monitoring'
     },
     {
       title: 'System Configuration',
       icon: Settings,
       path: '/super-admin/config',
-      description: 'System-wide settings and configuration'
+      description: 'System-wide settings and configuration',
+      requiredModule: 'system_config'
     },
     {
-      title: 'Security & Audit',
-      icon: Shield,
-      path: '/super-admin/security',
-      description: 'Security logs and audit trails'
+      title: 'Data Management',
+      icon: Server,
+      path: '/super-admin/data',
+      description: 'Data backups and management',
+      requiredModule: 'data_management'
     }
   ];
+
+  // Filter menu items based on user permissions - PERMANENT SOLUTION
+  const menuItems = allMenuItems.filter(item => {
+    if (!userPermissions || !userPermissions.modules) {
+      return false; // No fallback here - API must work properly
+    }
+    return userPermissions.modules.includes(item.requiredModule);
+  });
 
   const handleLogout = () => {
     logout();
@@ -169,7 +245,7 @@ const SuperAdminLayout = () => {
                 {user?.email}
               </p>
               <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Super Administrator
+                {userPermissions?.roleDefinition?.name || 'Super Administrator'}
               </p>
             </div>
           </div>

@@ -96,6 +96,8 @@ import EmployeeProfile from './pages/EmployeeDashboard/EmployeeProfile';
 import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
 import ClientManagement from './pages/SuperAdmin/ClientManagement';
 import PackageManagement from './pages/SuperAdmin/PackageManagement';
+import RoleManagement from './pages/SuperAdmin/RoleManagement';
+import AuditLogs from './pages/SuperAdmin/AuditLogs';
 
 function App() {
   return (
@@ -242,6 +244,8 @@ function App() {
             <Route path="dashboard" element={<SuperAdminDashboard />} />
             <Route path="clients" element={<ClientManagement />} />
             <Route path="packages" element={<PackageManagement />} />
+            <Route path="roles" element={<RoleManagement />} />
+            <Route path="audit" element={<AuditLogs />} />
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
           </Routes>
