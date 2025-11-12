@@ -16,11 +16,16 @@ import {
   Building,
   Mail,
   Phone,
-  MapPin
+  MapPin,
+  X,
+  Globe,
+  User,
+  Briefcase
 } from 'lucide-react';
 import { getClients, updateClientStatus, deleteClient } from '../../api/superAdmin';
 import toast from 'react-hot-toast';
 import ClientForm from '../../components/ClientForm';
+import ClientPackageManager from '../../components/SuperAdmin/ClientPackageManager';
 
 const ClientManagement = () => {
   const { theme } = useTheme();
@@ -34,8 +39,11 @@ const ClientManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [showActionMenu, setShowActionMenu] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [showPackageManager, setShowPackageManager] = useState(false);
+  const [selectedClientForPackages, setSelectedClientForPackages] = useState(null);
+  const [showActionMenu, setShowActionMenu] = useState(null);
 
   useEffect(() => {
     fetchClients();
@@ -193,6 +201,19 @@ const ClientManagement = () => {
                   <Edit className="w-4 h-4" />
                   <span>Edit Client</span>
                 </button>
+                <button
+                  onClick={() => {
+                    setSelectedClientForPackages(client);
+                    setShowPackageManager(true);
+                    setShowActionMenu(null);
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Manage Packages</span>
+                </button>
                 {client.status === 'active' ? (
                   <button
                     onClick={() => {
@@ -270,22 +291,44 @@ const ClientManagement = () => {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <Package className="w-4 h-4 text-gray-400" />
-            <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              {client.subscription?.packageId?.name || 'No Package'}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              {client.subscription?.endDate ? 
-                new Date(client.subscription.endDate).toLocaleDateString() : 
-                'No expiry'
-              }
-            </span>
-          </div>
+        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+          {client.activePackages && client.activePackages.length > 0 ? (
+            <div className="space-y-2">
+              {client.activePackages.map((clientPackage, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Package className="w-4 h-4 text-green-500" />
+                    <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {clientPackage.packageId?.name || 'Unknown Package'}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      clientPackage.status === 'active' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                    }`}>
+                      {clientPackage.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {clientPackage.endDate ? 
+                        new Date(clientPackage.endDate).toLocaleDateString() : 
+                        'No expiry'
+                      }
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Package className="w-4 h-4 text-gray-400" />
+              <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                No Active Packages
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -473,6 +516,310 @@ const ClientManagement = () => {
             setEditingClient(null);
           }}
         />
+      )}
+
+      {/* Client Package Manager Modal */}
+      {showPackageManager && selectedClientForPackages && (
+        <ClientPackageManager
+          clientId={selectedClientForPackages._id}
+          clientName={selectedClientForPackages.companyName}
+          isOpen={showPackageManager}
+          onClose={() => {
+            setShowPackageManager(false);
+            setSelectedClientForPackages(null);
+          }}
+        />
+      )}
+
+      {/* Client Details Modal */}
+      {selectedClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-xl ${
+            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-3">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                  selectedClient.status === 'active' ? 'bg-green-100 dark:bg-green-900/20' :
+                  selectedClient.status === 'suspended' ? 'bg-red-100 dark:bg-red-900/20' :
+                  'bg-yellow-100 dark:bg-yellow-900/20'
+                }`}>
+                  <UserCheck className={`w-6 h-6 ${
+                    selectedClient.status === 'active' ? 'text-green-600 dark:text-green-400' :
+                    selectedClient.status === 'suspended' ? 'text-red-600 dark:text-red-400' :
+                    'text-yellow-600 dark:text-yellow-400'
+                  }`} />
+                </div>
+                <div>
+                  <h2 className={`text-xl font-semibold ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {selectedClient.companyName}
+                  </h2>
+                  <p className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {selectedClient.clientCode}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedClient(null)}
+                className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className={`text-lg font-medium mb-4 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Company Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {selectedClient.email}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {selectedClient.phone}
+                      </span>
+                    </div>
+                    {selectedClient.website && (
+                      <div className="flex items-center space-x-3">
+                        <Globe className="w-4 h-4 text-gray-400" />
+                        <a 
+                          href={selectedClient.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          {selectedClient.website}
+                        </a>
+                      </div>
+                    )}
+                    {selectedClient.address && (
+                      <div className="flex items-start space-x-3">
+                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {typeof selectedClient.address === 'string' 
+                            ? selectedClient.address 
+                            : `${selectedClient.address.street}, ${selectedClient.address.city}, ${selectedClient.address.country}`
+                          }
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className={`text-lg font-medium mb-4 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Contact Person
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedClient.contactPerson?.name && (
+                      <div className="flex items-center space-x-3">
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {selectedClient.contactPerson.name}
+                        </span>
+                      </div>
+                    )}
+                    {selectedClient.contactPerson?.email && (
+                      <div className="flex items-center space-x-3">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {selectedClient.contactPerson.email}
+                        </span>
+                      </div>
+                    )}
+                    {selectedClient.contactPerson?.position && (
+                      <div className="flex items-center space-x-3">
+                        <Briefcase className="w-4 h-4 text-gray-400" />
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {selectedClient.contactPerson.position}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Packages */}
+              {selectedClient.activePackages && selectedClient.activePackages.length > 0 && (
+                <div>
+                  <h3 className={`text-lg font-medium mb-4 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Active Packages
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedClient.activePackages.map((clientPackage, index) => (
+                      <div key={index} className={`p-4 rounded-lg border ${
+                        theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Package className="w-5 h-5 text-blue-600" />
+                            <div>
+                              <h4 className={`font-medium ${
+                                theme === 'dark' ? 'text-white' : 'text-gray-900'
+                              }`}>
+                                {clientPackage.packageId?.name || 'Unknown Package'}
+                              </h4>
+                              <p className={`text-sm ${
+                                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                              }`}>
+                                {clientPackage.billingCycle} billing • {clientPackage.status}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-sm ${
+                              theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
+                              Expires: {clientPackage.endDate ? 
+                                new Date(clientPackage.endDate).toLocaleDateString() : 
+                                'No expiry'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Status and Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className={`text-lg font-medium mb-4 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Status Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        Status:
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedClient.status === 'active' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                          : selectedClient.status === 'suspended'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                      }`}>
+                        {selectedClient.status}
+                      </span>
+                    </div>
+                    {selectedClient.industry && (
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          Industry:
+                        </span>
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {selectedClient.industry}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className={`text-lg font-medium mb-4 ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    Timeline
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        Created:
+                      </span>
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {new Date(selectedClient.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        Last Updated:
+                      </span>
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {new Date(selectedClient.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end space-x-4 p-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  const clientToEdit = selectedClient;
+                  setSelectedClient(null);
+                  setEditingClient(clientToEdit);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+              >
+                Edit Client
+              </button>
+              <button
+                onClick={() => setSelectedClient(null)}
+                className={`px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 text-gray-300' 
+                    : 'border-gray-300 text-gray-700'
+                }`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
