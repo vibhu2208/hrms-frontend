@@ -97,7 +97,14 @@ import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
 import ClientManagement from './pages/SuperAdmin/ClientManagement';
 import PackageManagement from './pages/SuperAdmin/PackageManagement';
 import RoleManagement from './pages/SuperAdmin/RoleManagement';
-import AuditLogs from './pages/SuperAdmin/AuditLogs';
+import AuditLogs from './components/SuperAdmin/AuditLogs';
+import AnalyticsReports from './components/SuperAdmin/AnalyticsReports';
+import SystemConfiguration from './components/SuperAdmin/SystemConfiguration';
+import DataManagement from './components/SuperAdmin/DataManagement';
+import SubscriptionManagement from './pages/SuperAdmin/SubscriptionManagement';
+import InvoiceCenter from './pages/SuperAdmin/InvoiceCenter';
+import RevenueDashboard from './pages/SuperAdmin/RevenueDashboard';
+import BillingAlerts from './pages/SuperAdmin/BillingAlerts';
 
 function App() {
   return (
@@ -244,8 +251,15 @@ function App() {
             <Route path="dashboard" element={<SuperAdminDashboard />} />
             <Route path="clients" element={<ClientManagement />} />
             <Route path="packages" element={<PackageManagement />} />
+            <Route path="subscriptions" element={<SubscriptionManagement />} />
+            <Route path="invoices" element={<InvoiceCenter />} />
+            <Route path="revenue" element={<RevenueDashboard />} />
+            <Route path="billing-alerts" element={<BillingAlerts />} />
             <Route path="roles" element={<RoleManagement />} />
             <Route path="audit" element={<AuditLogs />} />
+            <Route path="analytics" element={<AnalyticsReports />} />
+            <Route path="config" element={<SystemConfiguration />} />
+            <Route path="data" element={<DataManagement />} />
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
           </Routes>
