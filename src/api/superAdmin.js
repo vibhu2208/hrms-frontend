@@ -115,3 +115,39 @@ export const exportAuditLogs = (params = {}) => {
     responseType: 'blob' // For file download
   });
 };
+
+// Enhanced Package Management APIs
+export const getPackageAnalytics = () => {
+  return api.get('/super-admin/packages/analytics');
+};
+
+// Module Management APIs
+export const getModules = (params = {}) => {
+  return api.get('/super-admin/modules', { params });
+};
+
+// Client Package Assignment APIs
+export const assignPackageToClient = (data) => {
+  return api.post('/super-admin/packages/assign', data);
+};
+
+export const getClientPackages = (clientId, params = {}) => {
+  return api.get(`/super-admin/clients/${clientId}/packages`, { params });
+};
+
+export const updateClientPackage = (clientPackageId, data) => {
+  return api.put(`/super-admin/client-packages/${clientPackageId}`, data);
+};
+
+export const cancelClientPackage = (clientPackageId, data) => {
+  return api.patch(`/super-admin/client-packages/${clientPackageId}/cancel`, data);
+};
+
+// Module Customization APIs
+export const customizeClientModules = (clientId, data) => {
+  return api.post(`/super-admin/clients/${clientId}/modules/customize`, data);
+};
+
+export const getClientModuleOverrides = (clientId) => {
+  return api.get(`/super-admin/clients/${clientId}/modules/overrides`);
+};

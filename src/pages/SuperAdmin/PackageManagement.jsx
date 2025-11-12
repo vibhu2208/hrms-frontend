@@ -15,8 +15,10 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { getPackages, togglePackageStatus, deletePackage } from '../../api/superAdmin';
+import { getPackages, togglePackageStatus, deletePackage, createPackage } from '../../api/superAdmin';
 import toast from 'react-hot-toast';
+import PackageAssignment from '../../components/SuperAdmin/PackageAssignment';
+import PackageForm from '../../components/SuperAdmin/PackageForm';
 
 const PackageManagement = () => {
   const { theme } = useTheme();
@@ -26,6 +28,8 @@ const PackageManagement = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [editingPackage, setEditingPackage] = useState(null);
 
   useEffect(() => {
     fetchPackages();
@@ -39,11 +43,39 @@ const PackageManagement = () => {
         type: typeFilter
       };
 
+      console.log('🔍 Fetching packages with params:', params);
       const response = await getPackages(params);
-      setPackages(response.data.packages);
+      console.log('📦 API Response:', response);
+      console.log('📊 Response data:', response.data);
+      console.log('🔍 Response data type:', typeof response.data);
+      console.log('🔍 Response data keys:', Object.keys(response.data || {}));
+      console.log('🔍 Looking for packages in:', response.data?.data?.packages);
+      
+      // Check different possible response structures
+      let packages = [];
+      if (response.data?.data?.packages) {
+        packages = response.data.data.packages;
+        console.log('✅ Found packages in data.data.packages:', packages.length);
+      } else if (response.data?.packages) {
+        packages = response.data.packages;
+        console.log('✅ Found packages in data.packages:', packages.length);
+      } else if (Array.isArray(response.data)) {
+        packages = response.data;
+        console.log('✅ Found packages as direct array:', packages.length);
+      } else {
+        console.log('❌ No packages found in any expected location');
+        console.log('📋 Response data keys:', Object.keys(response.data || {}));
+        console.log('📋 Full response structure (first 500 chars):', JSON.stringify(response.data, null, 2).substring(0, 500));
+      }
+      
+      setPackages(packages || []);
     } catch (error) {
-      console.error('Error fetching packages:', error);
-      toast.error('Failed to fetch packages');
+      console.error('❌ Error fetching packages:', error);
+      console.error('📋 Error response:', error.response);
+      console.error('📋 Error status:', error.response?.status);
+      console.error('📋 Error data:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Failed to fetch packages');
+      setPackages([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -72,6 +104,8 @@ const PackageManagement = () => {
       }
     }
   };
+
+  // handleCreatePackage removed - now handled by PackageForm component
 
   const getTypeColor = (type) => {
     const colors = {
@@ -219,10 +253,10 @@ const PackageManagement = () => {
         <p className={`text-sm font-medium mb-2 ${
           theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Included Modules ({pkg.includedModules.length})
+          Included Modules ({pkg.includedModules?.length || 0})
         </p>
         <div className="flex flex-wrap gap-1">
-          {pkg.includedModules.slice(0, 3).map((module) => (
+          {pkg.includedModules?.slice(0, 3).map((module) => (
             <span
               key={module}
               className={`px-2 py-1 rounded text-xs ${
@@ -233,8 +267,8 @@ const PackageManagement = () => {
             >
               {module.toUpperCase()}
             </span>
-          ))}
-          {pkg.includedModules.length > 3 && (
+          )) || []}
+          {pkg.includedModules && pkg.includedModules.length > 3 && (
             <span className={`px-2 py-1 rounded text-xs ${
               theme === 'dark' 
                 ? 'bg-gray-700 text-gray-400' 
@@ -267,9 +301,7 @@ const PackageManagement = () => {
           </button>
           
           <button
-            onClick={() => {
-              // Handle edit
-            }}
+            onClick={() => setEditingPackage(pkg)}
             className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
               theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
             }`}
@@ -306,13 +338,22 @@ const PackageManagement = () => {
             Create and manage subscription packages for clients
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Package</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setShowAssignmentModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+          >
+            <Users className="w-4 h-4" />
+            <span>Assign to Client</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create Package</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -374,7 +415,7 @@ const PackageManagement = () => {
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      ) : packages.length > 0 ? (
+      ) : packages && packages.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {packages.map((pkg) => (
             <PackageCard key={pkg._id} pkg={pkg} />
@@ -387,6 +428,268 @@ const PackageManagement = () => {
           <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p className="text-lg font-medium mb-2">No packages found</p>
           <p>Try adjusting your search criteria or create a new package.</p>
+        </div>
+      )}
+
+      {/* Create Package Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-xl ${
+            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className={`text-xl font-bold ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Create Package
+                </h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}
+                >
+                  ×
+                </button>
+              </div>
+              
+              <form onSubmit={handleCreatePackage} className="space-y-4">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={`block text-sm font-medium mb-1 ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Package Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={createForm.name}
+                      onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                      placeholder="e.g., Starter Plan"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-medium mb-1 ${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      Package Type *
+                    </label>
+                    <select
+                      value={createForm.type}
+                      onChange={(e) => setCreateForm({...createForm, type: e.target.value})}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        theme === 'dark' 
+                          ? 'bg-gray-700 border-gray-600 text-white' 
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="starter">Starter</option>
+                      <option value="professional">Professional</option>
+                      <option value="enterprise">Enterprise</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Description *
+                  </label>
+                  <textarea
+                    required
+                    value={createForm.description}
+                    onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
+                    rows={3}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                    placeholder="Describe the package features and benefits"
+                  />
+                </div>
+
+                {/* Pricing */}
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Pricing
+                  </label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Monthly ($) *</label>
+                      <input
+                        type="number"
+                        required
+                        value={createForm.pricing.monthly}
+                        onChange={(e) => setCreateForm({
+                          ...createForm, 
+                          pricing: {...createForm.pricing, monthly: e.target.value}
+                        })}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="29"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Quarterly ($)</label>
+                      <input
+                        type="number"
+                        value={createForm.pricing.quarterly}
+                        onChange={(e) => setCreateForm({
+                          ...createForm, 
+                          pricing: {...createForm.pricing, quarterly: e.target.value}
+                        })}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="78"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Yearly ($)</label>
+                      <input
+                        type="number"
+                        value={createForm.pricing.yearly}
+                        onChange={(e) => setCreateForm({
+                          ...createForm, 
+                          pricing: {...createForm.pricing, yearly: e.target.value}
+                        })}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="290"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Features */}
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Features
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Max Employees *</label>
+                      <input
+                        type="number"
+                        required
+                        value={createForm.features.maxEmployees}
+                        onChange={(e) => setCreateForm({
+                          ...createForm, 
+                          features: {...createForm.features, maxEmployees: e.target.value}
+                        })}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="25"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Storage (GB)</label>
+                      <input
+                        type="number"
+                        value={createForm.features.storageLimit}
+                        onChange={(e) => setCreateForm({
+                          ...createForm, 
+                          features: {...createForm.features, storageLimit: e.target.value}
+                        })}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          theme === 'dark' 
+                            ? 'bg-gray-700 border-gray-600 text-white' 
+                            : 'bg-white border-gray-300 text-gray-900'
+                        }`}
+                        placeholder="10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Included Modules */}
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    Included Modules
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {modules.map(module => (
+                      <label key={module} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={createForm.includedModules.includes(module)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCreateForm({
+                                ...createForm,
+                                includedModules: [...createForm.includedModules, module]
+                              });
+                            } else {
+                              setCreateForm({
+                                ...createForm,
+                                includedModules: createForm.includedModules.filter(m => m !== module)
+                              });
+                            }
+                          }}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className={`text-sm ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                          {module.charAt(0).toUpperCase() + module.slice(1)}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className={`px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                      theme === 'dark' 
+                        ? 'border-gray-600 text-gray-300' 
+                        : 'border-gray-300 text-gray-700'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    Create Package
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
@@ -456,6 +759,37 @@ const PackageManagement = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Package Assignment Modal */}
+      {showAssignmentModal && (
+        <PackageAssignment
+          isOpen={showAssignmentModal}
+          onClose={() => setShowAssignmentModal(false)}
+        />
+      )}
+
+      {/* Create Package Modal */}
+      {showCreateModal && (
+        <PackageForm
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            fetchPackages();
+            setShowCreateModal(false);
+          }}
+        />
+      )}
+
+      {/* Edit Package Modal */}
+      {editingPackage && (
+        <PackageForm
+          package={editingPackage}
+          onClose={() => setEditingPackage(null)}
+          onSuccess={() => {
+            fetchPackages();
+            setEditingPackage(null);
+          }}
+        />
       )}
     </div>
   );

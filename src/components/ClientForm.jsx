@@ -10,6 +10,7 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
     companyName: '',
     clientCode: '',
     email: '',
+    adminEmail: '', // Admin user login email
     phone: '',
     address: '',
     contactPerson: '',
@@ -30,6 +31,7 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
         companyName: client.companyName || '',
         clientCode: client.clientCode || '',
         email: client.email || '',
+        adminEmail: client.contactPerson?.email || '', // Use contact person email as admin email
         phone: client.phone || '',
         address: typeof client.address === 'string' ? client.address : '',
         contactPerson: client.contactPerson?.name || '',
@@ -62,12 +64,13 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
         name: formData.companyName, // Use companyName for name field
         companyName: formData.companyName,
         email: formData.email,
+        adminEmail: formData.adminEmail, // Admin user email
         phone: formData.phone,
         address: formData.address,
         contactPerson: {
           name: formData.contactPerson,
-          email: formData.email, // Use same email for contact person
-          phone: formData.phone   // Use same phone for contact person
+          email: formData.adminEmail || formData.email, // Use admin email or fallback to company email
+          phone: formData.phone
         },
         status: formData.status,
         industry: formData.industry,
@@ -251,7 +254,7 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Email <span className="text-red-500">*</span>
+                  Company Email <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -267,9 +270,39 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
                         ? 'bg-gray-700 border-gray-600' 
                         : 'bg-white border-gray-300'
                     }`}
+                    placeholder="company@example.com"
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Admin User Email <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <input
+                    type="email"
+                    name="adminEmail"
+                    value={formData.adminEmail}
+                    onChange={handleChange}
+                    className={`w-full pl-10 px-3 py-2 rounded-lg border ${
+                      theme === 'dark' 
+                        ? 'bg-gray-700 border-gray-600' 
+                        : 'bg-white border-gray-300'
+                    }`}
+                    placeholder="admin@example.com"
+                    required
+                  />
+                </div>
+                <p className={`text-xs mt-1 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  This email will be used to create the admin user account (password: password123)
+                </p>
               </div>
 
               <div>
