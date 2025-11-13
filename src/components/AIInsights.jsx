@@ -23,6 +23,7 @@ const AIInsights = ({ analysis, compact = false }) => {
     weaknesses, 
     overallFit 
   } = analysis;
+  
 
   // Get fit badge styling
   const getFitBadge = (fit) => {

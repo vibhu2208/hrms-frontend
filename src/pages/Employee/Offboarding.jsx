@@ -1,25 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, CheckCircle, Circle, Clock } from 'lucide-react';
+import { Plus, CheckCircle, Circle, Clock, User, Calendar, FileText } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
 const stageLabels = [
-  { key: 'exitDiscussion', label: 'Exit Discussion' },
-  { key: 'assetReturn', label: 'Asset Return' },
-  { key: 'documentation', label: 'Documentation' },
-  { key: 'finalSettlement', label: 'Final Settlement' },
-  { key: 'success', label: 'Completed' }
+  { key: 'initiation', label: 'Initiation' },
+  { key: 'manager_approval', label: 'Manager Approval' },
+  { key: 'hr_approval', label: 'HR Approval' },
+  { key: 'finance_approval', label: 'Finance Approval' },
+  { key: 'checklist_generation', label: 'Checklist Generation' },
+  { key: 'departmental_clearance', label: 'Departmental Clearance' },
+  { key: 'asset_return', label: 'Asset Return' },
+  { key: 'knowledge_transfer', label: 'Knowledge Transfer' },
+  { key: 'final_settlement', label: 'Final Settlement' },
+  { key: 'exit_interview', label: 'Exit Interview' },
+  { key: 'closure', label: 'Closure' }
 ];
 
 const StageProgress = ({ stages, currentStage, status }) => {
-  const currentIndex = stages.indexOf(currentStage);
+  // Use stageLabels if stages is not provided or is undefined
+  const stageArray = stages || stageLabels.map(s => s.key);
+  const currentIndex = stageArray.indexOf(currentStage);
   
   return (
     <div className="flex items-center space-x-1">
-      {stages.map((stage, idx) => {
+      {stageArray.map((stage, idx) => {
         const done = status === 'completed' || idx < currentIndex;
         const current = idx === currentIndex && status !== 'completed';
-        const isLast = idx === stages.length - 1;
+        const isLast = idx === stageArray.length - 1;
         
         return (
           <div key={stage} className="flex items-center">
@@ -53,6 +61,8 @@ const Offboarding = () => {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showInitiateModal, setShowInitiateModal] = useState(false);
+  const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
     fetchList();
@@ -70,6 +80,15 @@ const Offboarding = () => {
     }
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const res = await api.get('/employees');
+      setEmployees(res?.data?.data || []);
+    } catch (e) {
+      toast.error('Failed to load employees');
+    }
+  };
+
   const advanceStage = async (id) => {
     try {
       await api.post(`/offboarding/${id}/advance`);
@@ -77,6 +96,17 @@ const Offboarding = () => {
       fetchList();
     } catch (e) {
       toast.error(e?.response?.data?.message || 'Failed to advance stage');
+    }
+  };
+
+  const initiateOffboarding = async (formData) => {
+    try {
+      await api.post('/offboarding', formData);
+      toast.success('Offboarding initiated successfully');
+      setShowInitiateModal(false);
+      fetchList();
+    } catch (e) {
+      toast.error(e?.response?.data?.message || 'Failed to initiate offboarding');
     }
   };
 
@@ -95,7 +125,13 @@ const Offboarding = () => {
           <h1 className="text-2xl font-bold text-white">Offboarding</h1>
           <p className="text-gray-400 mt-1">Manage employee exit process</p>
         </div>
-        <button className="btn-primary flex items-center space-x-2">
+        <button 
+          onClick={() => {
+            setShowInitiateModal(true);
+            fetchEmployees();
+          }}
+          className="btn-primary flex items-center space-x-2"
+        >
           <Plus size={20} />
           <span>Initiate Offboarding</span>
         </button>
@@ -108,9 +144,11 @@ const Offboarding = () => {
           className="input-field w-48"
         >
           <option value="all">All Status</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="closed">Completed</option>
         </select>
       </div>
 
@@ -119,18 +157,48 @@ const Offboarding = () => {
           <div key={item._id} className="card">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-white">
-                  {item.employee?.firstName} {item.employee?.lastName}
+                <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+                  <User size={18} />
+                  <span>
+                    {item.employeeId?.firstName && item.employeeId?.lastName 
+                      ? `${item.employeeId.firstName} ${item.employeeId.lastName}` 
+                      : 'Employee Name Not Available'
+                    }
+                  </span>
                 </h3>
-                <p className="text-sm text-gray-400">{item.employee?.email}</p>
-                <p className="text-sm text-gray-400 capitalize">
-                  Resignation Type: {item.resignationType}
-                </p>
+                <p className="text-sm text-gray-400">{item.employeeId?.email || 'Email not available'}</p>
+                <p className="text-sm text-gray-400">{item.employeeId?.employeeCode || 'Employee Code not available'}</p>
+                
+                {/* Employee Details */}
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <p className="text-sm text-gray-400 flex items-center space-x-1">
+                    <FileText size={14} />
+                    <span>Designation: {item.employeeId?.designation || 'Not specified'}</span>
+                  </p>
+                  <p className="text-sm text-gray-400 flex items-center space-x-1">
+                    <FileText size={14} />
+                    <span>Department: {item.employeeId?.department?.name || 'Not specified'}</span>
+                  </p>
+                </div>
+
+                {/* Offboarding Details */}
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <p className="text-sm text-gray-400 capitalize flex items-center space-x-1">
+                    <FileText size={14} />
+                    <span>Reason: {item.reason?.replace(/_/g, ' ') || 'Not specified'}</span>
+                  </p>
+                  <p className="text-sm text-gray-400 flex items-center space-x-1">
+                    <Calendar size={14} />
+                    <span>Priority: {item.priority || 'Medium'}</span>
+                  </p>
+                </div>
               </div>
               <span className={`badge ${
-                item.status === 'completed' ? 'badge-success' :
-                item.status === 'in-progress' ? 'badge-info' :
-                'badge-danger'
+                item.status === 'closed' ? 'badge-success' :
+                item.status === 'active' ? 'badge-info' :
+                item.status === 'approved' ? 'badge-success' :
+                item.status === 'rejected' ? 'badge-danger' :
+                'badge-warning'
               }`}>
                 {item.status}
               </span>
@@ -138,28 +206,89 @@ const Offboarding = () => {
 
             <div className="mb-4">
               <StageProgress 
-                stages={item.stages} 
                 currentStage={item.currentStage} 
                 status={item.status}
               />
             </div>
 
-            {item.lastWorkingDate && (
+            {item.lastWorkingDay && (
               <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded-lg">
-                <p className="text-sm text-red-400">
-                  Last Working Date: {new Date(item.lastWorkingDate).toLocaleDateString()}
+                <p className="text-sm text-red-400 flex items-center space-x-1">
+                  <Calendar size={14} />
+                  <span>Last Working Day: {new Date(item.lastWorkingDay).toLocaleDateString()}</span>
                 </p>
               </div>
             )}
 
-            {item.status === 'in-progress' && (
-              <button
-                onClick={() => advanceStage(item._id)}
-                className="btn-primary text-sm"
-              >
-                Advance Stage
-              </button>
-            )}
+            {/* Approval Status Section */}
+            <div className="mb-4 p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+              <h4 className="text-sm font-semibold text-white mb-2">Current Status & Approvals</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <p className="text-sm text-gray-400">
+                    <span className="font-medium">Current Stage:</span> {stageLabels.find(s => s.key === item.currentStage)?.label || item.currentStage}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    <span className="font-medium">Overall Status:</span> 
+                    <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                      item.status === 'closed' ? 'bg-green-900 text-green-300' :
+                      item.status === 'active' ? 'bg-blue-900 text-blue-300' :
+                      item.status === 'approved' ? 'bg-green-900 text-green-300' :
+                      item.status === 'rejected' ? 'bg-red-900 text-red-300' :
+                      'bg-yellow-900 text-yellow-300'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  {item.completionPercentage && (
+                    <p className="text-sm text-gray-400">
+                      <span className="font-medium">Progress:</span> {item.completionPercentage}%
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-400">
+                    <span className="font-medium">Created:</span> {new Date(item.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Approval Details */}
+              {item.approvals && item.approvals.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <p className="text-sm font-medium text-white mb-2">Approval History:</p>
+                  <div className="space-y-1">
+                    {item.approvals.map((approval, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <span className="text-gray-400 capitalize">{approval.stage} Approval:</span>
+                        <span className={`px-2 py-1 rounded ${
+                          approval.status === 'approved' ? 'bg-green-900 text-green-300' :
+                          approval.status === 'rejected' ? 'bg-red-900 text-red-300' :
+                          'bg-yellow-900 text-yellow-300'
+                        }`}>
+                          {approval.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-400">
+                <p>Initiated: {new Date(item.createdAt).toLocaleDateString()}</p>
+              </div>
+              
+              {item.status === 'active' && (
+                <button
+                  onClick={() => advanceStage(item._id)}
+                  className="btn-primary text-sm"
+                >
+                  Advance Stage
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -169,6 +298,165 @@ const Offboarding = () => {
           <p className="text-gray-400">No offboarding records found</p>
         </div>
       )}
+
+      {/* Initiate Offboarding Modal */}
+      {showInitiateModal && (
+        <InitiateOffboardingModal
+          employees={employees}
+          onClose={() => setShowInitiateModal(false)}
+          onSubmit={initiateOffboarding}
+        />
+      )}
+    </div>
+  );
+};
+
+// Initiate Offboarding Modal Component
+const InitiateOffboardingModal = ({ employees, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    reason: '',
+    reasonDetails: '',
+    lastWorkingDay: '',
+    noticePeriod: 30,
+    priority: 'medium'
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.employeeId || !formData.reason || !formData.lastWorkingDay) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white">Initiate Offboarding</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Employee *
+            </label>
+            <select
+              value={formData.employeeId}
+              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+              className="input-field w-full"
+              required
+            >
+              <option value="">Select Employee</option>
+              {employees.map((emp) => (
+                <option key={emp._id} value={emp._id}>
+                  {emp.firstName} {emp.lastName} - {emp.email}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Reason *
+            </label>
+            <select
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              className="input-field w-full"
+              required
+            >
+              <option value="">Select Reason</option>
+              <option value="voluntary_resignation">Voluntary Resignation</option>
+              <option value="involuntary_termination">Involuntary Termination</option>
+              <option value="retirement">Retirement</option>
+              <option value="contract_end">Contract End</option>
+              <option value="layoff">Layoff</option>
+              <option value="performance_issues">Performance Issues</option>
+              <option value="misconduct">Misconduct</option>
+              <option value="mutual_agreement">Mutual Agreement</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Reason Details
+            </label>
+            <textarea
+              value={formData.reasonDetails}
+              onChange={(e) => setFormData({ ...formData, reasonDetails: e.target.value })}
+              className="input-field w-full"
+              rows="3"
+              placeholder="Additional details about the offboarding reason..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Last Working Day *
+            </label>
+            <input
+              type="date"
+              value={formData.lastWorkingDay}
+              onChange={(e) => setFormData({ ...formData, lastWorkingDay: e.target.value })}
+              className="input-field w-full"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Notice Period (days)
+            </label>
+            <input
+              type="number"
+              value={formData.noticePeriod}
+              onChange={(e) => setFormData({ ...formData, noticePeriod: parseInt(e.target.value) })}
+              className="input-field w-full"
+              min="0"
+              max="365"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Priority
+            </label>
+            <select
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              className="input-field w-full"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 btn-primary"
+            >
+              Initiate Offboarding
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
