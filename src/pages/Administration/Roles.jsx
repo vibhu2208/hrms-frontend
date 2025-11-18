@@ -28,7 +28,7 @@ const Roles = () => {
     roleType: '',
     userEmail: '',
     userName: '',
-    clientId: '6914486fef016d63d6ac03ce' // Default tenant ID
+    clientId: '6914486fef016d63d6ac03ce' // Default teasnant ID
   });
 
   useEffect(() => {
