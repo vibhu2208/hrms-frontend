@@ -25,6 +25,7 @@ import CandidateTimeline from './pages/CandidateTimeline';
 // Employee Pages
 import EmployeeList from './pages/Employee/EmployeeList';
 import EmployeeAdd from './pages/Employee/EmployeeAdd';
+import EmployeeEdit from './pages/Employee/EmployeeEdit';
 import EmployeeDetail from './pages/Employee/EmployeeDetail';
 import Onboarding from './pages/Employee/Onboarding';
 import Offboarding from './pages/Employee/Offboarding';
@@ -162,6 +163,7 @@ function App() {
             <Route path="employees" element={<EmployeeList />} />
             <Route path="employees/add" element={<EmployeeAdd />} />
             <Route path="employees/bulk-upload" element={<BulkEmployeeUpload />} />
+            <Route path="employees/:id/edit" element={<EmployeeEdit />} />
             <Route path="employees/:id" element={<EmployeeDetail />} />
             <Route path="employees/onboarding" element={<Onboarding />} />
             <Route path="employees/offboarding" element={<Offboarding />} />

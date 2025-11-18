@@ -23,36 +23,70 @@ const StageProgress = ({ stages, currentStage, status }) => {
   const currentIndex = stageArray.indexOf(currentStage);
   
   return (
-    <div className="flex items-center space-x-1">
-      {stageArray.map((stage, idx) => {
-        const done = status === 'completed' || idx < currentIndex;
-        const current = idx === currentIndex && status !== 'completed';
-        const isLast = idx === stageArray.length - 1;
-        
-        return (
-          <div key={stage} className="flex items-center">
-            <div className="flex flex-col items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${
-                done ? 'bg-green-500 text-white' : 
-                current ? 'bg-blue-500 text-white animate-pulse' : 
-                'bg-gray-700 text-gray-400'
-              }`}>
-                {done ? <CheckCircle size={18} /> : current ? <Clock size={18} /> : <Circle size={18} />}
+    <div className="w-full">
+      {/* Mobile View - Vertical Layout */}
+      <div className="block lg:hidden">
+        <div className="space-y-2">
+          {stageArray.map((stage, idx) => {
+            const done = status === 'completed' || idx < currentIndex;
+            const current = idx === currentIndex && status !== 'completed';
+            
+            return (
+              <div key={stage} className="flex items-center space-x-3">
+                <div className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${
+                  done ? 'bg-green-500 text-white' : 
+                  current ? 'bg-blue-500 text-white animate-pulse' : 
+                  'bg-gray-700 text-gray-400'
+                }`}>
+                  {done ? <CheckCircle size={14} /> : current ? <Clock size={14} /> : <Circle size={14} />}
+                </div>
+                <div className={`text-xs font-medium ${
+                  done ? 'text-green-400' : current ? 'text-blue-400' : 'text-gray-500'
+                }`}>
+                  {stageLabels.find(x => x.key === stage)?.label || stage}
+                </div>
               </div>
-              <div className={`mt-1 text-xs font-medium text-center ${
-                done ? 'text-green-400' : current ? 'text-blue-400' : 'text-gray-500'
-              }`}>
-                {stageLabels.find(x => x.key === stage)?.label || stage}
-              </div>
-            </div>
-            {!isLast && (
-              <div className={`mx-3 h-0.5 w-16 transition-all duration-300 ${
-                done ? 'bg-green-500' : 'bg-gray-700'
-              }`}></div>
-            )}
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Desktop View - Horizontal Scrollable Layout */}
+      <div className="hidden lg:block">
+        <div className="overflow-x-auto pb-2">
+          <div className="flex items-center space-x-1 min-w-max">
+            {stageArray.map((stage, idx) => {
+              const done = status === 'completed' || idx < currentIndex;
+              const current = idx === currentIndex && status !== 'completed';
+              const isLast = idx === stageArray.length - 1;
+              
+              return (
+                <div key={stage} className="flex items-center flex-shrink-0">
+                  <div className="flex flex-col items-center">
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${
+                      done ? 'bg-green-500 text-white' : 
+                      current ? 'bg-blue-500 text-white animate-pulse' : 
+                      'bg-gray-700 text-gray-400'
+                    }`}>
+                      {done ? <CheckCircle size={18} /> : current ? <Clock size={18} /> : <Circle size={18} />}
+                    </div>
+                    <div className={`mt-1 text-xs font-medium text-center whitespace-nowrap ${
+                      done ? 'text-green-400' : current ? 'text-blue-400' : 'text-gray-500'
+                    }`}>
+                      {stageLabels.find(x => x.key === stage)?.label || stage}
+                    </div>
+                  </div>
+                  {!isLast && (
+                    <div className={`mx-3 h-0.5 w-12 transition-all duration-300 flex-shrink-0 ${
+                      done ? 'bg-green-500' : 'bg-gray-700'
+                    }`}></div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      </div>
     </div>
   );
 };
@@ -71,7 +105,7 @@ const Offboarding = () => {
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/offboarding');
+      const res = await api.get('/tenant/offboarding');
       setList(res?.data?.data || []);
     } catch (e) {
       toast.error(e?.response?.data?.message || 'Failed to load offboarding list');
@@ -91,7 +125,7 @@ const Offboarding = () => {
 
   const advanceStage = async (id) => {
     try {
-      await api.post(`/offboarding/${id}/advance`);
+      await api.put(`/tenant/offboarding/${id}/approve`);
       toast.success('Stage advanced successfully');
       fetchList();
     } catch (e) {
@@ -101,7 +135,7 @@ const Offboarding = () => {
 
   const initiateOffboarding = async (formData) => {
     try {
-      await api.post('/offboarding', formData);
+      await api.post('/tenant/offboarding', formData);
       toast.success('Offboarding initiated successfully');
       setShowInitiateModal(false);
       fetchList();
@@ -120,7 +154,7 @@ const Offboarding = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Offboarding</h1>
           <p className="text-gray-400 mt-1">Manage employee exit process</p>
@@ -130,7 +164,7 @@ const Offboarding = () => {
             setShowInitiateModal(true);
             fetchEmployees();
           }}
-          className="btn-primary flex items-center space-x-2"
+          className="btn-primary flex items-center space-x-2 w-full sm:w-auto"
         >
           <Plus size={20} />
           <span>Initiate Offboarding</span>
@@ -155,56 +189,59 @@ const Offboarding = () => {
       <div className="space-y-4">
         {filteredList.map((item) => (
           <div key={item._id} className="card">
-            <div className="flex items-start justify-between mb-4">
-              <div>
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+              <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
                   <User size={18} />
-                  <span>
+                  <span className="truncate">
                     {item.employeeId?.firstName && item.employeeId?.lastName 
                       ? `${item.employeeId.firstName} ${item.employeeId.lastName}` 
                       : 'Employee Name Not Available'
                     }
                   </span>
                 </h3>
-                <p className="text-sm text-gray-400">{item.employeeId?.email || 'Email not available'}</p>
+                <p className="text-sm text-gray-400 truncate">{item.employeeId?.email || 'Email not available'}</p>
                 <p className="text-sm text-gray-400">{item.employeeId?.employeeCode || 'Employee Code not available'}</p>
                 
                 {/* Employee Details */}
-                <div className="flex flex-wrap gap-4 mt-2">
-                  <p className="text-sm text-gray-400 flex items-center space-x-1">
-                    <FileText size={14} />
-                    <span>Designation: {item.employeeId?.designation || 'Not specified'}</span>
-                  </p>
-                  <p className="text-sm text-gray-400 flex items-center space-x-1">
-                    <FileText size={14} />
-                    <span>Department: {item.employeeId?.department?.name || 'Not specified'}</span>
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                  <div className="text-sm text-gray-400 flex items-center space-x-1 min-w-0">
+                    <FileText size={14} className="flex-shrink-0" />
+                    <span className="truncate">Designation: {item.employeeId?.designation || 'Not specified'}</span>
+                  </div>
+                  <div className="text-sm text-gray-400 flex items-center space-x-1 min-w-0">
+                    <FileText size={14} className="flex-shrink-0" />
+                    <span className="truncate">Department: {item.employeeId?.department?.name || 'Not specified'}</span>
+                  </div>
                 </div>
 
                 {/* Offboarding Details */}
-                <div className="flex flex-wrap gap-4 mt-2">
-                  <p className="text-sm text-gray-400 capitalize flex items-center space-x-1">
-                    <FileText size={14} />
-                    <span>Reason: {item.reason?.replace(/_/g, ' ') || 'Not specified'}</span>
-                  </p>
-                  <p className="text-sm text-gray-400 flex items-center space-x-1">
-                    <Calendar size={14} />
-                    <span>Priority: {item.priority || 'Medium'}</span>
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                  <div className="text-sm text-gray-400 capitalize flex items-center space-x-1 min-w-0">
+                    <FileText size={14} className="flex-shrink-0" />
+                    <span className="truncate">Reason: {item.reason?.replace(/_/g, ' ') || 'Not specified'}</span>
+                  </div>
+                  <div className="text-sm text-gray-400 flex items-center space-x-1 min-w-0">
+                    <Calendar size={14} className="flex-shrink-0" />
+                    <span className="truncate">Priority: {item.priority || 'Medium'}</span>
+                  </div>
                 </div>
               </div>
-              <span className={`badge ${
-                item.status === 'closed' ? 'badge-success' :
-                item.status === 'active' ? 'badge-info' :
-                item.status === 'approved' ? 'badge-success' :
-                item.status === 'rejected' ? 'badge-danger' :
-                'badge-warning'
-              }`}>
-                {item.status}
-              </span>
+              <div className="flex flex-col items-end gap-2">
+                <span className={`badge whitespace-nowrap ${
+                  item.status === 'closed' ? 'badge-success' :
+                  item.status === 'active' ? 'badge-info' :
+                  item.status === 'approved' ? 'badge-success' :
+                  item.status === 'rejected' ? 'badge-danger' :
+                  'badge-warning'
+                }`}>
+                  {item.status}
+                </span>
+              </div>
             </div>
 
             <div className="mb-4">
+              <h4 className="text-sm font-semibold text-white mb-3">Progress Stages</h4>
               <StageProgress 
                 currentStage={item.currentStage} 
                 status={item.status}
@@ -223,14 +260,15 @@ const Offboarding = () => {
             {/* Approval Status Section */}
             <div className="mb-4 p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
               <h4 className="text-sm font-semibold text-white mb-2">Current Status & Approvals</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <p className="text-sm text-gray-400">
-                    <span className="font-medium">Current Stage:</span> {stageLabels.find(s => s.key === item.currentStage)?.label || item.currentStage}
+                    <span className="font-medium">Current Stage:</span> 
+                    <span className="block mt-1 break-words">{stageLabels.find(s => s.key === item.currentStage)?.label || item.currentStage}</span>
                   </p>
                   <p className="text-sm text-gray-400">
                     <span className="font-medium">Overall Status:</span> 
-                    <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                    <span className={`ml-2 px-2 py-1 rounded text-xs inline-block ${
                       item.status === 'closed' ? 'bg-green-900 text-green-300' :
                       item.status === 'active' ? 'bg-blue-900 text-blue-300' :
                       item.status === 'approved' ? 'bg-green-900 text-green-300' :
@@ -241,7 +279,7 @@ const Offboarding = () => {
                     </span>
                   </p>
                 </div>
-                <div>
+                <div className="space-y-2">
                   {item.completionPercentage && (
                     <p className="text-sm text-gray-400">
                       <span className="font-medium">Progress:</span> {item.completionPercentage}%
@@ -256,12 +294,12 @@ const Offboarding = () => {
               {/* Approval Details */}
               {item.approvals && item.approvals.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-gray-700">
-                  <p className="text-sm font-medium text-white mb-2">Approval History:</p>
-                  <div className="space-y-1">
+                  <h5 className="text-xs font-semibold text-gray-300 mb-2">Approval Chain</h5>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
                     {item.approvals.map((approval, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs">
-                        <span className="text-gray-400 capitalize">{approval.stage} Approval:</span>
-                        <span className={`px-2 py-1 rounded ${
+                      <div key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs gap-1">
+                        <span className="text-gray-400 capitalize break-words">{approval.stage} Approval:</span>
+                        <span className={`px-2 py-1 rounded whitespace-nowrap self-start sm:self-auto ${
                           approval.status === 'approved' ? 'bg-green-900 text-green-300' :
                           approval.status === 'rejected' ? 'bg-red-900 text-red-300' :
                           'bg-yellow-900 text-yellow-300'
@@ -275,7 +313,7 @@ const Offboarding = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm text-gray-400">
                 <p>Initiated: {new Date(item.createdAt).toLocaleDateString()}</p>
               </div>
@@ -283,7 +321,7 @@ const Offboarding = () => {
               {item.status === 'active' && (
                 <button
                   onClick={() => advanceStage(item._id)}
-                  className="btn-primary text-sm"
+                  className="btn-primary text-sm w-full sm:w-auto"
                 >
                   Advance Stage
                 </button>
@@ -332,11 +370,11 @@ const InitiateOffboardingModal = ({ employees, onClose, onSubmit }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold text-white">Initiate Offboarding</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-white self-end sm:self-auto">
             ×
           </button>
         </div>

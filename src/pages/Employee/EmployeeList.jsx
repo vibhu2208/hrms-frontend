@@ -118,14 +118,14 @@ const EmployeeList = () => {
           <table className="table">
             <thead>
               <tr>
-                <th>Employee</th>
-                <th>Employee Code</th>
-                <th>Department</th>
-                <th>Designation</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th className="min-w-[200px]">Employee</th>
+                <th className="min-w-[120px]">Employee Code</th>
+                <th className="min-w-[120px]">Department</th>
+                <th className="min-w-[120px]">Designation</th>
+                <th className="min-w-[200px]">Email</th>
+                <th className="min-w-[120px]">Phone</th>
+                <th className="min-w-[100px]">Status</th>
+                <th className="min-w-[120px]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -163,9 +163,12 @@ const EmployeeList = () => {
                       >
                         <Eye size={16} />
                       </Link>
-                      <button className="p-2 text-yellow-400 hover:bg-dark-800 rounded">
+                      <Link
+                        to={`/employees/${employee._id}/edit`}
+                        className="p-2 text-yellow-400 hover:bg-dark-800 rounded"
+                      >
                         <Edit size={16} />
-                      </button>
+                      </Link>
                       <button
                         onClick={() => handleDelete(employee._id)}
                         className="p-2 text-red-400 hover:bg-dark-800 rounded"
