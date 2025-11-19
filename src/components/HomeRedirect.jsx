@@ -12,9 +12,11 @@ const HomeRedirect = () => {
   // Role-based redirection
   if (user.role === 'superadmin') {
     return <Navigate to="/super-admin/dashboard" replace />;
-  } else if (user.role === 'employee') {
+  } else if (user.role === 'employee' || user.role === 'manager') {
+    // Both employee and manager use employee portal
     return <Navigate to="/employee/dashboard" replace />;
-  } else if (user.role === 'company_admin' || user.role === 'admin' || user.role === 'hr' || user.role === 'manager') {
+  } else if (user.role === 'company_admin' || user.role === 'admin' || user.role === 'hr') {
+    // Admin and HR use admin dashboard
     return <Navigate to="/dashboard" replace />;
   } else {
     // Default fallback

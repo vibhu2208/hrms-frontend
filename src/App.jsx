@@ -96,6 +96,23 @@ import EmployeeProjects from './pages/EmployeeDashboard/EmployeeProjects';
 import EmployeeRequests from './pages/EmployeeDashboard/EmployeeRequests';
 import EmployeeProfile from './pages/EmployeeDashboard/EmployeeProfile';
 
+// Modern Employee Dashboard Pages
+import ModernEmployeeHome from './pages/EmployeeDashboard/ModernEmployeeHome';
+import ModernLeaveBalance from './pages/EmployeeDashboard/ModernLeaveBalance';
+import ModernApplyLeave from './pages/EmployeeDashboard/ModernApplyLeave';
+import ModernAttendance from './pages/EmployeeDashboard/ModernAttendance';
+import ModernMyTeam from './pages/EmployeeDashboard/ModernMyTeam';
+import ModernPayslips from './pages/EmployeeDashboard/ModernPayslips';
+import ModernProjects from './pages/EmployeeDashboard/ModernProjects';
+import ModernProfile from './pages/EmployeeDashboard/ModernProfile';
+
+// Manager Dashboard Pages
+import ManagerHome from './pages/ManagerDashboard/ManagerHome';
+import LeaveApprovals from './pages/ManagerDashboard/LeaveApprovals';
+import AssignProject from './pages/ManagerDashboard/AssignProject';
+import ScheduleMeeting from './pages/ManagerDashboard/ScheduleMeeting';
+import Announcements from './pages/ManagerDashboard/Announcements';
+
 // Super Admin Pages
 import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
 import ClientManagement from './pages/SuperAdmin/ClientManagement';
@@ -228,23 +245,34 @@ function App() {
             <Route path="settings/theme" element={<ThemeSettings />} />
           </Route>
 
-          {/* Employee Dashboard Routes */}
+          {/* Employee Dashboard Routes (includes Manager) */}
           <Route
             path="/employee/*"
             element={
-              <ProtectedRoute roles={['employee']}>
+              <ProtectedRoute roles={['employee', 'manager']}>
                 <EmployeeDashboardLayout />
               </ProtectedRoute>
             }
           >
-            <Route path="dashboard" element={<EmployeeHome />} />
+            <Route path="dashboard" element={<ModernEmployeeHome />} />
+            <Route path="home" element={<ModernEmployeeHome />} />
             <Route path="leave" element={<EmployeeLeave />} />
-            <Route path="attendance" element={<EmployeeAttendance />} />
-            <Route path="payslips" element={<EmployeePayslips />} />
-            <Route path="projects" element={<EmployeeProjects />} />
+            <Route path="leave/balance" element={<ModernLeaveBalance />} />
+            <Route path="leave/apply" element={<ModernApplyLeave />} />
+            <Route path="attendance" element={<ModernAttendance />} />
+            <Route path="team" element={<ModernMyTeam />} />
+            <Route path="payslips" element={<ModernPayslips />} />
+            <Route path="projects" element={<ModernProjects />} />
             <Route path="requests" element={<EmployeeRequests />} />
-            <Route path="profile" element={<EmployeeProfile />} />
+            <Route path="profile" element={<ModernProfile />} />
             <Route path="settings/theme" element={<ThemeSettings />} />
+            
+            {/* Manager Extra Routes */}
+            <Route path="manager/home" element={<ManagerHome />} />
+            <Route path="manager/leave-approvals" element={<LeaveApprovals />} />
+            <Route path="manager/assign-project" element={<AssignProject />} />
+            <Route path="manager/schedule-meeting" element={<ScheduleMeeting />} />
+            <Route path="manager/announcements" element={<Announcements />} />
           </Route>
 
           {/* Super Admin Routes */}

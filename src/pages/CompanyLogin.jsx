@@ -98,9 +98,11 @@ const CompanyLogin = () => {
       const userData = JSON.parse(localStorage.getItem('user'));
       
       // Role-based redirection for multi-tenant users
-      if (userData?.role === 'employee') {
+      if (userData?.role === 'employee' || userData?.role === 'manager') {
+        // Both employee and manager use employee portal
         navigate('/employee/dashboard');
-      } else if (userData?.role === 'company_admin' || userData?.role === 'admin' || userData?.role === 'hr' || userData?.role === 'manager') {
+      } else if (userData?.role === 'company_admin' || userData?.role === 'admin' || userData?.role === 'hr') {
+        // Admin and HR use admin dashboard
         navigate('/dashboard');
       } else {
         navigate('/dashboard');
