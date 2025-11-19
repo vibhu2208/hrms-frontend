@@ -95,7 +95,7 @@ const SubscriptionManagement = () => {
         toast.error('Access denied. You don\'t have permission to view subscriptions.');
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
         console.error('🌐 Network error - backend server may be down');
-        toast.error('Cannot connect to server. Please check if the backend is running on port 5000.');
+        toast.error('Cannot connect to server. Please check if the backend is running on port 5001.');
       } else {
         console.error('💥 Unexpected error:', error.message);
         toast.error('Failed to fetch subscriptions: ' + error.message);

@@ -68,7 +68,7 @@ const OfferTemplates = () => {
         sampleData: {
           candidateName: 'John Doe',
           designation: 'Software Engineer',
-          ctc: '500000',
+          ctc: '500100',
           startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toDateString(),
           companyName: 'Your Company'
         }

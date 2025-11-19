@@ -17,12 +17,12 @@ Updated both files to use the centralized `api.config.js` which properly handles
 
 ### Files Modified:
 1. **`frontend/src/pages/Public/CareersPage.jsx`**
-   - Changed: `const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';`
+   - Changed: `const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';`
    - To: `const API_BASE_URL = config.apiBaseUrl;`
    - Added import: `import { config } from '../../config/api.config';`
 
 2. **`frontend/src/components/ResumeSubmissionModal.jsx`**
-   - Changed: `const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';`
+   - Changed: `const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';`
    - To: `const API_BASE_URL = config.apiBaseUrl;`
    - Added import: `import { config } from '../config/api.config';`
 
@@ -31,7 +31,7 @@ Updated both files to use the centralized `api.config.js` which properly handles
 ### Development Mode (`npm run dev`):
 - `config.apiBaseUrl` = `/api`
 - Requests go to `/api/public/jobs`
-- Vite proxy forwards to `http://localhost:5000/api/public/jobs`
+- Vite proxy forwards to `http://localhost:5001/api/public/jobs`
 
 ### Production Mode (deployed):
 - `config.apiBaseUrl` = `https://hrms-backend-xbz8.onrender.com/api`

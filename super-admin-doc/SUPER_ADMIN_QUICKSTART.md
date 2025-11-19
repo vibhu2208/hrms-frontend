@@ -14,7 +14,7 @@
 cd hrms-backend
 npm start
 ```
-The server should start on `http://localhost:5000`
+The server should start on `http://localhost:5001`
 
 #### Frontend
 ```bash
@@ -66,25 +66,25 @@ You can test the API endpoints directly:
 #### Dashboard Stats
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:5000/api/super-admin/dashboard/stats
+  http://localhost:5001/api/super-admin/dashboard/stats
 ```
 
 #### System Health
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:5000/api/super-admin/dashboard/health
+  http://localhost:5001/api/super-admin/dashboard/health
 ```
 
 #### List Packages
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:5000/api/super-admin/packages
+  http://localhost:5001/api/super-admin/packages
 ```
 
 #### List Clients
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:5000/api/super-admin/clients
+  http://localhost:5001/api/super-admin/clients
 ```
 
 ### 🎨 UI/UX Testing
@@ -125,7 +125,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ### Issue: Frontend not connecting to backend
 **Solution**:
-1. Check backend is running on port 5000
+1. Check backend is running on port 5001
 2. Verify CORS settings in backend
 3. Check frontend API base URL configuration
 

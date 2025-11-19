@@ -502,7 +502,7 @@ describe('SuperAdmin Controller', () => {
 ```bash
 # Backend (.env)
 NODE_ENV=production
-PORT=5000
+PORT=5001
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=your-secret-key
 JWT_EXPIRE=30d

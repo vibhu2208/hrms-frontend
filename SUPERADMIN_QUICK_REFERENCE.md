@@ -46,7 +46,7 @@ Role: superadmin
 | Can't login | Check credentials, clear cache |
 | Clients not showing | Refresh page (Ctrl+F5) |
 | Create button missing | Check if logged in as superadmin |
-| API errors | Check backend server (port 5000) |
+| API errors | Check backend server (port 5001) |
 
 ### Debug Commands (Browser Console)
 ```javascript
@@ -67,7 +67,7 @@ fetch('/api/super-admin/clients', {
 4. **Employee** → Self-service only
 
 ## 🛠️ System Status Check
-- Backend: `http://localhost:5000`
+- Backend: `http://localhost:5001`
 - Frontend: `http://localhost:5173`
 - Database: MongoDB Atlas (auto-connected)
 

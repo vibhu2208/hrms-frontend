@@ -1334,7 +1334,7 @@ const SendOfferModal = ({ candidate, onClose, onSend }) => {
               value={formData.salary}
               onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
               className={`input-field w-full ${errors.salary ? 'border-red-500' : ''}`}
-              placeholder="e.g., 500000"
+              placeholder="e.g., 500100"
             />
             {errors.salary && (
               <p className="text-red-400 text-sm mt-1">{errors.salary}</p>

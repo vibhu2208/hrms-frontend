@@ -35,7 +35,7 @@ const CandidateDocuments = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/candidate-documents/public/validate`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/candidate-documents/public/validate`,
         { candidateCode: candidateCode.trim() }
       );
 
@@ -113,7 +113,7 @@ const CandidateDocuments = () => {
       }));
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/candidate-documents/public/submit`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/candidate-documents/public/submit`,
         submitData,
         {
           headers: {

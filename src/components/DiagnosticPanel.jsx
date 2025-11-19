@@ -89,7 +89,7 @@ const DiagnosticPanel = () => {
         name: 'Backend Connectivity',
         status: 'error',
         message: 'Cannot connect to backend server',
-        details: error.message || 'Network error - check if backend is running on port 5000'
+        details: error.message || 'Network error - check if backend is running on port 5001'
       });
     }
 

@@ -341,7 +341,7 @@ DELETE /api/super-admin/packages/:id     # Delete package
 **Problem**: Cannot login as superadmin
 **Solutions**:
 - Verify credentials: `superadminb41fitot@hrms.com` / `admin123`
-- Check backend server is running on port 5000
+- Check backend server is running on port 5001
 - Clear browser cache and cookies
 - Check network connectivity
 

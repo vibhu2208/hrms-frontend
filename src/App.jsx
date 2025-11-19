@@ -114,7 +114,7 @@ function App() {
           <Toaster
             position="top-right"
             toastOptions={{
-              duration: 5000,
+              duration: 5001,
               style: {
                 background: '#1e293b',
                 color: '#f1f5f9',

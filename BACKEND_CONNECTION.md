@@ -60,7 +60,7 @@ proxy: {
 ### 4. `src/api/axios.js` (Smart Base URL)
 ```javascript
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5000'),
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5001'),
   // ...
 });
 ```

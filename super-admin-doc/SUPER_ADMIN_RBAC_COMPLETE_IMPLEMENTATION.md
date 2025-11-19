@@ -544,7 +544,7 @@ router.post('/users',
 ```bash
 # Test unauthorized API access
 curl -H "Authorization: Bearer <finance_admin_token>" \
-     http://localhost:5000/api/super-admin/users \
+     http://localhost:5001/api/super-admin/users \
      # Should fail for role_management access
 ```
 
