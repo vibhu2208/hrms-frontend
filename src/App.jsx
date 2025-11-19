@@ -11,6 +11,10 @@ import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 // Auth Pages
 import Login from './pages/Login';
+import LoginLanding from './pages/LoginLanding';
+import CompanySelect from './pages/CompanySelect';
+import CompanyLogin from './pages/CompanyLogin';
+import SuperAdminLogin from './pages/SuperAdminLogin';
 
 // Public Pages
 import CareersPage from './pages/Public/CareersPage';
@@ -136,7 +140,11 @@ function App() {
           />
           <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<LoginLanding />} />
+          <Route path="/login/company-select" element={<CompanySelect />} />
+          <Route path="/login/super-admin" element={<SuperAdminLogin />} />
+          <Route path="/login/old" element={<Login />} />
+          <Route path="/login/:companySlug" element={<CompanyLogin />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/jobs" element={<CareersPage />} />
           <Route path="/candidate-documents" element={<CandidateDocuments />} />
