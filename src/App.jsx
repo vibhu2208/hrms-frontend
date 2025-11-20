@@ -284,6 +284,8 @@ function App() {
             <Route path="hr/attendance" element={<HREmployees />} />
             <Route path="hr/payroll" element={<HREmployees />} />
             <Route path="hr/recruitment" element={<JobDesk />} />
+            <Route path="hr/recruitment/:jobId/applicants" element={<ViewApplicants />} />
+            <Route path="hr/recruitment/candidates/:candidateId/timeline" element={<CandidateTimeline />} />
             <Route path="hr/performance" element={<HREmployees />} />
           </Route>
 
