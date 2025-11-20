@@ -113,6 +113,10 @@ import AssignProject from './pages/ManagerDashboard/AssignProject';
 import ScheduleMeeting from './pages/ManagerDashboard/ScheduleMeeting';
 import Announcements from './pages/ManagerDashboard/Announcements';
 
+// HR Dashboard Pages
+import HRHome from './pages/HRDashboard/HRHome';
+import HREmployees from './pages/HRDashboard/HREmployees';
+
 // Super Admin Pages
 import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
 import ClientManagement from './pages/SuperAdmin/ClientManagement';
@@ -245,11 +249,11 @@ function App() {
             <Route path="settings/theme" element={<ThemeSettings />} />
           </Route>
 
-          {/* Employee Dashboard Routes (includes Manager) */}
+          {/* Employee Dashboard Routes (includes Manager and HR) */}
           <Route
             path="/employee/*"
             element={
-              <ProtectedRoute roles={['employee', 'manager']}>
+              <ProtectedRoute roles={['employee', 'manager', 'hr']}>
                 <EmployeeDashboardLayout />
               </ProtectedRoute>
             }
@@ -273,6 +277,14 @@ function App() {
             <Route path="manager/assign-project" element={<AssignProject />} />
             <Route path="manager/schedule-meeting" element={<ScheduleMeeting />} />
             <Route path="manager/announcements" element={<Announcements />} />
+            
+            {/* HR Extra Routes */}
+            <Route path="hr/dashboard" element={<HRHome />} />
+            <Route path="hr/employees" element={<HREmployees />} />
+            <Route path="hr/attendance" element={<HREmployees />} />
+            <Route path="hr/payroll" element={<HREmployees />} />
+            <Route path="hr/recruitment" element={<JobDesk />} />
+            <Route path="hr/performance" element={<HREmployees />} />
           </Route>
 
           {/* Super Admin Routes */}
