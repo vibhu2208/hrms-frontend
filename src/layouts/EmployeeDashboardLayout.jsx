@@ -22,7 +22,10 @@ import {
   CheckCircle,
   UserPlus,
   CalendarPlus,
-  MessageSquare
+  MessageSquare,
+  Users,
+  ClipboardList,
+  TrendingUp
 } from 'lucide-react';
 
 const EmployeeDashboardLayout = () => {
@@ -34,6 +37,7 @@ const EmployeeDashboardLayout = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const isManager = user?.role === 'manager';
+  const isHR = user?.role === 'hr';
 
   const employeeNavigation = [
     { name: 'Dashboard', href: '/employee/dashboard', icon: Home },
@@ -53,9 +57,21 @@ const EmployeeDashboardLayout = () => {
     { name: 'Announcements', href: '/employee/manager/announcements', icon: MessageSquare },
   ];
 
-  const navigation = isManager 
-    ? [...employeeNavigation, ...managerNavigation]
-    : employeeNavigation;
+  const hrNavigation = [
+    { name: 'HR Dashboard', href: '/employee/hr/dashboard', icon: ClipboardList },
+    { name: 'Employee Management', href: '/employee/hr/employees', icon: Users },
+    { name: 'Attendance Reports', href: '/employee/hr/attendance', icon: Clock },
+    { name: 'Payroll Management', href: '/employee/hr/payroll', icon: DollarSign },
+    { name: 'Recruitment', href: '/employee/hr/recruitment', icon: UserPlus },
+    { name: 'Performance', href: '/employee/hr/performance', icon: TrendingUp },
+  ];
+
+  let navigation = employeeNavigation;
+  if (isManager) {
+    navigation = [...employeeNavigation, ...managerNavigation];
+  } else if (isHR) {
+    navigation = [...employeeNavigation, ...hrNavigation];
+  }
 
   const handleLogout = () => {
     logout();
@@ -125,6 +141,39 @@ const EmployeeDashboardLayout = () => {
 
                 {/* Manager Navigation */}
                 {managerNavigation.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${
+                        active
+                          ? 'bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white shadow-lg'
+                          : 'text-gray-400 hover:bg-[#1E1E2A] hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 mr-3" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+
+            {/* HR Section Divider */}
+            {isHR && (
+              <>
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center space-x-2 px-3">
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                    <span className="text-xs text-gray-500 font-semibold">HR MANAGEMENT</span>
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                  </div>
+                </div>
+
+                {/* HR Navigation */}
+                {hrNavigation.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
                   return (
