@@ -116,6 +116,8 @@ import Announcements from './pages/ManagerDashboard/Announcements';
 // HR Dashboard Pages
 import HRHome from './pages/HRDashboard/HRHome';
 import HREmployees from './pages/HRDashboard/HREmployees';
+import ResumeSearch from './pages/HRDashboard/ResumeSearch';
+import HRCandidatePool from './pages/HRDashboard/HRCandidatePool';
 
 // Super Admin Pages
 import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
@@ -286,6 +288,8 @@ function App() {
             <Route path="hr/recruitment" element={<JobDesk />} />
             <Route path="hr/recruitment/:jobId/applicants" element={<ViewApplicants />} />
             <Route path="hr/recruitment/candidates/:candidateId/timeline" element={<CandidateTimeline />} />
+            <Route path="hr/resume-search" element={<ResumeSearch />} />
+            <Route path="hr/candidate-pool" element={<HRCandidatePool />} />
             <Route path="hr/performance" element={<HREmployees />} />
           </Route>
 
