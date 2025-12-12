@@ -25,7 +25,8 @@ import {
   MessageSquare,
   Users,
   ClipboardList,
-  TrendingUp
+  TrendingUp,
+  Search
 } from 'lucide-react';
 
 const EmployeeDashboardLayout = () => {
@@ -63,6 +64,8 @@ const EmployeeDashboardLayout = () => {
     { name: 'Attendance Reports', href: '/employee/hr/attendance', icon: Clock },
     { name: 'Payroll Management', href: '/employee/hr/payroll', icon: DollarSign },
     { name: 'Recruitment', href: '/employee/hr/recruitment', icon: UserPlus },
+    { name: 'Candidate Pool', href: '/employee/hr/candidate-pool', icon: Users },
+    { name: 'Resume Search', href: '/employee/hr/resume-search', icon: Search },
     { name: 'Performance', href: '/employee/hr/performance', icon: TrendingUp },
   ];
 
