@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Search, 
@@ -28,6 +28,7 @@ import AIInsights from '../components/AIInsights';
 const ViewApplicants = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [applicants, setApplicants] = useState([]);
   const [jobDetails, setJobDetails] = useState(null);
@@ -181,7 +182,11 @@ const ViewApplicants = () => {
   };
 
   const handleViewCandidate = (candidateId) => {
-    navigate(`/candidates/${candidateId}/timeline`);
+    if (location.pathname.includes('/hr/recruitment')) {
+      navigate(`/employee/hr/recruitment/candidates/${candidateId}/timeline`);
+    } else {
+      navigate(`/candidates/${candidateId}/timeline`);
+    }
   };
 
   const handleMoveToOnboarding = async (applicant, e) => {
@@ -294,19 +299,29 @@ const ViewApplicants = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className={location.pathname.includes('/hr/recruitment')
+          ? "w-12 h-12 border-4 border-[#A88BFF] border-t-transparent rounded-full animate-spin"
+          : "w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"}></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ backgroundColor: location.pathname.includes('/hr/recruitment') ? '#1E1E2A' : undefined }}>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigate('/job-desk')}
-            className="btn-outline p-2"
+            onClick={() => {
+              if (location.pathname.includes('/hr/recruitment')) {
+                navigate('/employee/hr/recruitment');
+              } else {
+                navigate('/job-desk');
+              }
+            }}
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-[#2A2A3A] text-white p-2 rounded-xl border border-gray-700 hover:border-[#A88BFF] transition-all"
+              : "btn-outline p-2"}
           >
             <ArrowLeft size={20} />
           </button>
@@ -317,7 +332,9 @@ const ViewApplicants = () => {
             <p className="text-gray-400 mt-1">
               {applicants.length} {applicants.length === 1 ? 'applicant' : 'applicants'} found
               {analysisStats && analysisStats.analyzed > 0 && (
-                <span className="ml-2 text-primary-500">
+                <span className={location.pathname.includes('/hr/recruitment')
+                  ? "ml-2 text-[#A88BFF]"
+                  : "ml-2 text-primary-500"}>
                   • {analysisStats.analyzed} analyzed
                 </span>
               )}
@@ -328,7 +345,9 @@ const ViewApplicants = () => {
           <button
             onClick={handleAnalyzeCandidates}
             disabled={analyzing}
-            className="btn-primary flex items-center space-x-2"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white px-6 py-2.5 rounded-xl font-medium hover:shadow-lg transition-all flex items-center space-x-2 disabled:opacity-50"
+              : "btn-primary flex items-center space-x-2"}
           >
             {analyzing ? (
               <>
@@ -344,7 +363,9 @@ const ViewApplicants = () => {
           </button>
           <button
             onClick={handleExportApplicants}
-            className="btn-outline flex items-center space-x-2"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-[#2A2A3A] text-white px-6 py-2.5 rounded-xl border border-gray-700 hover:border-[#A88BFF] transition-all flex items-center space-x-2 disabled:opacity-50"
+              : "btn-outline flex items-center space-x-2"}
             disabled={applicants.length === 0}
           >
             <Download size={18} />
@@ -396,7 +417,9 @@ const ViewApplicants = () => {
       )}
 
       {/* Filters */}
-      <div className="card">
+      <div className={location.pathname.includes('/hr/recruitment')
+        ? "bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800"
+        : "card"}>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
@@ -406,19 +429,25 @@ const ViewApplicants = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="input-field pl-10"
+              className={location.pathname.includes('/hr/recruitment')
+                ? "w-full bg-[#1E1E2A] text-white pl-10 pr-4 py-2.5 rounded-xl border border-gray-700 focus:border-[#A88BFF] focus:outline-none transition-colors"
+                : "input-field pl-10"}
             />
           </div>
           <button
             onClick={handleSearch}
-            className="btn-primary md:w-auto"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white px-6 py-2.5 rounded-xl font-medium hover:shadow-lg transition-all md:w-auto"
+              : "btn-primary md:w-auto"}
           >
             Search
           </button>
           <select
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="input-field md:w-48"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-[#1E1E2A] text-white px-4 py-2.5 rounded-xl border border-gray-700 focus:border-[#A88BFF] focus:outline-none transition-colors md:w-48"
+              : "input-field md:w-48"}
           >
             <option value="date">Sort by Date</option>
             <option value="ai-score">Sort by AI Score</option>
@@ -427,7 +456,9 @@ const ViewApplicants = () => {
           <select
             value={filterStage}
             onChange={(e) => setFilterStage(e.target.value)}
-            className="input-field md:w-48"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-[#1E1E2A] text-white px-4 py-2.5 rounded-xl border border-gray-700 focus:border-[#A88BFF] focus:outline-none transition-colors md:w-48"
+              : "input-field md:w-48"}
           >
             <option value="all">All Stages</option>
             <option value="applied">Applied</option>
@@ -444,7 +475,9 @@ const ViewApplicants = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="input-field md:w-48"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-[#1E1E2A] text-white px-4 py-2.5 rounded-xl border border-gray-700 focus:border-[#A88BFF] focus:outline-none transition-colors md:w-48"
+              : "input-field md:w-48"}
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -457,7 +490,9 @@ const ViewApplicants = () => {
 
       {/* Applicants List */}
       {applicants.length === 0 ? (
-        <div className="card text-center py-12">
+        <div className={location.pathname.includes('/hr/recruitment')
+          ? "bg-[#2A2A3A] rounded-2xl p-12 border border-gray-800 text-center"
+          : "card text-center py-12"}>
           <User size={48} className="mx-auto text-gray-600 mb-4" />
           <p className="text-gray-400">No applicants found for this job posting</p>
         </div>
@@ -466,14 +501,18 @@ const ViewApplicants = () => {
           {applicants.map((applicant) => (
             <div
               key={applicant._id}
-              className="card hover:border-primary-600 transition-all cursor-pointer"
+              className={location.pathname.includes('/hr/recruitment')
+                ? "bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800 hover:border-[#A88BFF] transition-all cursor-pointer"
+                : "card hover:border-primary-600 transition-all cursor-pointer"}
               onClick={() => handleViewCandidate(applicant._id)}
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 {/* Left Section - Basic Info */}
                 <div className="flex items-start space-x-4 flex-1">
-                  <div className="w-12 h-12 bg-primary-600/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User size={24} className="text-primary-500" />
+                  <div className={location.pathname.includes('/hr/recruitment')
+                    ? "w-12 h-12 bg-gradient-to-br from-[#A88BFF]/20 to-[#8B6FE8]/20 rounded-full flex items-center justify-center flex-shrink-0"
+                    : "w-12 h-12 bg-primary-600/20 rounded-full flex items-center justify-center flex-shrink-0"}>
+                    <User size={24} className={location.pathname.includes('/hr/recruitment') ? "text-[#A88BFF]" : "text-primary-500"} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3 mb-2">
@@ -560,7 +599,9 @@ const ViewApplicants = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="btn-outline text-sm py-2 px-4 flex items-center space-x-2"
+                        className={location.pathname.includes('/hr/recruitment')
+                          ? "bg-[#1E1E2A] text-white text-sm py-2 px-4 rounded-xl border border-gray-700 hover:border-[#A88BFF] transition-all flex items-center space-x-2"
+                          : "btn-outline text-sm py-2 px-4 flex items-center space-x-2"}
                       >
                         <FileText size={16} />
                         <span>Resume</span>
@@ -569,7 +610,9 @@ const ViewApplicants = () => {
                     {canMoveToOnboarding(applicant) && (
                       <button
                         onClick={(e) => handleMoveToOnboarding(applicant, e)}
-                        className="btn-primary text-sm py-2 px-4 flex items-center space-x-2 whitespace-nowrap"
+                        className={location.pathname.includes('/hr/recruitment')
+                          ? "bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white text-sm py-2 px-4 rounded-xl font-medium hover:shadow-lg transition-all flex items-center space-x-2 whitespace-nowrap"
+                          : "btn-primary text-sm py-2 px-4 flex items-center space-x-2 whitespace-nowrap"}
                         title={`Send ${applicant.firstName} ${applicant.lastName} to comprehensive onboarding process`}
                       >
                         <UserPlus size={16} />
@@ -582,19 +625,25 @@ const ViewApplicants = () => {
 
               {/* Skills Section */}
               {applicant.skills && applicant.skills.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-dark-800">
+                <div className={location.pathname.includes('/hr/recruitment')
+                  ? "mt-4 pt-4 border-t border-gray-700"
+                  : "mt-4 pt-4 border-t border-dark-800"}>
                   <p className="text-gray-500 text-xs mb-2">Skills</p>
                   <div className="flex flex-wrap gap-2">
                     {applicant.skills.slice(0, 8).map((skill, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-dark-800 text-gray-300 rounded text-xs"
+                        className={location.pathname.includes('/hr/recruitment')
+                          ? "px-2 py-1 bg-[#1E1E2A] text-gray-300 rounded-lg text-xs"
+                          : "px-2 py-1 bg-dark-800 text-gray-300 rounded text-xs"}
                       >
                         {skill}
                       </span>
                     ))}
                     {applicant.skills.length > 8 && (
-                      <span className="px-2 py-1 bg-dark-800 text-gray-400 rounded text-xs">
+                      <span className={location.pathname.includes('/hr/recruitment')
+                        ? "px-2 py-1 bg-[#1E1E2A] text-gray-400 rounded-lg text-xs"
+                        : "px-2 py-1 bg-dark-800 text-gray-400 rounded text-xs"}>
                         +{applicant.skills.length - 8} more
                       </span>
                     )}
@@ -612,14 +661,18 @@ const ViewApplicants = () => {
                       e.stopPropagation();
                       toggleAIInsights(applicant._id);
                     }}
-                    className="mt-3 text-sm text-primary-500 hover:text-primary-400 flex items-center space-x-1"
+                    className={location.pathname.includes('/hr/recruitment')
+                      ? "mt-3 text-sm text-[#A88BFF] hover:text-[#8B6FE8] flex items-center space-x-1"
+                      : "mt-3 text-sm text-primary-500 hover:text-primary-400 flex items-center space-x-1"}
                   >
                     <Brain size={14} />
                     <span>{showAIInsights[applicant._id] ? 'Hide' : 'View'} Detailed AI Insights</span>
                   </button>
 
                   {showAIInsights[applicant._id] && (
-                    <div className="mt-4 pt-4 border-t border-dark-800">
+                    <div className={location.pathname.includes('/hr/recruitment')
+                      ? "mt-4 pt-4 border-t border-gray-700"
+                      : "mt-4 pt-4 border-t border-dark-800"}>
                       <AIInsights analysis={applicant.aiAnalysis} compact={false} />
                     </div>
                   )}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye, Briefcase } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
@@ -7,6 +7,7 @@ import JobCreateModal from '../components/JobCreateModal';
 
 const JobDesk = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,13 +93,15 @@ const JobDesk = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className={location.pathname.includes('/hr/recruitment')
+          ? "w-12 h-12 border-4 border-[#A88BFF] border-t-transparent rounded-full animate-spin"
+          : "w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"}></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ backgroundColor: location.pathname.includes('/hr/recruitment') ? '#1E1E2A' : undefined }}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -107,7 +110,9 @@ const JobDesk = () => {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="btn-primary flex items-center space-x-2"
+          className={location.pathname.includes('/hr/recruitment') 
+            ? "bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white px-6 py-2.5 rounded-xl font-medium hover:shadow-lg transition-all flex items-center space-x-2"
+            : "btn-primary flex items-center space-x-2"}
         >
           <Plus size={20} />
           <span>Post New Job</span>
@@ -115,7 +120,9 @@ const JobDesk = () => {
       </div>
 
       {/* Filters */}
-      <div className="card">
+      <div className={location.pathname.includes('/hr/recruitment') 
+        ? "bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800" 
+        : "card"}>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
@@ -124,13 +131,17 @@ const JobDesk = () => {
               placeholder="Search jobs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
+              className={location.pathname.includes('/hr/recruitment')
+                ? "w-full bg-[#1E1E2A] text-white pl-10 pr-4 py-2.5 rounded-xl border border-gray-700 focus:border-[#A88BFF] focus:outline-none transition-colors"
+                : "input-field pl-10"}
             />
           </div>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="input-field md:w-48"
+            className={location.pathname.includes('/hr/recruitment')
+              ? "bg-[#1E1E2A] text-white px-4 py-2.5 rounded-xl border border-gray-700 focus:border-[#A88BFF] focus:outline-none transition-colors md:w-48"
+              : "input-field md:w-48"}
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -145,11 +156,15 @@ const JobDesk = () => {
       {/* Job Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredJobs.map((job) => (
-          <div key={job._id} className="card hover:border-primary-600 transition-colors cursor-pointer">
+          <div key={job._id} className={location.pathname.includes('/hr/recruitment')
+            ? "bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800 hover:border-[#A88BFF] transition-all cursor-pointer"
+            : "card hover:border-primary-600 transition-colors cursor-pointer"}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-primary-600/20 rounded-lg flex items-center justify-center">
-                  <Briefcase size={24} className="text-primary-500" />
+                <div className={location.pathname.includes('/hr/recruitment')
+                  ? "w-12 h-12 bg-gradient-to-br from-[#A88BFF]/20 to-[#8B6FE8]/20 rounded-xl flex items-center justify-center"
+                  : "w-12 h-12 bg-primary-600/20 rounded-lg flex items-center justify-center"}>
+                  <Briefcase size={24} className={location.pathname.includes('/hr/recruitment') ? "text-[#A88BFF]" : "text-primary-500"} />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">{job.title}</h3>
@@ -196,24 +211,38 @@ const JobDesk = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 pt-4 border-t border-dark-800">
+            <div className={location.pathname.includes('/hr/recruitment')
+              ? "flex items-center space-x-2 pt-4 border-t border-gray-700"
+              : "flex items-center space-x-2 pt-4 border-t border-dark-800"}>
               <button 
-                onClick={() => navigate(`/job-desk/${job._id}/applicants`)}
-                className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"
+                onClick={() => {
+                  if (location.pathname.includes('/hr/recruitment')) {
+                    navigate(`/employee/hr/recruitment/${job._id}/applicants`);
+                  } else {
+                    navigate(`/job-desk/${job._id}/applicants`);
+                  }
+                }}
+                className={location.pathname.includes('/hr/recruitment')
+                  ? "flex-1 bg-[#1E1E2A] text-white text-sm py-2 rounded-xl border border-gray-700 hover:border-[#A88BFF] transition-all flex items-center justify-center space-x-1"
+                  : "flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"}
               >
                 <Eye size={16} />
                 <span>View</span>
               </button>
               <button 
                 onClick={() => handleEdit(job)}
-                className="flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"
+                className={location.pathname.includes('/hr/recruitment')
+                  ? "flex-1 bg-[#1E1E2A] text-white text-sm py-2 rounded-xl border border-gray-700 hover:border-[#A88BFF] transition-all flex items-center justify-center space-x-1"
+                  : "flex-1 btn-outline text-sm py-2 flex items-center justify-center space-x-1"}
               >
                 <Edit size={16} />
                 <span>Edit</span>
               </button>
               <button 
                 onClick={() => handleDelete(job._id)}
-                className="btn-outline text-sm py-2 px-3 text-red-500 hover:bg-red-500/10"
+                className={location.pathname.includes('/hr/recruitment')
+                  ? "bg-[#1E1E2A] text-red-400 text-sm py-2 px-3 rounded-xl border border-gray-700 hover:border-red-500 hover:bg-red-500/10 transition-all"
+                  : "btn-outline text-sm py-2 px-3 text-red-500 hover:bg-red-500/10"}
               >
                 <Trash2 size={16} />
               </button>

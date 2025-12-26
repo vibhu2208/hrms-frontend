@@ -17,7 +17,16 @@ import {
   Bell,
   Moon,
   Sun,
-  ChevronDown
+  ChevronDown,
+  Shield,
+  CheckCircle,
+  UserPlus,
+  CalendarPlus,
+  MessageSquare,
+  Users,
+  ClipboardList,
+  TrendingUp,
+  Search
 } from 'lucide-react';
 
 const EmployeeDashboardLayout = () => {
@@ -25,10 +34,13 @@ const EmployeeDashboardLayout = () => {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Hidden on mobile by default
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  const navigation = [
+  const isManager = user?.role === 'manager';
+  const isHR = user?.role === 'hr';
+
+  const employeeNavigation = [
     { name: 'Dashboard', href: '/employee/dashboard', icon: Home },
     { name: 'Leave', href: '/employee/leave', icon: Calendar },
     { name: 'Attendance', href: '/employee/attendance', icon: Clock },
@@ -37,6 +49,32 @@ const EmployeeDashboardLayout = () => {
     { name: 'Requests', href: '/employee/requests', icon: FileText },
     { name: 'Profile', href: '/employee/profile', icon: User },
   ];
+
+  const managerNavigation = [
+    { name: 'Manager Home', href: '/employee/manager/home', icon: Shield },
+    { name: 'Leave Approvals', href: '/employee/manager/leave-approvals', icon: CheckCircle },
+    { name: 'Assign Project', href: '/employee/manager/assign-project', icon: UserPlus },
+    { name: 'Schedule Meeting', href: '/employee/manager/schedule-meeting', icon: CalendarPlus },
+    { name: 'Announcements', href: '/employee/manager/announcements', icon: MessageSquare },
+  ];
+
+  const hrNavigation = [
+    { name: 'HR Dashboard', href: '/employee/hr/dashboard', icon: ClipboardList },
+    { name: 'Employee Management', href: '/employee/hr/employees', icon: Users },
+    { name: 'Attendance Reports', href: '/employee/hr/attendance', icon: Clock },
+    { name: 'Payroll Management', href: '/employee/hr/payroll', icon: DollarSign },
+    { name: 'Recruitment', href: '/employee/hr/recruitment', icon: UserPlus },
+    { name: 'Candidate Pool', href: '/employee/hr/candidate-pool', icon: Users },
+    { name: 'Resume Search', href: '/employee/hr/resume-search', icon: Search },
+    { name: 'Performance', href: '/employee/hr/performance', icon: TrendingUp },
+  ];
+
+  let navigation = employeeNavigation;
+  if (isManager) {
+    navigation = [...employeeNavigation, ...managerNavigation];
+  } else if (isHR) {
+    navigation = [...employeeNavigation, ...hrNavigation];
+  }
 
   const handleLogout = () => {
     logout();
@@ -48,24 +86,24 @@ const EmployeeDashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen theme-bg" style={{ backgroundColor: 'var(--color-background)' }}>
+    <div className="min-h-screen bg-[#1E1E2A]">
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen transition-transform theme-surface border-r theme-border ${
+        className={`fixed top-0 left-0 z-40 h-screen transition-transform bg-[#2A2A3A] border-r border-gray-800 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{ width: '260px', backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+        } md:translate-x-0`}
+        style={{ width: '260px' }}
       >
         <div className="h-full px-3 py-4 overflow-y-auto">
           {/* Logo */}
           <div className="flex items-center justify-between mb-6 px-3">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">E</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-[#A88BFF] to-[#8B6FE8] rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">H</span>
               </div>
               <div>
-                <h1 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Employee Portal
+                <h1 className="text-lg font-bold text-white">
+                  HRMS Portal
                 </h1>
               </div>
             </div>
@@ -73,19 +111,18 @@ const EmployeeDashboardLayout = () => {
 
           {/* Navigation */}
           <nav className="space-y-1">
-            {navigation.map((item) => {
+            {/* Employee Navigation */}
+            {employeeNavigation.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${
                     active
-                      ? 'bg-primary-600 text-white'
-                      : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-dark-800 hover:text-white'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white shadow-lg'
+                      : 'text-gray-400 hover:bg-[#1E1E2A] hover:text-white'
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />
@@ -93,29 +130,87 @@ const EmployeeDashboardLayout = () => {
                 </Link>
               );
             })}
+
+            {/* Manager Section Divider */}
+            {isManager && (
+              <>
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center space-x-2 px-3">
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                    <span className="text-xs text-gray-500 font-semibold">MANAGER</span>
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                  </div>
+                </div>
+
+                {/* Manager Navigation */}
+                {managerNavigation.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${
+                        active
+                          ? 'bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white shadow-lg'
+                          : 'text-gray-400 hover:bg-[#1E1E2A] hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 mr-3" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+
+            {/* HR Section Divider */}
+            {isHR && (
+              <>
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center space-x-2 px-3">
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                    <span className="text-xs text-gray-500 font-semibold">HR MANAGEMENT</span>
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                  </div>
+                </div>
+
+                {/* HR Navigation */}
+                {hrNavigation.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${
+                        active
+                          ? 'bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white shadow-lg'
+                          : 'text-gray-400 hover:bg-[#1E1E2A] hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 mr-3" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </nav>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-[260px]' : 'ml-0'} transition-all duration-300`}>
+      <div className="md:ml-[260px] transition-all duration-300">
         {/* Top Navigation */}
-        <header
-          className={`sticky top-0 z-30 ${
-            theme === 'dark' ? 'bg-dark-900 border-dark-800' : 'bg-white border-gray-200'
-          } border-b`}
-        >
+        <header className="sticky top-0 z-30 bg-[#2A2A3A] border-b border-gray-800">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Left side */}
               <div className="flex items-center">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className={`p-2 rounded-lg ${
-                    theme === 'dark'
-                      ? 'text-gray-400 hover:bg-dark-800 hover:text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                  className="p-2 rounded-xl text-gray-400 hover:bg-[#1E1E2A] hover:text-white transition-colors"
                 >
                   {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
@@ -123,41 +218,19 @@ const EmployeeDashboardLayout = () => {
 
               {/* Right side */}
               <div className="flex items-center space-x-4">
-                {/* Theme Toggle */}
-                <button
-                  onClick={toggleTheme}
-                  className={`p-2 rounded-lg ${
-                    theme === 'dark'
-                      ? 'text-gray-400 hover:bg-dark-800 hover:text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-
                 {/* Notifications */}
-                <button
-                  className={`p-2 rounded-lg relative ${
-                    theme === 'dark'
-                      ? 'text-gray-400 hover:bg-dark-800 hover:text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
+                <button className="p-2 rounded-xl text-gray-400 hover:bg-[#1E1E2A] hover:text-white transition-colors relative">
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#A88BFF] rounded-full"></span>
                 </button>
 
                 {/* Profile Dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg ${
-                      theme === 'dark'
-                        ? 'text-gray-300 hover:bg-dark-800'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-xl text-gray-300 hover:bg-[#1E1E2A] transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#A88BFF] to-[#8B6FE8] rounded-full flex items-center justify-center">
                       <span className="text-white text-sm font-medium">
                         {user?.email?.charAt(0).toUpperCase()}
                       </span>
@@ -166,44 +239,20 @@ const EmployeeDashboardLayout = () => {
                   </button>
 
                   {profileMenuOpen && (
-                    <div
-                      className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg ${
-                        theme === 'dark' ? 'bg-dark-800 border-dark-700' : 'bg-white border-gray-200'
-                      } border`}
-                    >
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl shadow-lg bg-[#2A2A3A] border border-gray-700">
                       <div className="py-1">
                         <Link
                           to="/employee/profile"
-                          className={`block px-4 py-2 text-sm ${
-                            theme === 'dark'
-                              ? 'text-gray-300 hover:bg-dark-700'
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-[#1E1E2A] rounded-lg transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <User className="w-4 h-4 inline mr-2" />
                           My Profile
                         </Link>
-                        <Link
-                          to="/employee/settings/theme"
-                          className={`block px-4 py-2 text-sm ${
-                            theme === 'dark'
-                              ? 'text-gray-300 hover:bg-dark-700'
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                          onClick={() => setProfileMenuOpen(false)}
-                        >
-                          <Settings className="w-4 h-4 inline mr-2" />
-                          Theme Settings
-                        </Link>
-                        <hr className={`my-1 ${theme === 'dark' ? 'border-dark-700' : 'border-gray-200'}`} />
+                        <hr className="my-1 border-gray-700" />
                         <button
                           onClick={handleLogout}
-                          className={`block w-full text-left px-4 py-2 text-sm ${
-                            theme === 'dark'
-                              ? 'text-red-400 hover:bg-dark-700'
-                              : 'text-red-600 hover:bg-gray-100'
-                          }`}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#1E1E2A] rounded-lg transition-colors"
                         >
                           <LogOut className="w-4 h-4 inline mr-2" />
                           Logout
@@ -226,7 +275,7 @@ const EmployeeDashboardLayout = () => {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
