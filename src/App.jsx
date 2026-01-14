@@ -55,6 +55,7 @@ import Departments from './pages/Administration/Departments';
 import Roles from './pages/Administration/Roles';
 import Policies from './pages/Administration/Policies';
 import UserManagement from './pages/Administration/UserManagement';
+import LeaveManagement from './pages/Administration/LeaveManagement';
 
 // Assets Page
 import Assets from './pages/Assets';
@@ -134,6 +135,49 @@ import InvoiceCenter from './pages/SuperAdmin/InvoiceCenter';
 import RevenueDashboard from './pages/SuperAdmin/RevenueDashboard';
 import BillingAlerts from './pages/SuperAdmin/BillingAlerts';
 
+// Work Schedule Pages
+import ShiftTemplates from './pages/WorkSchedule/ShiftTemplates';
+import RosterManagement from './pages/WorkSchedule/RosterManagement';
+import RosterCalendar from './pages/WorkSchedule/RosterCalendar';
+import RosterChangeRequest from './pages/WorkSchedule/RosterChangeRequest';
+
+// Leave Encashment Pages
+import EncashmentRules from './pages/LeaveEncashment/EncashmentRules';
+import EncashmentRequests from './pages/LeaveEncashment/EncashmentRequests';
+import EncashmentHistory from './pages/LeaveEncashment/EncashmentHistory';
+
+// Advanced Reports Pages
+import LeaveReports from './pages/Reports/LeaveReports';
+import AdvancedAttendanceReports from './pages/Reports/AttendanceReports';
+import ComplianceReports from './pages/Reports/ComplianceReports';
+import ScheduledReports from './pages/Reports/ScheduledReports';
+import AnalyticsDashboard from './pages/Reports/AnalyticsDashboard';
+
+// Leave Accrual Pages
+import AccrualPolicies from './pages/LeaveAccrual/AccrualPolicies';
+import AccrualHistory from './pages/LeaveAccrual/AccrualHistory';
+import ManualAccrual from './pages/LeaveAccrual/ManualAccrual';
+
+// Approval Workflow Pages
+import Workflows from './pages/ApprovalWorkflow/Workflows';
+import ApprovalMatrix from './pages/ApprovalWorkflow/ApprovalMatrix';
+import Delegations from './pages/ApprovalWorkflow/Delegations';
+import PendingApprovals from './pages/ApprovalWorkflow/PendingApprovals';
+import SLAMonitoring from './pages/ApprovalWorkflow/SLAMonitoring';
+
+// Biometric Integration Pages
+import DeviceManagement from './pages/Biometric/DeviceManagement';
+import { default as BiometricEmployeeSync } from './pages/Biometric/EmployeeSync';
+import AttendancePull from './pages/Biometric/AttendancePull';
+import { default as BiometricSyncLogs } from './pages/Biometric/SyncLogs';
+
+// SAP Integration Pages
+import ConnectionConfig from './pages/SAPIntegration/ConnectionConfig';
+import { default as SAPEmployeeSync } from './pages/SAPIntegration/EmployeeSync';
+import LeaveSync from './pages/SAPIntegration/LeaveSync';
+import AttendanceSync from './pages/SAPIntegration/AttendanceSync';
+import { default as SAPSyncLogs } from './pages/SAPIntegration/SyncLogs';
+
 function App() {
   return (
     <ThemeProvider>
@@ -209,6 +253,12 @@ function App() {
             <Route path="attendance/mark" element={<AttendanceMark />} />
             <Route path="attendance/reports" element={<AttendanceReports />} />
 
+            {/* Work Schedule Routes */}
+            <Route path="work-schedule/shift-templates" element={<ShiftTemplates />} />
+            <Route path="work-schedule/rosters" element={<RosterManagement />} />
+            <Route path="work-schedule/roster-calendar" element={<RosterCalendar />} />
+            <Route path="work-schedule/roster-change-requests" element={<RosterChangeRequest />} />
+
             {/* Payroll Routes */}
             <Route path="payroll" element={<PayrollList />} />
             <Route path="payroll/generate" element={<PayrollGenerate />} />
@@ -219,6 +269,7 @@ function App() {
             <Route path="administration/roles" element={<Roles />} />
             <Route path="administration/policies" element={<Policies />} />
             <Route path="administration/users" element={<UserManagement />} />
+            <Route path="administration/leave-management" element={<LeaveManagement />} />
 
             {/* Assets Route */}
             <Route path="assets" element={<Assets />} />
@@ -245,6 +296,41 @@ function App() {
             {/* Report Routes */}
             <Route path="reports/export" element={<ReportExport />} />
             <Route path="reports/compliance" element={<ComplianceReport />} />
+            <Route path="reports/leave" element={<LeaveReports />} />
+            <Route path="reports/attendance" element={<AdvancedAttendanceReports />} />
+            <Route path="reports/compliance-reports" element={<ComplianceReports />} />
+            <Route path="reports/scheduled" element={<ScheduledReports />} />
+            <Route path="reports/analytics" element={<AnalyticsDashboard />} />
+
+            {/* Leave Encashment Routes */}
+            <Route path="leave-encashment/rules" element={<EncashmentRules />} />
+            <Route path="leave-encashment/requests" element={<EncashmentRequests />} />
+            <Route path="leave-encashment/history" element={<EncashmentHistory />} />
+
+            {/* Leave Accrual Routes */}
+            <Route path="leave-accrual/policies" element={<AccrualPolicies />} />
+            <Route path="leave-accrual/history" element={<AccrualHistory />} />
+            <Route path="leave-accrual/manual" element={<ManualAccrual />} />
+
+            {/* Approval Workflow Routes */}
+            <Route path="approval-workflow/workflows" element={<Workflows />} />
+            <Route path="approval-workflow/matrix" element={<ApprovalMatrix />} />
+            <Route path="approval-workflow/delegations" element={<Delegations />} />
+            <Route path="approval-workflow/pending" element={<PendingApprovals />} />
+            <Route path="approval-workflow/sla" element={<SLAMonitoring />} />
+
+            {/* Biometric Integration Routes */}
+            <Route path="biometric/devices" element={<DeviceManagement />} />
+            <Route path="biometric/employee-sync" element={<BiometricEmployeeSync />} />
+            <Route path="biometric/attendance-pull" element={<AttendancePull />} />
+            <Route path="biometric/sync-logs" element={<BiometricSyncLogs />} />
+
+            {/* SAP Integration Routes */}
+            <Route path="sap/connections" element={<ConnectionConfig />} />
+            <Route path="sap/employee-sync" element={<SAPEmployeeSync />} />
+            <Route path="sap/leave-sync" element={<LeaveSync />} />
+            <Route path="sap/attendance-sync" element={<AttendanceSync />} />
+            <Route path="sap/sync-logs" element={<SAPSyncLogs />} />
 
             {/* Settings Routes */}
             <Route path="settings/profile" element={<Profile />} />
@@ -275,6 +361,12 @@ function App() {
             <Route path="profile" element={<ModernProfile />} />
             <Route path="settings/theme" element={<ThemeSettings />} />
             
+            {/* Work Schedule Routes for Employees */}
+            <Route path="work-schedule/shift-templates" element={<ShiftTemplates />} />
+            <Route path="work-schedule/rosters" element={<RosterManagement />} />
+            <Route path="work-schedule/roster-calendar" element={<RosterCalendar />} />
+            <Route path="work-schedule/roster-change-requests" element={<RosterChangeRequest />} />
+            
             {/* Manager Extra Routes */}
             <Route path="manager/home" element={<ManagerHome />} />
             <Route path="manager/leave-approvals" element={<LeaveApprovals />} />
@@ -285,14 +377,26 @@ function App() {
             {/* HR Extra Routes */}
             <Route path="hr/dashboard" element={<HRHome />} />
             <Route path="hr/employees" element={<HREmployees />} />
-            <Route path="hr/attendance" element={<HREmployees />} />
-            <Route path="hr/payroll" element={<HREmployees />} />
+            <Route path="hr/attendance" element={<AttendanceList />} />
+            <Route path="hr/payroll" element={<PayrollList />} />
             <Route path="hr/recruitment" element={<JobDesk />} />
             <Route path="hr/recruitment/:jobId/applicants" element={<ViewApplicants />} />
             <Route path="hr/recruitment/candidates/:candidateId/timeline" element={<CandidateTimeline />} />
             <Route path="hr/resume-search" element={<ResumeSearch />} />
             <Route path="hr/candidate-pool" element={<HRCandidatePool />} />
-            <Route path="hr/performance" element={<HREmployees />} />
+            <Route path="hr/performance" element={<FeedbackList />} />
+            
+            {/* Employee Leave Encashment Routes */}
+            <Route path="leave-encashment/requests" element={<EncashmentRequests />} />
+            <Route path="leave-encashment/history" element={<EncashmentHistory />} />
+            
+            {/* HR Management Routes (accessible from employee dashboard) */}
+            <Route path="hr/leave-encashment-rules" element={<EncashmentRules />} />
+            <Route path="hr/leave-accrual-policies" element={<AccrualPolicies />} />
+            <Route path="hr/approval-workflows" element={<Workflows />} />
+            <Route path="hr/pending-approvals" element={<PendingApprovals />} />
+            <Route path="hr/reports-analytics" element={<AnalyticsDashboard />} />
+            <Route path="hr/attendance-reports" element={<AdvancedAttendanceReports />} />
           </Route>
 
           {/* Super Admin Routes */}

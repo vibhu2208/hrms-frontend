@@ -500,8 +500,16 @@ const ClientManagement = () => {
         <ClientForm
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
-            fetchClients();
             setShowCreateModal(false);
+            // Reset to page 1 and clear filters to show the new client
+            setCurrentPage(1);
+            setSearchTerm('');
+            setStatusFilter('');
+            setSubscriptionFilter('');
+            // Force refresh after a brief delay to ensure DB write completes
+            setTimeout(() => {
+              fetchClients();
+            }, 500);
           }}
         />
       )}

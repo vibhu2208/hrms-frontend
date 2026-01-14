@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Users, Briefcase, MapPin, Star, Clock, ChevronDown, X, Plus, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const ResumeSearch = () => {
   const [searchCriteria, setSearchCriteria] = useState({
@@ -63,7 +63,7 @@ const ResumeSearch = () => {
     setResults([]);
     
     try {
-      const response = await axios.post('/api/ai-analysis/resume-search', searchCriteria);
+      const response = await api.post('/ai-analysis/resume-search', searchCriteria);
       
       if (response.data.success) {
         setResults(response.data.data);

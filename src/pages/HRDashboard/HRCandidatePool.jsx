@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import { Users, Plus, FileText, UploadCloud, Search, Clock, Filter, X, Loader2 } from 'lucide-react';
 
 const HRCandidatePool = () => {
@@ -55,7 +55,7 @@ const HRCandidatePool = () => {
 
       // If searchQuery is present, use search API; else normal list API
       if (searchQuery.trim()) {
-        const response = await axios.post('/api/resume-pool/search', {
+        const response = await api.post('/resume-pool/search', {
           query: searchQuery.trim(),
           page: opts.page || page,
           limit: pageSize,
@@ -71,7 +71,7 @@ const HRCandidatePool = () => {
           setError(response.data.message || 'Failed to search resumes');
         }
       } else {
-        const response = await axios.get('/api/resume-pool', { params });
+        const response = await api.get('/resume-pool', { params });
 
         if (response.data.success) {
           setResumes(response.data.data || []);
@@ -135,7 +135,7 @@ const HRCandidatePool = () => {
           : []
       };
 
-      const response = await axios.post('/api/resume-pool/text', payload);
+      const response = await api.post('/resume-pool/text', payload);
 
       if (response.data.success) {
         setShowAddModal(false);
@@ -164,7 +164,7 @@ const HRCandidatePool = () => {
       if (fileUpload.phone) formData.append('phone', fileUpload.phone);
       if (fileUpload.tags) formData.append('tags', fileUpload.tags);
 
-      const response = await axios.post('/api/resume-pool/file', formData, {
+      const response = await api.post('/resume-pool/file', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
