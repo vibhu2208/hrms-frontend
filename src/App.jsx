@@ -19,6 +19,7 @@ import SuperAdminLogin from './pages/SuperAdminLogin';
 // Public Pages
 import CareersPage from './pages/Public/CareersPage';
 import CandidateDocuments from './pages/CandidateDocuments';
+import DocumentUpload from './pages/Public/DocumentUpload';
 
 // Dashboard Pages
 import Dashboard from './pages/Dashboard';
@@ -29,6 +30,7 @@ import CandidateTimeline from './pages/CandidateTimeline';
 // Employee Pages
 import EmployeeList from './pages/Employee/EmployeeList';
 import EmployeeAdd from './pages/Employee/EmployeeAdd';
+import EmployeeEdit from './pages/Employee/EmployeeEdit';
 import EmployeeDetail from './pages/Employee/EmployeeDetail';
 import Onboarding from './pages/Employee/Onboarding';
 import Offboarding from './pages/Employee/Offboarding';
@@ -119,6 +121,7 @@ import HRHome from './pages/HRDashboard/HRHome';
 import HREmployees from './pages/HRDashboard/HREmployees';
 import ResumeSearch from './pages/HRDashboard/ResumeSearch';
 import HRCandidatePool from './pages/HRDashboard/HRCandidatePool';
+import DocumentVerification from './pages/HR/DocumentVerification';
 
 // Super Admin Pages
 import SuperAdminDashboard from './pages/SuperAdmin/Dashboard';
@@ -215,6 +218,7 @@ function App() {
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/jobs" element={<CareersPage />} />
           <Route path="/candidate-documents" element={<CandidateDocuments />} />
+          <Route path="/public/upload-documents/:token" element={<DocumentUpload />} />
           
           {/* Root redirect based on role */}
           <Route path="/" element={<HomeRedirect />} />
@@ -237,6 +241,7 @@ function App() {
             <Route path="employees" element={<EmployeeList />} />
             <Route path="employees/add" element={<EmployeeAdd />} />
             <Route path="employees/bulk-upload" element={<BulkEmployeeUpload />} />
+            <Route path="employees/:id/edit" element={<EmployeeEdit />} />
             <Route path="employees/:id" element={<EmployeeDetail />} />
             <Route path="employees/onboarding" element={<Onboarding />} />
             <Route path="employees/offboarding" element={<Offboarding />} />
@@ -283,6 +288,7 @@ function App() {
 
             {/* Recruitment Routes */}
             <Route path="candidates" element={<CandidateList />} />
+            <Route path="document-verification" element={<DocumentVerification />} />
 
             {/* Talent Pool Routes */}
             <Route path="talent-pool" element={<TalentPoolList />} />

@@ -3,7 +3,7 @@ import {
   Plus, CheckCircle, Circle, Clock, FileText, Calendar, 
   Users, AlertCircle, Eye, Edit, Send, CheckSquare,
   Filter, Search, MoreHorizontal, Mail, Phone, X, Briefcase,
-  MapPin, DollarSign, Building, FileEdit, Trash2, Copy, Save
+  MapPin, DollarSign, Building, FileEdit, Trash2, Copy, Save, Check
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -78,7 +78,11 @@ const Onboarding = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [summary, setSummary] = useState({});
   const [selectedOnboarding, setSelectedOnboarding] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [rejectionNotes, setRejectionNotes] = useState('');
+  const [verifyingDoc, setVerifyingDoc] = useState(null);
   
   // Template states
   const [templates, setTemplates] = useState([]);
@@ -106,11 +110,28 @@ const Onboarding = () => {
       if (filterStatus) params.append('status', filterStatus);
       if (filterDepartment) params.append('department', filterDepartment);
       if (searchTerm) params.append('search', searchTerm);
+      // Add timestamp to prevent caching
+      params.append('_t', Date.now());
       
-      const res = await api.get(`/onboarding?${params.toString()}`);
+      console.log('🔍 Fetching onboarding list with params:', params.toString());
+      const res = await api.get(`/onboarding?${params.toString()}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      console.log('📦 Onboarding API Response:', res?.data);
+      console.log('📋 Onboarding List Data:', res?.data?.data);
+      console.log('📊 List Length:', res?.data?.data?.length);
+      
       setList(res?.data?.data || []);
       setSummary(res?.data?.summary || {});
+      
+      if (res?.data?.data?.length === 0) {
+        console.warn('⚠️ No onboarding records returned from API');
+      }
     } catch (e) {
+      console.error('❌ Error fetching onboarding list:', e);
       toast.error(e?.response?.data?.message || 'Failed to load onboarding list');
     } finally {
       setLoading(false);
@@ -161,7 +182,81 @@ const Onboarding = () => {
     }
   };
 
-  // Template Management Functions
+  const requestDocuments = async (id) => {
+    try {
+      const res = await api.post(`/onboarding/${id}/request-documents`);
+      toast.success(`Document request email sent to ${res.data.data.sentTo}`);
+    } catch (e) {
+      toast.error(e?.response?.data?.message || 'Failed to send document request');
+    }
+  };
+
+  const handleAcceptDocument = async (docId) => {
+    setVerifyingDoc(docId);
+    try {
+      const response = await api.put(`/onboarding/${selectedOnboarding._id}/documents/${docId}/verify`, {
+        action: 'approve',
+        notes: 'Document verified and accepted'
+      });
+
+      if (response.data.success) {
+        toast.success('Document accepted successfully!');
+        fetchList();
+        if (selectedOnboarding) {
+          const updatedOnboarding = list.find(o => o._id === selectedOnboarding._id);
+          setSelectedOnboarding(updatedOnboarding);
+        }
+      } else {
+        toast.error(response.data.message || 'Failed to accept document');
+      }
+    } catch (error) {
+      console.error('Error accepting document:', error);
+      toast.error('Failed to accept document');
+    } finally {
+      setVerifyingDoc(null);
+    }
+  };
+
+  const handleRejectDocument = (doc) => {
+    setSelectedDocument(doc);
+    setRejectionNotes('');
+    setShowRejectModal(true);
+  };
+
+  const submitRejection = async () => {
+    if (!rejectionNotes.trim()) {
+      toast.error('Please provide a reason for rejection');
+      return;
+    }
+
+    setVerifyingDoc(selectedDocument._id);
+    try {
+      const response = await api.put(`/onboarding/${selectedOnboarding._id}/documents/${selectedDocument._id}/verify`, {
+        action: 'reject',
+        notes: rejectionNotes
+      });
+
+      if (response.data.success) {
+        toast.success('Document rejected and email sent to candidate');
+        setShowRejectModal(false);
+        setSelectedDocument(null);
+        setRejectionNotes('');
+        fetchList();
+        if (selectedOnboarding) {
+          const updatedOnboarding = list.find(o => o._id === selectedOnboarding._id);
+          setSelectedOnboarding(updatedOnboarding);
+        }
+      } else {
+        toast.error(response.data.message || 'Failed to reject document');
+      }
+    } catch (error) {
+      console.error('Error rejecting document:', error);
+      toast.error('Failed to reject document');
+    } finally {
+      setVerifyingDoc(null);
+    }
+  };
+
   const fetchTemplates = async () => {
     setTemplateLoading(true);
     try {
@@ -390,8 +485,9 @@ const Onboarding = () => {
             }}
             onViewDetails={(onboarding) => {
               setSelectedOnboarding(onboarding);
-              setShowDetails(true);
+              setShowDetailsModal(true);
             }}
+            onRequestDocuments={requestDocuments}
           />
         ))}
       </div>
@@ -407,15 +503,33 @@ const Onboarding = () => {
       )}
 
           {/* Details Modal */}
-          {showDetails && selectedOnboarding && (
+          {showDetailsModal && selectedOnboarding && (
             <OnboardingDetailsModal 
               onboarding={selectedOnboarding}
               onClose={() => {
-                setShowDetails(false);
+                setShowDetailsModal(false);
                 setSelectedOnboarding(null);
               }}
+              verifyingDoc={verifyingDoc}
+              onAcceptDocument={handleAcceptDocument}
+              onRejectDocument={handleRejectDocument}
             />
           )}
+
+          {/* Rejection Modal */}
+          <RejectionModal
+            isOpen={showRejectModal}
+            onClose={() => {
+              setShowRejectModal(false);
+              setSelectedDocument(null);
+              setRejectionNotes('');
+            }}
+            document={selectedDocument}
+            rejectionNotes={rejectionNotes}
+            setRejectionNotes={setRejectionNotes}
+            onSubmit={submitRejection}
+            isSubmitting={verifyingDoc !== null}
+          />
         </>
       )}
 
@@ -464,7 +578,7 @@ const Onboarding = () => {
 };
 
 // Onboarding Card Component
-const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, onComplete, onViewDetails, onOpenSendOfferModal }) => {
+const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, onComplete, onViewDetails, onOpenSendOfferModal, onRequestDocuments }) => {
   const [showActions, setShowActions] = useState(false);
   const statusInfo = statusLabels[item.status];
   
@@ -601,6 +715,16 @@ const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, o
         </div>
         
         <div className="flex items-center space-x-2">
+          {/* Request Documents button - always visible */}
+          <button
+            onClick={() => onRequestDocuments(item._id)}
+            className="btn-outline text-sm flex items-center space-x-1"
+            title="Send document upload link to candidate"
+          >
+            <FileText size={14} />
+            <span>Request Documents</span>
+          </button>
+          
           {nextActions.slice(0, 2).map((action, idx) => (
             <button
               key={idx}
@@ -617,7 +741,7 @@ const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, o
 };
 
 // Onboarding Details Modal Component
-const OnboardingDetailsModal = ({ onboarding, onClose }) => {
+const OnboardingDetailsModal = ({ onboarding, onClose, verifyingDoc, onAcceptDocument, onRejectDocument }) => {
   const statusInfo = statusLabels[onboarding.status];
   
   const formatDate = (date) => {
@@ -636,6 +760,15 @@ const OnboardingDetailsModal = ({ onboarding, onClose }) => {
       currency: 'INR',
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const getDocumentHref = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const backendBaseUrl = import.meta.env.VITE_API_URL || '';
+    if (url.startsWith('/uploads/')) return `${backendBaseUrl}${url}`;
+    if (url.startsWith('/')) return url;
+    return `${backendBaseUrl}/uploads/${url}`;
   };
 
   return (
@@ -817,23 +950,69 @@ const OnboardingDetailsModal = ({ onboarding, onClose }) => {
           {onboarding.documents && onboarding.documents.length > 0 && (
             <div className="card">
               <h3 className="text-lg font-semibold text-white mb-4">Documents</h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {onboarding.documents.map((doc, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-dark-800 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <FileText size={18} className="text-primary-500" />
-                      <div>
-                        <p className="text-white">{doc.name}</p>
-                        <p className="text-gray-400 text-sm">{doc.type}</p>
+                  <div key={idx} className="p-4 bg-dark-800 rounded-lg">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <FileText size={18} className="text-primary-500" />
+                        <div>
+                          <p className="text-white font-medium">{doc.name}</p>
+                          <p className="text-gray-400 text-sm">{doc.type}</p>
+                        </div>
                       </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
+                        doc.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                        doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {doc.status || 'uploaded'}
+                      </span>
                     </div>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                      doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-gray-500/20 text-gray-400'
-                    }`}>
-                      {doc.status}
-                    </span>
+                    
+                    {doc.rejectionReason && (
+                      <div className="mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded text-sm text-red-400">
+                        <strong>Rejection Reason:</strong> {doc.rejectionReason}
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        {doc.url && (
+                          <a
+                            href={getDocumentHref(doc.url)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm text-primary-400 hover:text-primary-300 flex items-center space-x-1"
+                          >
+                            <Eye size={14} />
+                            <span>View</span>
+                          </a>
+                        )}
+                      </div>
+                      
+                      {doc.status !== 'verified' && doc.url && (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => onAcceptDocument(doc._id)}
+                            disabled={verifyingDoc === doc._id}
+                            className="flex items-center space-x-1 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                          >
+                            <Check size={14} />
+                            <span>{verifyingDoc === doc._id ? 'Processing...' : 'Accept'}</span>
+                          </button>
+                          <button
+                            onClick={() => onRejectDocument(doc)}
+                            disabled={verifyingDoc === doc._id}
+                            className="flex items-center space-x-1 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                          >
+                            <X size={14} />
+                            <span>Reject</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1382,6 +1561,61 @@ const SendOfferModal = ({ candidate, onClose, onSend }) => {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+// Rejection Notes Modal
+const RejectionModal = ({ isOpen, onClose, document, rejectionNotes, setRejectionNotes, onSubmit, isSubmitting }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-dark-800 rounded-lg shadow-xl max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-white">Reject Document</h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-white">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className="mb-4">
+            <p className="text-gray-300 mb-2">Document: <strong>{document?.name || document?.type}</strong></p>
+            <p className="text-gray-400 text-sm">Please provide a reason for rejecting this document. The candidate will receive an email with your notes.</p>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Rejection Reason <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              value={rejectionNotes}
+              onChange={(e) => setRejectionNotes(e.target.value)}
+              placeholder="e.g., Document is not clear, please upload a better quality scan..."
+              className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              rows={4}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSubmit}
+              disabled={!rejectionNotes.trim() || isSubmitting}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Sending...' : 'Reject & Send Email'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

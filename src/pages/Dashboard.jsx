@@ -44,6 +44,12 @@ const Dashboard = () => {
       color: 'bg-green-500'
     },
     {
+      title: 'On Leave Today',
+      value: stats?.employees?.onLeave || 0,
+      icon: Calendar,
+      color: 'bg-yellow-500'
+    },
+    {
       title: 'Today Attendance',
       value: stats?.attendance?.today || 0,
       icon: Clock,
@@ -131,9 +137,9 @@ const Dashboard = () => {
               <div key={index} className="flex items-center justify-between py-2 border-b border-dark-800 last:border-0">
                 <div>
                   <p className="text-white font-medium">
-                    {leave.employee?.firstName} {leave.employee?.lastName}
+                    {leave.employeeName}
                   </p>
-                  <p className="text-sm text-gray-400 capitalize">{leave.leaveType} Leave</p>
+                  <p className="text-sm text-gray-400 capitalize">{leave.leaveType}</p>
                 </div>
                 <span className={`badge ${
                   leave.status === 'approved' ? 'badge-success' :

@@ -136,7 +136,7 @@ const Offboarding = () => {
 
   const initiateOffboarding = async (formData) => {
     try {
-      await api.post('/offboarding', formData);
+      await api.post('/tenant/offboarding', formData);
       toast.success('Offboarding initiated successfully');
       setShowInitiateModal(false);
       fetchList();
@@ -308,7 +308,7 @@ const Offboarding = () => {
             setShowInitiateModal(true);
             fetchEmployees();
           }}
-          className="btn-primary flex items-center space-x-2"
+          className="btn-primary flex items-center space-x-2 w-full sm:w-auto"
         >
           <Plus size={20} />
           <span>Initiate Offboarding</span>
