@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Calendar, DollarSign, TrendingUp, Clock, Briefcase, Loader2 } from 'lucide-react';
+import { Users, Calendar, DollarSign, TrendingUp, Clock, Briefcase, Loader2, UserCheck, UserPlus, ClipboardList } from 'lucide-react';
 import { getHRDashboardStats } from '../../api/hr';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,20 @@ const HRHome = () => {
     totalEmployees: 0,
     pendingLeaves: 0,
     payrollThisMonth: 0,
-    openPositions: 0
+    openPositions: 0,
+    recruitment: {
+      totalApplications: 0,
+      shortlisted: 0,
+      interviewScheduled: 0,
+      selected: 0,
+      rejected: 0
+    },
+    onboarding: {
+      total: 0,
+      preboarding: 0,
+      inProgress: 0,
+      completed: 0
+    }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,6 +68,20 @@ const HRHome = () => {
     { name: 'Open Positions', value: stats.openPositions.toString(), icon: Briefcase, color: 'from-purple-500 to-purple-600' },
   ];
 
+  const recruitmentData = [
+    { name: 'Total Applications', value: stats.recruitment?.totalApplications || 0, icon: Users, color: 'from-cyan-500 to-cyan-600' },
+    { name: 'Shortlisted', value: stats.recruitment?.shortlisted || 0, icon: UserCheck, color: 'from-green-500 to-green-600' },
+    { name: 'Interview Scheduled', value: stats.recruitment?.interviewScheduled || 0, icon: Calendar, color: 'from-blue-500 to-blue-600' },
+    { name: 'Selected', value: stats.recruitment?.selected || 0, icon: UserPlus, color: 'from-emerald-500 to-emerald-600' },
+  ];
+
+  const onboardingData = [
+    { name: 'Total Onboarding', value: stats.onboarding?.total || 0, icon: ClipboardList, color: 'from-indigo-500 to-indigo-600' },
+    { name: 'Preboarding', value: stats.onboarding?.preboarding || 0, icon: Clock, color: 'from-yellow-500 to-yellow-600' },
+    { name: 'In Progress', value: stats.onboarding?.inProgress || 0, icon: TrendingUp, color: 'from-orange-500 to-orange-600' },
+    { name: 'Completed', value: stats.onboarding?.completed || 0, icon: UserCheck, color: 'from-green-500 to-green-600' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#1E1E2A] p-6">
       {/* Header */}
@@ -96,6 +123,48 @@ const HRHome = () => {
           })}
         </div>
       )}
+
+      {/* Recruitment Stats */}
+      <div className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800 mb-8">
+        <h2 className="text-xl font-bold text-white mb-4">Recruitment Pipeline</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {recruitmentData.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.name} className="bg-[#1E1E2A] rounded-xl p-4 border border-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                <h3 className="text-gray-400 text-xs mb-1">{stat.name}</h3>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Onboarding Stats */}
+      <div className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800 mb-8">
+        <h2 className="text-xl font-bold text-white mb-4">Onboarding Status</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {onboardingData.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.name} className="bg-[#1E1E2A] rounded-xl p-4 border border-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                <h3 className="text-gray-400 text-xs mb-1">{stat.name}</h3>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Quick Actions */}
       <div className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800">
