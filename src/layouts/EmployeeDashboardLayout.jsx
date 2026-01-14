@@ -39,29 +39,42 @@ const EmployeeDashboardLayout = () => {
 
   const isManager = user?.role === 'manager';
   const isHR = user?.role === 'hr';
+  const isAdmin = user?.role === 'admin';
 
+  // Employee Navigation - Basic features for all employees
   const employeeNavigation = [
     { name: 'Dashboard', href: '/employee/dashboard', icon: Home },
     { name: 'Leave', href: '/employee/leave', icon: Calendar },
+    { name: 'Leave Encashment', href: '/employee/leave-encashment/requests', icon: DollarSign },
     { name: 'Attendance', href: '/employee/attendance', icon: Clock },
+    { name: 'Work Schedule', href: '/employee/work-schedule/roster-calendar', icon: Calendar },
     { name: 'Payslips', href: '/employee/payslips', icon: DollarSign },
     { name: 'Projects', href: '/employee/projects', icon: Briefcase },
     { name: 'Requests', href: '/employee/requests', icon: FileText },
     { name: 'Profile', href: '/employee/profile', icon: User },
   ];
 
+  // Manager Navigation - Team management and approvals
   const managerNavigation = [
     { name: 'Manager Home', href: '/employee/manager/home', icon: Shield },
     { name: 'Leave Approvals', href: '/employee/manager/leave-approvals', icon: CheckCircle },
+    { name: 'Pending Approvals', href: '/approval-workflow/pending', icon: CheckCircle },
+    { name: 'Team Reports', href: '/reports/analytics', icon: FileText },
     { name: 'Assign Project', href: '/employee/manager/assign-project', icon: UserPlus },
     { name: 'Schedule Meeting', href: '/employee/manager/schedule-meeting', icon: CalendarPlus },
     { name: 'Announcements', href: '/employee/manager/announcements', icon: MessageSquare },
   ];
 
+  // HR Navigation - HR management features
   const hrNavigation = [
     { name: 'HR Dashboard', href: '/employee/hr/dashboard', icon: ClipboardList },
     { name: 'Employee Management', href: '/employee/hr/employees', icon: Users },
-    { name: 'Attendance Reports', href: '/employee/hr/attendance', icon: Clock },
+    { name: 'Leave Encashment Rules', href: '/employee/hr/leave-encashment-rules', icon: DollarSign },
+    { name: 'Leave Accrual Policies', href: '/employee/hr/leave-accrual-policies', icon: Calendar },
+    { name: 'Approval Workflows', href: '/employee/hr/approval-workflows', icon: CheckCircle },
+    { name: 'Pending Approvals', href: '/employee/hr/pending-approvals', icon: CheckCircle },
+    { name: 'Reports & Analytics', href: '/employee/hr/reports-analytics', icon: FileText },
+    { name: 'Attendance Reports', href: '/employee/hr/attendance-reports', icon: Clock },
     { name: 'Payroll Management', href: '/employee/hr/payroll', icon: DollarSign },
     { name: 'Recruitment', href: '/employee/hr/recruitment', icon: UserPlus },
     { name: 'Candidate Pool', href: '/employee/hr/candidate-pool', icon: Users },
@@ -69,11 +82,37 @@ const EmployeeDashboardLayout = () => {
     { name: 'Performance', href: '/employee/hr/performance', icon: TrendingUp },
   ];
 
+  // Admin Navigation - Full system access
+  const adminNavigation = [
+    { name: 'Admin Dashboard', href: '/dashboard', icon: Shield },
+    { name: 'Employee Management', href: '/employees', icon: Users },
+    { name: 'Leave Management', href: '/leave', icon: Calendar },
+    { name: 'Leave Encashment Rules', href: '/leave-encashment/rules', icon: DollarSign },
+    { name: 'Leave Accrual Policies', href: '/leave-accrual/policies', icon: Calendar },
+    { name: 'Manual Accrual', href: '/leave-accrual/manual', icon: Calendar },
+    { name: 'Approval Workflows', href: '/approval-workflow/workflows', icon: CheckCircle },
+    { name: 'Approval Matrix', href: '/approval-workflow/matrix', icon: CheckCircle },
+    { name: 'Delegations', href: '/approval-workflow/delegations', icon: CheckCircle },
+    { name: 'SLA Monitoring', href: '/approval-workflow/sla', icon: Clock },
+    { name: 'Work Schedule', href: '/work-schedule/shift-templates', icon: Calendar },
+    { name: 'Biometric Devices', href: '/biometric/devices', icon: Clock },
+    { name: 'SAP Connections', href: '/sap/connections', icon: Shield },
+    { name: 'Reports & Analytics', href: '/reports/analytics', icon: FileText },
+    { name: 'Scheduled Reports', href: '/reports/scheduled', icon: FileText },
+    { name: 'Departments', href: '/administration/departments', icon: Users },
+    { name: 'Roles & Permissions', href: '/administration/roles', icon: Shield },
+    { name: 'Policies', href: '/administration/policies', icon: FileText },
+    { name: 'User Management', href: '/administration/users', icon: Users },
+    { name: 'Leave Management', href: '/administration/leave-management', icon: Calendar },
+  ];
+
   let navigation = employeeNavigation;
-  if (isManager) {
-    navigation = [...employeeNavigation, ...managerNavigation];
+  if (isAdmin) {
+    navigation = [...employeeNavigation, ...adminNavigation];
   } else if (isHR) {
     navigation = [...employeeNavigation, ...hrNavigation];
+  } else if (isManager) {
+    navigation = [...employeeNavigation, ...managerNavigation];
   }
 
   const handleLogout = () => {
@@ -131,8 +170,41 @@ const EmployeeDashboardLayout = () => {
               );
             })}
 
+            {/* Admin Section Divider */}
+            {isAdmin && (
+              <>
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center space-x-2 px-3">
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                    <span className="text-xs text-gray-500 font-semibold">ADMINISTRATION</span>
+                    <div className="flex-1 h-px bg-gray-700"></div>
+                  </div>
+                </div>
+
+                {/* Admin Navigation */}
+                {adminNavigation.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all ${
+                        active
+                          ? 'bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white shadow-lg'
+                          : 'text-gray-400 hover:bg-[#1E1E2A] hover:text-white'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 mr-3" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+
             {/* Manager Section Divider */}
-            {isManager && (
+            {isManager && !isAdmin && (
               <>
                 <div className="pt-4 pb-2">
                   <div className="flex items-center space-x-2 px-3">
@@ -165,7 +237,7 @@ const EmployeeDashboardLayout = () => {
             )}
 
             {/* HR Section Divider */}
-            {isHR && (
+            {isHR && !isAdmin && (
               <>
                 <div className="pt-4 pb-2">
                   <div className="flex items-center space-x-2 px-3">

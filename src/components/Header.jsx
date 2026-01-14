@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, User, LogOut, Settings, Sun, Moon, Maximize, Minimize } from 'lucide-react';
+import { Menu, Bell, User, LogOut, Settings, Sun, Moon, Maximize, Minimize, Users, Calendar, Clock, DollarSign, Briefcase, FileText, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -10,6 +10,11 @@ const Header = ({ toggleSidebar }) => {
   const { theme, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'company_admin';
+  const isHR = user?.role === 'hr';
+  const isManager = user?.role === 'manager';
+  const showEmployeeFeatures = isAdmin || isHR || isManager;
 
   const handleLogout = () => {
     logout();
@@ -115,7 +120,7 @@ const Header = ({ toggleSidebar }) => {
                 className="fixed inset-0 z-10"
                 onClick={() => setShowUserMenu(false)}
               />
-              <div className="absolute right-0 mt-2 w-48 theme-surface theme-border rounded-lg shadow-lg z-20"
+              <div className="absolute right-0 mt-2 w-56 theme-surface theme-border rounded-lg shadow-lg z-20"
                 style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', borderWidth: '1px', borderStyle: 'solid' }}>
                 <div className="py-1">
                   <button
@@ -144,6 +149,140 @@ const Header = ({ toggleSidebar }) => {
                     <Settings size={16} />
                     <span>Settings</span>
                   </button>
+                  
+                  {showEmployeeFeatures && (
+                    <>
+                      <hr className="my-1 theme-border" style={{ borderColor: 'var(--color-border)' }} />
+                      {/* Employee Self-Service Section */}
+                      <button
+                        onClick={() => {
+                          navigate('/leave/apply');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                        style={{ color: 'var(--color-text)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <Calendar size={16} />
+                        <span>Apply Leave</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate('/leave/balance');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                        style={{ color: 'var(--color-text)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <Calendar size={16} />
+                        <span>Leave Balance</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate('/attendance');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                        style={{ color: 'var(--color-text)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <Clock size={16} />
+                        <span>Attendance</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate('/payroll/slips');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                        style={{ color: 'var(--color-text)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <DollarSign size={16} />
+                        <span>Payslips</span>
+                      </button>
+                      {!(isAdmin || isHR) && (
+                        <button
+                          onClick={() => {
+                            navigate('/leave-encashment/requests');
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                          style={{ color: 'var(--color-text)' }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <DollarSign size={16} />
+                          <span>Leave Encashment</span>
+                        </button>
+                      )}
+                      
+                      {/* Employee Management Section (Admin/HR only) */}
+                      {(isAdmin || isHR) && (
+                        <>
+                          <hr className="my-1 theme-border" style={{ borderColor: 'var(--color-border)' }} />
+                          <button
+                            onClick={() => {
+                              navigate('/employees');
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                            style={{ color: 'var(--color-text)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <Users size={16} />
+                            <span>All Employees</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigate('/employees/add');
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                            style={{ color: 'var(--color-text)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <UserPlus size={16} />
+                            <span>Add Employee</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigate('/employees/onboarding');
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                            style={{ color: 'var(--color-text)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <UserPlus size={16} />
+                            <span>Onboarding</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigate('/employees/offboarding');
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                            style={{ color: 'var(--color-text)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <Users size={16} />
+                            <span>Offboarding</span>
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                  
                   <hr className="my-1 theme-border" style={{ borderColor: 'var(--color-border)' }} />
                   <button
                     onClick={handleLogout}

@@ -3,8 +3,12 @@ import { useAuth } from '../../context/AuthContext';
 import BottomNavigation from '../../components/BottomNavigation';
 import { 
   User, Mail, Phone, MapPin, Calendar, Briefcase, 
-  Edit2, Save, X, Camera, Building, Award 
+  Edit2, Save, X, Camera, Building, Award, Users, GraduationCap, FileEdit
 } from 'lucide-react';
+import FamilyDetails from '../EmployeeProfile/FamilyDetails';
+import Certifications from '../EmployeeProfile/Certifications';
+import AcademicQualifications from '../EmployeeProfile/AcademicQualifications';
+import ProfileUpdateRequest from '../EmployeeProfile/ProfileUpdateRequest';
 
 const ModernProfile = () => {
   const { user } = useAuth();
@@ -28,6 +32,10 @@ const ModernProfile = () => {
   const tabs = [
     { id: 'personal', label: 'Personal Info' },
     { id: 'employment', label: 'Employment' },
+    { id: 'family', label: 'Family Details', icon: Users },
+    { id: 'certifications', label: 'Certifications', icon: Award },
+    { id: 'education', label: 'Education', icon: GraduationCap },
+    { id: 'update-requests', label: 'Update Requests', icon: FileEdit },
     { id: 'documents', label: 'Documents' }
   ];
 
@@ -119,22 +127,27 @@ const ModernProfile = () => {
 
         {/* Tabs */}
         <div className="flex items-center space-x-2 border-b border-gray-700 overflow-x-auto scrollbar-hide">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 font-medium transition-all relative ${
-                activeTab === tab.id
-                  ? 'text-[#A88BFF]'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#A88BFF]"></div>
-              )}
-            </button>
-          ))}
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 md:px-6 py-3 font-medium transition-all relative flex items-center gap-2 whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'text-[#A88BFF]'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {Icon && <Icon className="w-4 h-4" />}
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#A88BFF]"></div>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab Content */}
@@ -266,6 +279,30 @@ const ModernProfile = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'family' && (
+          <div className="bg-[#2A2A3A] rounded-2xl p-4 md:p-6 border border-gray-700">
+            <FamilyDetails />
+          </div>
+        )}
+
+        {activeTab === 'certifications' && (
+          <div className="bg-[#2A2A3A] rounded-2xl p-4 md:p-6 border border-gray-700">
+            <Certifications />
+          </div>
+        )}
+
+        {activeTab === 'education' && (
+          <div className="bg-[#2A2A3A] rounded-2xl p-4 md:p-6 border border-gray-700">
+            <AcademicQualifications />
+          </div>
+        )}
+
+        {activeTab === 'update-requests' && (
+          <div className="bg-[#2A2A3A] rounded-2xl p-4 md:p-6 border border-gray-700">
+            <ProfileUpdateRequest />
           </div>
         )}
 

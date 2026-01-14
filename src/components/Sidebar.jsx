@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Briefcase,
@@ -23,7 +24,12 @@ import {
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
+  const { user } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState({});
+  
+  const isAdmin = user?.role === 'admin' || user?.role === 'company_admin';
+  const isHR = user?.role === 'hr';
+  const isManager = user?.role === 'manager';
 
   const toggleMenu = (key) => {
     setExpandedMenus(prev => {
@@ -44,7 +50,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const isActive = (path) => location.pathname === path;
   const isParentActive = (paths) => paths.some(path => location.pathname.startsWith(path));
 
-  const menuItems = [
+  // Base menu items - available to all roles
+  const baseMenuItems = [
     {
       key: 'dashboard',
       label: 'Dashboard',
@@ -58,24 +65,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: '/job-desk'
     },
     {
-      key: 'employee',
-      label: 'Employee',
-      icon: Users,
-      submenu: [
-        { label: 'All Employees', path: '/employees' },
-        { label: 'Add Employee', path: '/employees/add' },
-        { label: 'Onboarding', path: '/employees/onboarding' },
-        { label: 'Offboarding', path: '/employees/offboarding' }
-      ]
-    },
-    {
       key: 'leave',
       label: 'Leave',
       icon: Calendar,
       submenu: [
         { label: 'All Leaves', path: '/leave' },
-        { label: 'Apply Leave', path: '/leave/apply' },
-        { label: 'Leave Balance', path: '/leave/balance' }
+        ...(!isAdmin && !isHR && !isManager ? [
+          { label: 'Apply Leave', path: '/leave/apply' },
+          { label: 'Leave Balance', path: '/leave/balance' }
+        ] : []),
+        ...(isAdmin || isHR ? [
+          { label: 'Leave Encashment Rules', path: '/leave-encashment/rules' },
+          { label: 'Leave Accrual Policies', path: '/leave-accrual/policies' },
+          { label: 'Manual Accrual', path: '/leave-accrual/manual' }
+        ] : [
+          { label: 'Leave Encashment', path: '/leave-encashment/requests' },
+          { label: 'Encashment History', path: '/leave-encashment/history' }
+        ])
       ]
     },
     {
@@ -86,6 +92,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { label: 'View Attendance', path: '/attendance' },
         { label: 'Mark Attendance', path: '/attendance/mark' },
         { label: 'Reports', path: '/attendance/reports' }
+      ]
+    },
+    {
+      key: 'work-schedule',
+      label: 'Work Schedule',
+      icon: Calendar,
+      submenu: [
+        { label: 'Shift Templates', path: '/work-schedule/shift-templates' },
+        { label: 'Roster Management', path: '/work-schedule/rosters' },
+        { label: 'Roster Calendar', path: '/work-schedule/roster-calendar' },
+        { label: 'Change Requests', path: '/work-schedule/roster-change-requests' }
       ]
     },
     {
@@ -139,11 +156,31 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       key: 'administration',
       label: 'Administration',
       icon: Shield,
+      roles: ['admin', 'company_admin', 'hr'], // Available to admin and HR
       submenu: [
-        { label: 'Departments', path: '/administration/departments' },
-        { label: 'Roles & Permissions', path: '/administration/roles' },
-        { label: 'Policies', path: '/administration/policies' },
-        { label: 'User Management', path: '/administration/users' }
+        ...(isAdmin ? [
+          { label: 'Departments', path: '/administration/departments' },
+          { label: 'Roles & Permissions', path: '/administration/roles' },
+          { label: 'Policies', path: '/administration/policies' },
+          { label: 'User Management', path: '/administration/users' },
+          { label: 'Leave Management', path: '/administration/leave-management' }
+        ] : []),
+        { label: 'Approval Workflows', path: '/approval-workflow/workflows' },
+        { label: 'Approval Matrix', path: '/approval-workflow/matrix' },
+        { label: 'Delegations', path: '/approval-workflow/delegations' },
+        { label: 'Pending Approvals', path: '/approval-workflow/pending' },
+        { label: 'SLA Monitoring', path: '/approval-workflow/sla' },
+        ...(isAdmin ? [
+          { label: 'Biometric Devices', path: '/biometric/devices' },
+          { label: 'Biometric Employee Sync', path: '/biometric/employee-sync' },
+          { label: 'Biometric Attendance Pull', path: '/biometric/attendance-pull' },
+          { label: 'Biometric Sync Logs', path: '/biometric/sync-logs' },
+          { label: 'SAP Connections', path: '/sap/connections' },
+          { label: 'SAP Employee Sync', path: '/sap/employee-sync' },
+          { label: 'SAP Leave Sync', path: '/sap/leave-sync' },
+          { label: 'SAP Attendance Sync', path: '/sap/attendance-sync' },
+          { label: 'SAP Sync Logs', path: '/sap/sync-logs' }
+        ] : [])
       ]
     },
     {
@@ -156,9 +193,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       key: 'reports',
       label: 'Reports',
       icon: FileText,
+      roles: ['admin', 'company_admin', 'hr', 'manager'], // Available to admin, HR, and managers
       submenu: [
         { label: 'Export Data', path: '/reports/export' },
-        { label: 'Compliance Report', path: '/reports/compliance' }
+        { label: 'Compliance Report', path: '/reports/compliance' },
+        ...(isAdmin || isHR ? [
+          { label: 'Leave Reports', path: '/reports/leave' },
+          { label: 'Attendance Reports', path: '/reports/attendance' },
+          { label: 'Compliance Reports', path: '/reports/compliance-reports' },
+          { label: 'Scheduled Reports', path: '/reports/scheduled' },
+          { label: 'Analytics Dashboard', path: '/reports/analytics' }
+        ] : [])
       ]
     },
     {
@@ -209,7 +254,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3">
-          {menuItems.map((item) => (
+          {baseMenuItems.filter(item => {
+            // Filter by role if roles array is specified
+            if (item.roles && !item.roles.includes(user?.role)) {
+              return false;
+            }
+            return true;
+          }).map((item) => (
             <div key={item.key} className="mb-1">
               {item.submenu ? (
                 <>

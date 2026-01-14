@@ -1,18 +1,20 @@
-import React from 'react';
-import { Users } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 const HREmployees = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to the main employees page
+    navigate('/employees', { replace: true });
+  }, [navigate]);
+
   return (
-    <div className="min-h-screen bg-[#1E1E2A] p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Employee Management</h1>
-        <p className="text-gray-400">Manage all employee records and information</p>
-      </div>
-      
-      <div className="bg-[#2A2A3A] rounded-2xl p-12 border border-gray-800 text-center">
-        <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">Employee Management</h3>
-        <p className="text-gray-400">This page is under development</p>
+    <div className="min-h-screen bg-[#1E1E2A] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#A88BFF]" />
+        <p className="text-gray-400">Redirecting to Employee Management...</p>
       </div>
     </div>
   );
