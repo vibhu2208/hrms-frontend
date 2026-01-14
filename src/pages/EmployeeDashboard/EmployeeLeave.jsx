@@ -49,11 +49,13 @@ const EmployeeLeave = () => {
         getLeaveSummary(selectedYear),
         getLeaveApplications({ year: selectedYear })
       ]);
-      setLeaveBalances(summaryRes.data.balances);
-      setLeaveHistory(summaryRes.data.history);
+      setLeaveBalances(summaryRes.data?.balances || summaryRes.data?.data || []);
+      setLeaveHistory(summaryRes.data?.history || historyRes.data?.data || historyRes.data || []);
     } catch (error) {
       console.error('Error fetching leave data:', error);
       toast.error('Failed to load leave data');
+      setLeaveBalances([]);
+      setLeaveHistory([]);
     } finally {
       setLoading(false);
     }
@@ -177,7 +179,7 @@ const EmployeeLeave = () => {
 
       {/* Leave Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {leaveBalances.map((balance, index) => (
+        {leaveBalances && leaveBalances.length > 0 ? leaveBalances.map((balance, index) => (
           <div
             key={index}
             className={`rounded-xl p-6 ${theme === 'dark' ? 'bg-dark-800' : 'bg-white'}`}
@@ -186,7 +188,7 @@ const EmployeeLeave = () => {
               <h3 className={`text-sm font-medium uppercase ${
                 theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                {balance.leaveType}
+                {balance.leaveType || 'N/A'}
               </h3>
               <Calendar className="w-5 h-5 text-primary-600" />
             </div>
@@ -196,7 +198,7 @@ const EmployeeLeave = () => {
                   Total
                 </span>
                 <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {balance.totalAllotted}
+                  {balance.totalAllotted || balance.total || 0}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -204,7 +206,7 @@ const EmployeeLeave = () => {
                   Used
                 </span>
                 <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {balance.used}
+                  {balance.used || balance.consumed || 0}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -212,7 +214,7 @@ const EmployeeLeave = () => {
                   Pending
                 </span>
                 <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {balance.pending}
+                  {balance.pending || 0}
                 </span>
               </div>
               <div className="pt-2 border-t border-gray-200 dark:border-dark-700">
@@ -221,13 +223,17 @@ const EmployeeLeave = () => {
                     Remaining
                   </span>
                   <span className="font-bold text-primary-600 text-lg">
-                    {balance.remaining}
+                    {balance.remaining || balance.available || 0}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className={`col-span-full text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            No leave balance data available
+          </div>
+        )}
       </div>
 
       {/* Leave History */}
@@ -260,7 +266,7 @@ const EmployeeLeave = () => {
               </tr>
             </thead>
             <tbody>
-              {leaveHistory.length > 0 ? (
+              {leaveHistory && leaveHistory.length > 0 ? (
                 leaveHistory.map((leave) => (
                   <tr
                     key={leave.id}

@@ -1,12 +1,58 @@
-import React from 'react';
-import { Users, Calendar, DollarSign, TrendingUp, Clock, Briefcase } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Calendar, DollarSign, TrendingUp, Clock, Briefcase, Loader2 } from 'lucide-react';
+import { getHRDashboardStats } from '../../api/hr';
+import toast from 'react-hot-toast';
 
 const HRHome = () => {
-  const stats = [
-    { name: 'Total Employees', value: '0', icon: Users, color: 'from-blue-500 to-blue-600' },
-    { name: 'Pending Leaves', value: '0', icon: Calendar, color: 'from-orange-500 to-orange-600' },
-    { name: 'Payroll This Month', value: '₹0', icon: DollarSign, color: 'from-green-500 to-green-600' },
-    { name: 'Open Positions', value: '0', icon: Briefcase, color: 'from-purple-500 to-purple-600' },
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalEmployees: 0,
+    pendingLeaves: 0,
+    payrollThisMonth: 0,
+    openPositions: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await getHRDashboardStats();
+      if (response.success) {
+        setStats(response.data);
+      } else {
+        setError(response.message || 'Failed to load dashboard stats');
+        toast.error(response.message || 'Failed to load dashboard stats');
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to load dashboard stats';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const statsData = [
+    { name: 'Total Employees', value: stats.totalEmployees.toString(), icon: Users, color: 'from-blue-500 to-blue-600' },
+    { name: 'Pending Leaves', value: stats.pendingLeaves.toString(), icon: Calendar, color: 'from-orange-500 to-orange-600' },
+    { name: 'Payroll This Month', value: formatCurrency(stats.payrollThisMonth), icon: DollarSign, color: 'from-green-500 to-green-600' },
+    { name: 'Open Positions', value: stats.openPositions.toString(), icon: Briefcase, color: 'from-purple-500 to-purple-600' },
   ];
 
   return (
@@ -17,39 +63,64 @@ const HRHome = () => {
         <p className="text-gray-400">Welcome to HR Management Portal</p>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-500/10 border border-red-500/40 text-red-300 text-sm rounded-xl px-4 py-3">
+          {error}
+        </div>
+      )}
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.name} className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
+      {loading ? (
+        <div className="flex items-center justify-center h-64 mb-8">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-[#A88BFF]" />
+            <p className="text-gray-400">Loading dashboard stats...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {statsData.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div key={stat.name} className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
                 </div>
+                <h3 className="text-gray-400 text-sm mb-1">{stat.name}</h3>
+                <p className="text-3xl font-bold text-white">{stat.value}</p>
               </div>
-              <h3 className="text-gray-400 text-sm mb-1">{stat.name}</h3>
-              <p className="text-3xl font-bold text-white">{stat.value}</p>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-800">
         <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 bg-[#1E1E2A] rounded-xl hover:bg-[#3A3A4A] transition-colors text-left">
+          <button
+            onClick={() => navigate('/employees')}
+            className="p-4 bg-[#1E1E2A] rounded-xl hover:bg-[#3A3A4A] transition-colors text-left"
+          >
             <Users className="w-6 h-6 text-[#A88BFF] mb-2" />
             <h3 className="text-white font-semibold mb-1">Manage Employees</h3>
             <p className="text-gray-400 text-sm">View and manage employee records</p>
           </button>
-          <button className="p-4 bg-[#1E1E2A] rounded-xl hover:bg-[#3A3A4A] transition-colors text-left">
+          <button
+            onClick={() => navigate('/approval-workflow/pending')}
+            className="p-4 bg-[#1E1E2A] rounded-xl hover:bg-[#3A3A4A] transition-colors text-left"
+          >
             <Calendar className="w-6 h-6 text-[#A88BFF] mb-2" />
             <h3 className="text-white font-semibold mb-1">Leave Approvals</h3>
             <p className="text-gray-400 text-sm">Review pending leave requests</p>
           </button>
-          <button className="p-4 bg-[#1E1E2A] rounded-xl hover:bg-[#3A3A4A] transition-colors text-left">
+          <button
+            onClick={() => navigate('/payroll')}
+            className="p-4 bg-[#1E1E2A] rounded-xl hover:bg-[#3A3A4A] transition-colors text-left"
+          >
             <DollarSign className="w-6 h-6 text-[#A88BFF] mb-2" />
             <h3 className="text-white font-semibold mb-1">Process Payroll</h3>
             <p className="text-gray-400 text-sm">Generate and manage payroll</p>
