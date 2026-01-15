@@ -3,15 +3,17 @@ import api from '../../api/axios';
 import { Users, Plus, FileText, UploadCloud, Search, Clock, Filter, X, Loader2 } from 'lucide-react';
 
 const HRCandidatePool = () => {
-  const [resumes, setResumes] = useState([]);
+  const [allEntries, setAllEntries] = useState([]);
+  const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
-  const [selectedResume, setSelectedResume] = useState(null);
+  const [selectedEntry, setSelectedEntry] = useState(null);
   const [filters, setFilters] = useState({
     status: 'active',
     processingStatus: '',
@@ -38,50 +40,112 @@ const HRCandidatePool = () => {
 
   const pageSize = 20;
 
-  const fetchResumes = async (opts = {}) => {
+  const normalizeResumeEntry = (resume = {}) => ({
+    id: resume._id,
+    type: 'resume',
+    name: resume.name || 'Unnamed Candidate',
+    email: resume.email || '',
+    phone: resume.phone || '',
+    experience: {
+      years: resume.parsedData?.experience?.years ?? null,
+      months: resume.parsedData?.experience?.months ?? null
+    },
+    skills: resume.parsedData?.skills || [],
+    statusLabel: resume.processingStatus || 'pending',
+    statusType: 'processing',
+    tags: resume.tags || [],
+    source: resume.fileName || 'Resume Upload',
+    rawText: resume.rawText || '',
+    createdAt: resume.createdAt || resume.updatedAt,
+    appliedRole: null,
+    stage: null,
+    original: resume
+  });
+
+  const normalizeCandidateEntry = (candidate = {}) => ({
+    id: candidate._id,
+    type: 'candidate',
+    name: `${candidate.firstName || ''} ${candidate.lastName || ''}`.trim() || 'Unnamed Candidate',
+    email: candidate.email || '',
+    phone: candidate.phone || '',
+    experience: {
+      years: candidate.experience?.years ?? null,
+      months: candidate.experience?.months ?? null
+    },
+    skills: Array.isArray(candidate.skills) ? candidate.skills : [],
+    statusLabel: candidate.stage || candidate.status || 'applied',
+    statusType: 'stage',
+    tags: [candidate.source, candidate.appliedFor?.title].filter(Boolean),
+    source: candidate.appliedFor?.title ? `Applied for ${candidate.appliedFor.title}` : 'Job Applicant',
+    rawText: '',
+    createdAt: candidate.createdAt,
+    appliedRole: candidate.appliedFor?.title || '',
+    stage: candidate.stage || '',
+    resumeUrl: candidate.resume?.url,
+    original: candidate
+  });
+
+  const applyPagination = (dataset, targetPage = 1) => {
+    const total = dataset.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const safePage = Math.min(Math.max(targetPage, 1), pages);
+    const startIndex = (safePage - 1) * pageSize;
+    setEntries(dataset.slice(startIndex, startIndex + pageSize));
+    setPage(safePage);
+    setTotalPages(pages);
+    setTotalCount(total);
+  };
+
+  const fetchCandidatePool = async (opts = {}) => {
     setLoading(true);
     setError('');
 
+    const targetPage = opts.page || 1;
+
     try {
-      const params = {
-        page: opts.page || page,
+      const resumeParams = {
+        page: 1,
         limit: pageSize,
         status: filters.status,
       };
 
-      if (filters.processingStatus) params.processingStatus = filters.processingStatus;
-      if (filters.minExperience) params.minExperience = filters.minExperience;
-      if (filters.maxExperience) params.maxExperience = filters.maxExperience;
+      if (filters.processingStatus) resumeParams.processingStatus = filters.processingStatus;
+      if (filters.minExperience) resumeParams.minExperience = filters.minExperience;
+      if (filters.maxExperience) resumeParams.maxExperience = filters.maxExperience;
 
-      // If searchQuery is present, use search API; else normal list API
+      const resumeRequest = searchQuery.trim()
+        ? api.post('/resume-pool/search', {
+            query: searchQuery.trim(),
+            page: 1,
+            limit: pageSize,
+            filters: {}
+          })
+        : api.get('/resume-pool', { params: resumeParams });
+
+      const candidateParams = {};
       if (searchQuery.trim()) {
-        const response = await api.post('/resume-pool/search', {
-          query: searchQuery.trim(),
-          page: opts.page || page,
-          limit: pageSize,
-          filters: {}
-        });
-
-        if (response.data.success) {
-          setResumes(response.data.data || []);
-          const pagination = response.data.pagination || {};
-          setPage(pagination.page || 1);
-          setTotalPages(pagination.pages || 1);
-        } else {
-          setError(response.data.message || 'Failed to search resumes');
-        }
-      } else {
-        const response = await api.get('/resume-pool', { params });
-
-        if (response.data.success) {
-          setResumes(response.data.data || []);
-          const pagination = response.data.pagination || {};
-          setPage(pagination.page || 1);
-          setTotalPages(pagination.pages || 1);
-        } else {
-          setError(response.data.message || 'Failed to load resumes');
-        }
+        candidateParams.search = searchQuery.trim();
       }
+
+      const [resumeResponse, candidateResponse] = await Promise.all([
+        resumeRequest,
+        api.get('/candidates', { params: candidateParams })
+      ]);
+
+      const resumeData = Array.isArray(resumeResponse?.data?.data) ? resumeResponse.data.data : [];
+      const candidateData = Array.isArray(candidateResponse?.data?.data) ? candidateResponse.data.data : [];
+
+      const resumeEntries = resumeData.map(normalizeResumeEntry);
+      const candidateEntries = candidateData.map(normalizeCandidateEntry);
+
+      const combined = [...candidateEntries, ...resumeEntries].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      setAllEntries(combined);
+      applyPagination(combined, targetPage);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load candidate pool');
     } finally {
@@ -90,22 +154,22 @@ const HRCandidatePool = () => {
   };
 
   useEffect(() => {
-    fetchResumes({ page: 1 });
+    fetchCandidatePool({ page: 1 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = () => {
-    fetchResumes({ page: 1 });
+    fetchCandidatePool({ page: 1 });
   };
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
+    setTimeout(() => fetchCandidatePool({ page: 1 }), 0);
   };
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > totalPages) return;
-    setPage(newPage);
-    fetchResumes({ page: newPage });
+    applyPagination(allEntries, newPage);
   };
 
   const openAddModal = () => {
@@ -183,25 +247,67 @@ const HRCandidatePool = () => {
     }
   };
 
-  const getProcessingBadge = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-400 bg-green-500/10 border-green-500/40';
-      case 'processing':
-        return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/40';
-      case 'failed':
-        return 'text-red-400 bg-red-500/10 border-red-500/40';
-      default:
-        return 'text-gray-400 bg-gray-500/10 border-gray-500/40';
+  const getExperienceString = (entry) => {
+    if (!entry) return 'N/A';
+    if (entry.type === 'candidate') {
+      const years = entry.experience?.years || 0;
+      const months = entry.experience?.months || 0;
+      if (!years && !months) return 'N/A';
+      if (!months) return `${years} yrs`;
+      return `${years} yrs ${months} mo`;
     }
-  };
 
-  const getExperienceString = (parsedData) => {
-    const years = parsedData?.experience?.years || 0;
-    const months = parsedData?.experience?.months || 0;
+    const years = entry.experience?.years || 0;
+    const months = entry.experience?.months || 0;
     if (!years && !months) return 'N/A';
     if (!months) return `${years} yrs`;
     return `${years} yrs ${months} mo`;
+  };
+
+  const getStatusBadge = (entry) => {
+    if (!entry) return 'text-gray-400 border-gray-700';
+    if (entry.type === 'candidate') {
+      switch (entry.statusLabel) {
+        case 'shortlisted':
+        case 'interview-scheduled':
+          return 'border-green-500/50 text-green-300 bg-green-500/10';
+        case 'offer-extended':
+        case 'offer-accepted':
+          return 'border-blue-500/50 text-blue-300 bg-blue-500/10';
+        case 'rejected':
+          return 'border-red-500/50 text-red-300 bg-red-500/10';
+        default:
+          return 'border-[#A88BFF]/50 text-[#C7B6FF] bg-[#A88BFF]/10';
+      }
+    }
+
+    switch (entry.statusLabel) {
+      case 'completed':
+        return 'border-green-500/50 text-green-300 bg-green-500/10';
+      case 'failed':
+        return 'border-red-500/50 text-red-300 bg-red-500/10';
+      case 'processing':
+        return 'border-blue-500/50 text-blue-300 bg-blue-500/10';
+      default:
+        return 'border-[#A88BFF]/50 text-[#C7B6FF] bg-[#A88BFF]/10';
+    }
+  };
+
+  const getEntryTags = (entry) => {
+    if (!entry) return [];
+    if (entry.type === 'candidate') {
+      const tags = entry.tags || [];
+      return tags.length ? tags : ['Job Applicant'];
+    }
+    return entry.tags || [];
+  };
+
+  const openEntryModal = (entry) => {
+    setSelectedEntry(entry);
+  };
+
+  const closeEntryModal = () => {
+    setSelectedEntry(null);
   };
 
   return (
@@ -214,7 +320,7 @@ const HRCandidatePool = () => {
             Candidate Pool
           </h1>
           <p className="text-gray-400 mt-1">
-            Central pool of all resumes. View, search, and add candidates.
+            Unified view of all applicants and uploaded resumes across roles and sources.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -308,11 +414,11 @@ const HRCandidatePool = () => {
           <div className="flex items-center gap-2 text-sm text-gray-300">
             <Users className="w-4 h-4 text-[#A88BFF]" />
             <span>Candidate Pool</span>
-            <span className="text-xs text-gray-500">({resumes.length} shown)</span>
+            <span className="text-xs text-gray-500">({entries.length} shown of {totalCount})</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <Clock className="w-3 h-3" />
-            Auto-processed with AI for skills & experience
+            Recruiting + AI parsed resumes, combined automatically
           </div>
         </div>
 
@@ -325,7 +431,7 @@ const HRCandidatePool = () => {
                 <th className="px-4 py-3 text-left">Experience</th>
                 <th className="px-4 py-3 text-left">Key Skills</th>
                 <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Tags</th>
+                <th className="px-4 py-3 text-left">Source</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -339,40 +445,55 @@ const HRCandidatePool = () => {
                     </div>
                   </td>
                 </tr>
-              ) : resumes.length === 0 ? (
+              ) : entries.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-gray-500 text-sm">
-                    No resumes found in the pool.
+                    No candidates found yet. Adjust filters or add resumes manually.
                   </td>
                 </tr>
               ) : (
-                resumes.map((resume) => (
+                entries.map((entry) => (
                   <tr
-                    key={resume._id}
+                    key={entry.id}
                     className="border-t border-gray-800 hover:bg-[#1E1E2A]/60 transition-colors"
                   >
                     <td className="px-4 py-3">
                       <div className="flex flex-col">
-                        <span className="text-white font-medium">{resume.name}</span>
-                        <span className="text-xs text-gray-500">
-                          {resume.fileName || 'Manual Entry'}
+                        <span className="text-white font-medium flex items-center gap-2">
+                          {entry.name}
+                          {entry.type === 'candidate' && (
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                              Applicant
+                            </span>
+                          )}
+                          {entry.type === 'resume' && (
+                            <span className="px-2 py-0.5 text-[10px] rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                              Resume
+                            </span>
+                          )}
                         </span>
+                        {entry.appliedRole && (
+                          <span className="text-xs text-gray-500">Applied for: {entry.appliedRole}</span>
+                        )}
+                        {entry.source && entry.type === 'resume' && (
+                          <span className="text-xs text-gray-500">{entry.source}</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col text-xs text-gray-300">
-                        {resume.email && <span>{resume.email}</span>}
-                        {resume.phone && <span className="text-gray-500">{resume.phone}</span>}
+                        {entry.email && <span>{entry.email}</span>}
+                        {entry.phone && <span className="text-gray-500">{entry.phone}</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-gray-300">
-                        {getExperienceString(resume.parsedData)}
+                        {getExperienceString(entry)}
                       </span>
                     </td>
                     <td className="px-4 py-3 max-w-xs">
                       <div className="flex flex-wrap gap-1">
-                        {(resume.parsedData?.skills || []).slice(0, 5).map((skill, idx) => (
+                        {(entry.skills || []).slice(0, 5).map((skill, idx) => (
                           <span
                             key={idx}
                             className="px-2 py-0.5 rounded-full bg-[#1E1E2A] border border-gray-700 text-[11px] text-gray-200"
@@ -380,25 +501,23 @@ const HRCandidatePool = () => {
                             {skill}
                           </span>
                         ))}
-                        {(resume.parsedData?.skills || []).length > 5 && (
+                        {(entry.skills || []).length > 5 && (
                           <span className="text-[11px] text-gray-500">
-                            +{(resume.parsedData.skills.length - 5)} more
+                            +{(entry.skills.length - 5)} more
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] ${getProcessingBadge(
-                          resume.processingStatus
-                        )}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] ${getStatusBadge(entry)}`}
                       >
-                        {resume.processingStatus || 'pending'}
+                        {entry.statusLabel || 'pending'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {(resume.tags || []).slice(0, 3).map((tag, idx) => (
+                        {getEntryTags(entry).slice(0, 3).map((tag, idx) => (
                           <span
                             key={idx}
                             className="px-2 py-0.5 rounded-full bg-[#1E1E2A] border border-gray-700 text-[11px] text-gray-400"
@@ -410,7 +529,7 @@ const HRCandidatePool = () => {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => setSelectedResume(resume)}
+                        onClick={() => openEntryModal(entry)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#1E1E2A] border border-gray-700 text-xs text-gray-200 hover:border-[#A88BFF] hover:text-[#A88BFF] transition-colors"
                       >
                         <FileText className="w-3 h-3" />
@@ -690,21 +809,25 @@ const HRCandidatePool = () => {
       )}
 
       {/* Resume Detail Modal */}
-      {selectedResume && (
+      {selectedEntry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-4xl bg-[#2A2A3A] border border-gray-800 rounded-2xl shadow-xl max-h-[90vh] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
               <div>
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <FileText className="w-4 h-4 text-[#A88BFF]" />
-                  {selectedResume.name}
+                  {selectedEntry.name}
                 </h2>
                 <p className="text-xs text-gray-400 mt-1">
-                  From Resume Pool • {selectedResume.fileName || 'Manual Entry'}
+                  {selectedEntry.type === 'candidate'
+                    ? selectedEntry.appliedRole
+                      ? `Job Applicant • Applied for ${selectedEntry.appliedRole}`
+                      : 'Job Applicant'
+                    : selectedEntry.source || 'Resume Pool'}
                 </p>
               </div>
               <button
-                onClick={() => setSelectedResume(null)}
+                onClick={closeEntryModal}
                 className="text-gray-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
@@ -717,31 +840,31 @@ const HRCandidatePool = () => {
                 <div className="bg-[#1E1E2A] border border-gray-800 rounded-xl p-4">
                   <h3 className="text-sm font-semibold text-white mb-3">Basic Info</h3>
                   <div className="space-y-2 text-xs text-gray-300">
-                    {selectedResume.email && (
+                    {selectedEntry.email && (
                       <div>
                         <span className="text-gray-500">Email: </span>
-                        <span>{selectedResume.email}</span>
+                        <span>{selectedEntry.email}</span>
                       </div>
                     )}
-                    {selectedResume.phone && (
+                    {selectedEntry.phone && (
                       <div>
                         <span className="text-gray-500">Phone: </span>
-                        <span>{selectedResume.phone}</span>
+                        <span>{selectedEntry.phone}</span>
                       </div>
                     )}
                     <div>
                       <span className="text-gray-500">Experience: </span>
-                      <span>{getExperienceString(selectedResume.parsedData)}</span>
+                      <span>{getExperienceString(selectedEntry)}</span>
                     </div>
                     <div>
                       <span className="text-gray-500">Status: </span>
-                      <span className="capitalize">{selectedResume.processingStatus || 'pending'}</span>
+                      <span className="capitalize">{selectedEntry.statusLabel || 'pending'}</span>
                     </div>
-                    {selectedResume.tags && selectedResume.tags.length > 0 && (
+                    {getEntryTags(selectedEntry).length > 0 && (
                       <div>
                         <span className="text-gray-500">Tags: </span>
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {selectedResume.tags.map((tag, idx) => (
+                          {getEntryTags(selectedEntry).map((tag, idx) => (
                             <span
                               key={idx}
                               className="px-2 py-0.5 rounded-full bg-[#1E1E2A] border border-gray-700 text-[11px] text-gray-300"
@@ -758,7 +881,7 @@ const HRCandidatePool = () => {
                 <div className="bg-[#1E1E2A] border border-gray-800 rounded-xl p-4">
                   <h3 className="text-sm font-semibold text-white mb-3">Skills</h3>
                   <div className="flex flex-wrap gap-1 text-xs">
-                    {(selectedResume.parsedData?.skills || []).map((skill, idx) => (
+                    {(selectedEntry.skills || []).map((skill, idx) => (
                       <span
                         key={idx}
                         className="px-2 py-0.5 rounded-full bg-[#232334] text-gray-200 border border-gray-700"
@@ -766,27 +889,27 @@ const HRCandidatePool = () => {
                         {skill}
                       </span>
                     ))}
-                    {(!selectedResume.parsedData?.skills || selectedResume.parsedData.skills.length === 0) && (
+                    {(!selectedEntry.skills || selectedEntry.skills.length === 0) && (
                       <span className="text-gray-500">No parsed skills available.</span>
                     )}
                   </div>
                 </div>
 
-                {selectedResume.aiAnalysis && (
+                {selectedEntry.type === 'resume' && selectedEntry.original?.aiAnalysis && (
                   <div className="bg-[#1E1E2A] border border-gray-800 rounded-xl p-4">
                     <h3 className="text-sm font-semibold text-white mb-3">AI Insights</h3>
                     <div className="space-y-2 text-xs text-gray-300">
-                      {selectedResume.aiAnalysis.overallFit && (
+                      {selectedEntry.original.aiAnalysis.overallFit && (
                         <div>
                           <span className="text-gray-500">Overall Fit: </span>
-                          <span className="capitalize">{selectedResume.aiAnalysis.overallFit}</span>
+                          <span className="capitalize">{selectedEntry.original.aiAnalysis.overallFit}</span>
                         </div>
                       )}
-                      {selectedResume.aiAnalysis.keyHighlights && selectedResume.aiAnalysis.keyHighlights.length > 0 && (
+                      {selectedEntry.original.aiAnalysis.keyHighlights && selectedEntry.original.aiAnalysis.keyHighlights.length > 0 && (
                         <div>
                           <span className="text-gray-500">Highlights:</span>
                           <ul className="mt-1 list-disc list-inside space-y-1">
-                            {selectedResume.aiAnalysis.keyHighlights.map((item, idx) => (
+                            {selectedEntry.original.aiAnalysis.keyHighlights.map((item, idx) => (
                               <li key={idx}>{item}</li>
                             ))}
                           </ul>
@@ -799,15 +922,63 @@ const HRCandidatePool = () => {
 
               {/* Right column: raw text */}
               <div className="lg:col-span-2">
-                <div className="bg-[#1E1E2A] border border-gray-800 rounded-xl p-4 h-full flex flex-col">
-                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#A88BFF]" />
-                    Raw Resume Text
-                  </h3>
-                  <div className="flex-1 overflow-y-auto rounded-lg bg-[#11111C] border border-gray-900 p-3 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
-                    {selectedResume.rawText || 'No raw text available.'}
+                {selectedEntry.type === 'resume' ? (
+                  <div className="bg-[#1E1E2A] border border-gray-800 rounded-xl p-4 h-full flex flex-col">
+                    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#A88BFF]" />
+                      Raw Resume Text
+                    </h3>
+                    <div className="flex-1 overflow-y-auto rounded-lg bg-[#11111C] border border-gray-900 p-3 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {selectedEntry.rawText || 'No raw text available.'}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-[#1E1E2A] border border-gray-800 rounded-xl p-4 h-full flex flex-col">
+                    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#A88BFF]" />
+                      Candidate Overview
+                    </h3>
+                    <div className="flex-1 overflow-y-auto rounded-lg bg-[#11111C] border border-gray-900 p-3 text-xs text-gray-300 space-y-3">
+                      <div>
+                        <span className="text-gray-500 block mb-1">Stage</span>
+                        <span className="capitalize">{selectedEntry.stage || selectedEntry.statusLabel || 'applied'}</span>
+                      </div>
+                      {selectedEntry.original?.professionalExperience && selectedEntry.original.professionalExperience.length > 0 && (
+                        <div>
+                          <span className="text-gray-500 block mb-1">Experience Highlights</span>
+                          <ul className="list-disc list-inside space-y-1">
+                            {selectedEntry.original.professionalExperience.slice(0, 5).map((expItem, idx) => (
+                              <li key={idx}>
+                                <span className="text-white">{expItem.designation || 'Role'} @ {expItem.company || 'Company'}</span>
+                                {expItem.startDate && (
+                                  <span className="text-gray-500 ml-1">
+                                    ({new Date(expItem.startDate).toLocaleDateString()} - {expItem.currentlyWorking ? 'Present' : expItem.endDate ? new Date(expItem.endDate).toLocaleDateString() : 'Unknown'})
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {selectedEntry.original?.timeline && selectedEntry.original.timeline.length > 0 && (
+                        <div>
+                          <span className="text-gray-500 block mb-1">Recent Timeline</span>
+                          <ul className="space-y-1">
+                            {selectedEntry.original.timeline.slice(-4).reverse().map((event, idx) => (
+                              <li key={idx} className="text-gray-300">
+                                <span className="text-white">{event.action}</span>
+                                <span className="ml-2 text-gray-500 text-[11px]">
+                                  {new Date(event.timestamp).toLocaleString()}
+                                </span>
+                                {event.description && <div className="text-gray-400 text-[11px]">{event.description}</div>}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

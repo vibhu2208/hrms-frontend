@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './axios';
 import config from '../config/api.config';
 
 const API_URL = config.apiBaseUrl;
@@ -9,7 +9,7 @@ const API_URL = config.apiBaseUrl;
  * Validate upload token
  */
 export const validateToken = async (token, tenantId) => {
-  const response = await axios.get(`${API_URL}/public/document-upload/validate/${token}`, {
+  const response = await api.get(`/public/document-upload/validate/${token}`, {
     params: { tenantId }
   });
   return response.data;
@@ -24,8 +24,8 @@ export const uploadDocument = async (token, tenantId, documentType, file, onProg
   formData.append('tenantId', tenantId);
   formData.append('documentType', documentType);
 
-  const response = await axios.post(
-    `${API_URL}/public/document-upload/upload/${token}`,
+  const response = await api.post(
+    `/public/document-upload/upload/${token}`,
     formData,
     {
       headers: {
@@ -46,7 +46,7 @@ export const uploadDocument = async (token, tenantId, documentType, file, onProg
  * Get uploaded documents for a token
  */
 export const getUploadedDocuments = async (token, tenantId) => {
-  const response = await axios.get(`${API_URL}/public/document-upload/documents/${token}`, {
+  const response = await api.get(`/public/document-upload/documents/${token}`, {
     params: { tenantId }
   });
   return response.data;
@@ -58,7 +58,7 @@ export const getUploadedDocuments = async (token, tenantId) => {
  * Generate upload token for onboarding
  */
 export const generateUploadToken = async (onboardingId) => {
-  const response = await axios.post(`${API_URL}/document-verification/generate-token/${onboardingId}`);
+  const response = await api.post(`/document-verification/generate-token/${onboardingId}`);
   return response.data;
 };
 
@@ -66,7 +66,7 @@ export const generateUploadToken = async (onboardingId) => {
  * Get all candidates with documents
  */
 export const getCandidatesWithDocuments = async (status) => {
-  const response = await axios.get(`${API_URL}/document-verification/candidates`, {
+  const response = await api.get(`/document-verification/candidates`, {
     params: { status }
   });
   return response.data;
@@ -76,7 +76,7 @@ export const getCandidatesWithDocuments = async (status) => {
  * Get documents for specific candidate
  */
 export const getCandidateDocuments = async (onboardingId) => {
-  const response = await axios.get(`${API_URL}/document-verification/candidates/${onboardingId}/documents`);
+  const response = await api.get(`/document-verification/candidates/${onboardingId}/documents`);
   return response.data;
 };
 
@@ -84,7 +84,7 @@ export const getCandidateDocuments = async (onboardingId) => {
  * Verify document
  */
 export const verifyDocument = async (documentId, remarks) => {
-  const response = await axios.put(`${API_URL}/document-verification/documents/${documentId}/verify`, {
+  const response = await api.put(`/document-verification/documents/${documentId}/verify`, {
     remarks
   });
   return response.data;
@@ -94,7 +94,7 @@ export const verifyDocument = async (documentId, remarks) => {
  * Unverify document (mark as rejected)
  */
 export const unverifyDocument = async (documentId, reason) => {
-  const response = await axios.put(`${API_URL}/document-verification/documents/${documentId}/unverify`, {
+  const response = await api.put(`/document-verification/documents/${documentId}/unverify`, {
     reason
   });
   return response.data;
@@ -104,7 +104,7 @@ export const unverifyDocument = async (documentId, reason) => {
  * Bulk verify documents
  */
 export const bulkVerifyDocuments = async (documentIds, remarks) => {
-  const response = await axios.post(`${API_URL}/document-verification/documents/bulk-verify`, {
+  const response = await api.post(`/document-verification/documents/bulk-verify`, {
     documentIds,
     remarks
   });
@@ -115,7 +115,7 @@ export const bulkVerifyDocuments = async (documentIds, remarks) => {
  * Download document
  */
 export const downloadDocument = async (documentId) => {
-  const response = await axios.get(`${API_URL}/document-verification/documents/${documentId}/download`, {
+  const response = await api.get(`/document-verification/documents/${documentId}/download`, {
     responseType: 'blob'
   });
   return response.data;
@@ -125,7 +125,7 @@ export const downloadDocument = async (documentId) => {
  * Get verification statistics
  */
 export const getVerificationStats = async () => {
-  const response = await axios.get(`${API_URL}/document-verification/stats`);
+  const response = await api.get(`/document-verification/stats`);
   return response.data;
 };
 
@@ -133,7 +133,7 @@ export const getVerificationStats = async () => {
  * Send test onboarding email
  */
 export const sendTestOnboardingEmail = async (onboardingId, testEmail) => {
-  const response = await axios.post(`${API_URL}/onboarding/${onboardingId}/send-test-email`, {
+  const response = await api.post(`/onboarding/${onboardingId}/send-test-email`, {
     testEmail
   });
   return response.data;

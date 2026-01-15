@@ -580,6 +580,8 @@ const Onboarding = () => {
 // Onboarding Card Component
 const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, onComplete, onViewDetails, onOpenSendOfferModal, onRequestDocuments }) => {
   const [showActions, setShowActions] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [joiningDateInput, setJoiningDateInput] = useState('');
   const statusInfo = statusLabels[item.status];
   
   const getNextActions = () => {
@@ -615,9 +617,17 @@ const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, o
   };
 
   const handleSetJoiningDate = () => {
-    const joiningDate = prompt('Enter joining date (YYYY-MM-DD):');
-    if (joiningDate) {
-      onSetJoiningDate(item._id, joiningDate);
+    setShowDatePicker(true);
+    // Set default to today's date
+    const today = new Date().toISOString().split('T')[0];
+    setJoiningDateInput(today);
+  };
+
+  const handleDateSubmit = () => {
+    if (joiningDateInput) {
+      onSetJoiningDate(item._id, joiningDateInput);
+      setShowDatePicker(false);
+      setJoiningDateInput('');
     }
   };
 
@@ -736,6 +746,59 @@ const OnboardingCard = ({ item, onUpdateStatus, onSendOffer, onSetJoiningDate, o
           ))}
         </div>
       </div>
+
+      {/* Joining Date Picker Modal */}
+      {showDatePicker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-900 border border-dark-700 rounded-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Set Joining Date</h3>
+              <button
+                onClick={() => {
+                  setShowDatePicker(false);
+                  setJoiningDateInput('');
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Joining Date
+                </label>
+                <input
+                  type="date"
+                  value={joiningDateInput}
+                  onChange={(e) => setJoiningDateInput(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white focus:border-primary-600 focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleDateSubmit}
+                  className="flex-1 btn-primary"
+                  disabled={!joiningDateInput}
+                >
+                  <Calendar size={16} className="mr-2" />
+                  Set Date
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDatePicker(false);
+                    setJoiningDateInput('');
+                  }}
+                  className="flex-1 btn-outline"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

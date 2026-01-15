@@ -14,7 +14,7 @@ const Header = ({ toggleSidebar }) => {
   const isAdmin = user?.role === 'admin' || user?.role === 'company_admin';
   const isHR = user?.role === 'hr';
   const isManager = user?.role === 'manager';
-  const showEmployeeFeatures = isAdmin || isHR || isManager;
+  const showEmployeeFeatures = isHR || isManager; // Admin should not see employee self-service features
 
   const handleLogout = () => {
     logout();
@@ -154,19 +154,21 @@ const Header = ({ toggleSidebar }) => {
                     <>
                       <hr className="my-1 theme-border" style={{ borderColor: 'var(--color-border)' }} />
                       {/* Employee Self-Service Section */}
-                      <button
-                        onClick={() => {
-                          navigate('/leave/apply');
-                          setShowUserMenu(false);
-                        }}
-                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
-                        style={{ color: 'var(--color-text)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <Calendar size={16} />
-                        <span>Apply Leave</span>
-                      </button>
+                      {!isAdmin && (
+                        <button
+                          onClick={() => {
+                            navigate('/leave/apply');
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full flex items-center space-x-2 px-4 py-2 text-sm theme-text"
+                          style={{ color: 'var(--color-text)' }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surfaceHover)'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <Calendar size={16} />
+                          <span>Apply Leave</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           navigate('/leave/balance');

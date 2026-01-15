@@ -30,6 +30,13 @@ const resignationTypeLabels = {
   'contract-end': 'Contract End'
 };
 
+const resignationReasonToTypeMap = {
+  voluntary_resignation: 'voluntary',
+  involuntary_termination: 'involuntary',
+  retirement: 'retirement',
+  contract_end: 'contract-end'
+};
+
 const StageProgress = ({ stages, currentStage, status }) => {
   const stageArray = stages || stageLabels.map(s => s.key);
   const currentIndex = stageArray.indexOf(currentStage);
@@ -136,7 +143,17 @@ const Offboarding = () => {
 
   const initiateOffboarding = async (formData) => {
     try {
-      await api.post('/tenant/offboarding', formData);
+      // Map form fields to backend expected format
+      const selectedReason = formData.reason;
+      const mappedResignationType = resignationReasonToTypeMap[selectedReason] || formData.resignationType || 'voluntary';
+      const payload = {
+        employeeId: formData.employeeId,
+        lastWorkingDate: formData.lastWorkingDay || formData.lastWorkingDate,
+        resignationType: mappedResignationType,
+        reason: selectedReason || formData.resignationType || mappedResignationType
+      };
+
+      await api.post('/offboarding', payload);
       toast.success('Offboarding initiated successfully');
       setShowInitiateModal(false);
       fetchList();

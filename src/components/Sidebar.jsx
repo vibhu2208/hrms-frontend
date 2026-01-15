@@ -69,19 +69,37 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       label: 'Leave',
       icon: Calendar,
       submenu: [
-        { label: 'All Leaves', path: '/leave' },
+        ...(isAdmin || isHR ? [
+          { label: 'Leave Calendar', path: '/leave/calendar' }
+        ] : [
+          { label: 'All Leaves', path: '/leave' }
+        ]),
         ...(!isAdmin && !isHR && !isManager ? [
           { label: 'Apply Leave', path: '/leave/apply' },
           { label: 'Leave Balance', path: '/leave/balance' }
         ] : []),
-        ...(isAdmin || isHR ? [
+        ...(isAdmin ? [
           { label: 'Leave Encashment Rules', path: '/leave-encashment/rules' },
           { label: 'Leave Accrual Policies', path: '/leave-accrual/policies' },
           { label: 'Manual Accrual', path: '/leave-accrual/manual' }
+        ] : isHR ? [
+          { label: 'Leave Encashment Rules', path: '/leave-encashment/rules' }
         ] : [
           { label: 'Leave Encashment', path: '/leave-encashment/requests' },
           { label: 'Encashment History', path: '/leave-encashment/history' }
         ])
+      ]
+    },
+    {
+      key: 'employees',
+      label: 'Employees',
+      icon: Users,
+      roles: ['admin', 'company_admin', 'hr'], // Available to admin and HR
+      submenu: [
+        { label: 'All Employees', path: '/employees' },
+        { label: 'Add Employee', path: '/employees/add' },
+        { label: 'Onboarding', path: '/employees/onboarding' },
+        { label: 'Offboarding', path: '/employees/offboarding' }
       ]
     },
     {
@@ -121,7 +139,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       icon: Building2,
       submenu: [
         { label: 'All Clients', path: '/clients' },
-        { label: 'All Projects', path: '/projects' },
+        ...(isAdmin || isManager ? [
+          { label: 'All Projects', path: '/projects' }
+        ] : []),
         { label: 'Timesheets', path: '/timesheets' }
       ]
     },
@@ -129,6 +149,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       key: 'recruitment',
       label: 'Recruitment',
       icon: UserPlus,
+      roles: ['admin', 'company_admin'], // Hide for HR since they have HR dashboard
       submenu: [
         { label: 'Candidates', path: '/candidates' },
         { label: 'Job Postings', path: '/job-desk' }
@@ -165,10 +186,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           { label: 'User Management', path: '/administration/users' },
           { label: 'Leave Management', path: '/administration/leave-management' }
         ] : []),
-        { label: 'Approval Workflows', path: '/approval-workflow/workflows' },
+        ...(isHR ? [
+          { label: 'Onboarding', path: '/employees/onboarding' },
+          { label: 'Offboarding', path: '/employees/offboarding' }
+        ] : []),
+        ...(isAdmin ? [
+          { label: 'Approval Workflows', path: '/approval-workflow/workflows' },
+          { label: 'Pending Approvals', path: '/approval-workflow/pending' }
+        ] : []),
         { label: 'Approval Matrix', path: '/approval-workflow/matrix' },
         { label: 'Delegations', path: '/approval-workflow/delegations' },
-        { label: 'Pending Approvals', path: '/approval-workflow/pending' },
         { label: 'SLA Monitoring', path: '/approval-workflow/sla' },
         ...(isAdmin ? [
           { label: 'Biometric Devices', path: '/biometric/devices' },

@@ -1,6 +1,14 @@
 /**
  * Centralized API Configuration
- * Automatically detects environment and sets appropriate API base URL
+ * Automatically switches between local and production environments
+ * 
+ * DEVELOPMENT (npm run dev):
+ *   - Uses '/api' which is proxied to http://localhost:5001 via Vite
+ *   - No CORS issues, seamless local development
+ * 
+ * PRODUCTION (npm run build):
+ *   - Uses VITE_API_URL from environment variables
+ *   - Falls back to default production URL if not set
  */
 
 const ENV = {
@@ -11,31 +19,49 @@ const ENV = {
 
 // Detect current environment
 const getCurrentEnvironment = () => {
-  // Check if we're in Vite dev mode
   if (import.meta.env.DEV) {
     return ENV.DEVELOPMENT;
   }
   
-  // Check if we're in production
-  if (import.meta.env.PROD) {
-    return ENV.PRODUCTION;
+  if (import.meta.env.MODE === 'staging') {
+    return ENV.STAGING;
   }
   
   return ENV.PRODUCTION;
 };
 
-// API Base URLs for different environments
-const API_BASE_URLS = {
-  [ENV.DEVELOPMENT]: '/api', // Proxied through Vite dev server
-  [ENV.PRODUCTION]: (import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com') + '/api',
-  [ENV.STAGING]: (import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com') + '/api'
+// Get API base URL based on environment
+const getApiBaseUrl = (env) => {
+  switch (env) {
+    case ENV.DEVELOPMENT:
+      // In development, use proxy path (configured in vite.config.js)
+      // This proxies to http://localhost:5001
+      return '/api';
+      
+    case ENV.STAGING:
+      // Staging environment - use env variable or staging default
+      return (import.meta.env.VITE_API_URL || 'https://hrms-backend-staging.onrender.com') + '/api';
+      
+    case ENV.PRODUCTION:
+    default:
+      // Production - use env variable or production default
+      return (import.meta.env.VITE_API_URL || 'https://hrms-backend-xbz8.onrender.com') + '/api';
+  }
 };
 
-// Frontend URLs for different environments
-const FRONTEND_URLS = {
-  [ENV.DEVELOPMENT]: 'http://localhost:5173',
-  [ENV.PRODUCTION]: import.meta.env.VITE_FRONTEND_URL || 'https://hrms-frontend-blush.vercel.app',
-  [ENV.STAGING]: import.meta.env.VITE_FRONTEND_URL || 'https://hrms-frontend-blush.vercel.app'
+// Get frontend URL based on environment
+const getFrontendUrl = (env) => {
+  switch (env) {
+    case ENV.DEVELOPMENT:
+      return 'http://localhost:5173';
+      
+    case ENV.STAGING:
+      return import.meta.env.VITE_FRONTEND_URL || 'https://hrms-staging.vercel.app';
+      
+    case ENV.PRODUCTION:
+    default:
+      return import.meta.env.VITE_FRONTEND_URL || 'https://hrms-frontend-blush.vercel.app';
+  }
 };
 
 // Get current environment
@@ -49,8 +75,8 @@ export const config = {
   isStaging: currentEnv === ENV.STAGING,
   
   // API Configuration
-  apiBaseUrl: API_BASE_URLS[currentEnv],
-  frontendUrl: FRONTEND_URLS[currentEnv],
+  apiBaseUrl: getApiBaseUrl(currentEnv),
+  frontendUrl: getFrontendUrl(currentEnv),
   
   // Timeout settings
   apiTimeout: 30000, // 30 seconds
@@ -67,7 +93,8 @@ if (config.isDevelopment) {
   console.log('🔧 API Configuration:', {
     environment: config.env,
     apiBaseUrl: config.apiBaseUrl,
-    frontendUrl: config.frontendUrl
+    frontendUrl: config.frontendUrl,
+    note: 'Using Vite proxy - requests to /api are forwarded to http://localhost:5001'
   });
 }
 

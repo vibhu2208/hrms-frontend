@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, Search, ArrowLeft, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { config } from '../config/api.config';
 
 const CompanySelect = () => {
   const navigate = useNavigate();
@@ -29,7 +30,9 @@ const CompanySelect = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/companies`);
+      console.log('Fetching companies from:', `${config.apiBaseUrl}/auth/companies`);
+      const response = await axios.get(`${config.apiBaseUrl}/auth/companies`);
+      console.log('Companies response:', response.data);
       if (response.data.success) {
         setCompanies(response.data.data);
         setFilteredCompanies(response.data.data);

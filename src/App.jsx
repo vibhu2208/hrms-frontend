@@ -40,6 +40,7 @@ import BulkEmployeeUpload from './pages/Employee/BulkEmployeeUpload';
 import LeaveList from './pages/Leave/LeaveList';
 import LeaveApply from './pages/Leave/LeaveApply';
 import LeaveBalance from './pages/Leave/LeaveBalance';
+import LeaveCalendar from './pages/Leave/LeaveCalendar';
 
 // Attendance Pages
 import AttendanceList from './pages/Attendance/AttendanceList';
@@ -115,6 +116,7 @@ import LeaveApprovals from './pages/ManagerDashboard/LeaveApprovals';
 import AssignProject from './pages/ManagerDashboard/AssignProject';
 import ScheduleMeeting from './pages/ManagerDashboard/ScheduleMeeting';
 import Announcements from './pages/ManagerDashboard/Announcements';
+import TeamReports from './pages/ManagerDashboard/TeamReports';
 
 // HR Dashboard Pages
 import HRHome from './pages/HRDashboard/HRHome';
@@ -250,6 +252,7 @@ function App() {
             <Route path="leave" element={<LeaveList />} />
             <Route path="leave/apply" element={<LeaveApply />} />
             <Route path="leave/balance" element={<LeaveBalance />} />
+            <Route path="leave/calendar" element={<LeaveCalendar />} />
 
             {/* Attendance Routes */}
             <Route path="attendance" element={<AttendanceList />} />
@@ -374,6 +377,7 @@ function App() {
             {/* Manager Extra Routes */}
             <Route path="manager/home" element={<ManagerHome />} />
             <Route path="manager/leave-approvals" element={<LeaveApprovals />} />
+            <Route path="manager/team-reports" element={<TeamReports />} />
             <Route path="manager/assign-project" element={<AssignProject />} />
             <Route path="manager/schedule-meeting" element={<ScheduleMeeting />} />
             <Route path="manager/announcements" element={<Announcements />} />
@@ -389,6 +393,8 @@ function App() {
             <Route path="hr/resume-search" element={<ResumeSearch />} />
             <Route path="hr/candidate-pool" element={<HRCandidatePool />} />
             <Route path="hr/performance" element={<FeedbackList />} />
+            <Route path="hr/onboarding" element={<Onboarding />} />
+            <Route path="hr/offboarding" element={<Offboarding />} />
             
             {/* Employee Leave Encashment Routes */}
             <Route path="leave-encashment/requests" element={<EncashmentRequests />} />
@@ -399,7 +405,7 @@ function App() {
             <Route path="hr/leave-accrual-policies" element={<AccrualPolicies />} />
             <Route path="hr/approval-workflows" element={<Workflows />} />
             <Route path="hr/pending-approvals" element={<PendingApprovals />} />
-            <Route path="hr/reports-analytics" element={<AnalyticsDashboard />} />
+            <Route path="hr/reports/analytics" element={<AnalyticsDashboard />} />
             <Route path="hr/attendance-reports" element={<AdvancedAttendanceReports />} />
           </Route>
 
