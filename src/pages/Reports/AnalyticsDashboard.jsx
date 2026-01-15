@@ -42,7 +42,88 @@ const AnalyticsDashboard = () => {
       }
       
       const response = await api.get(endpoint, { params });
-      setAnalyticsData(response.data);
+      const payload = response.data;
+
+      let summary = {
+        totalRecords: 0,
+        average: 0,
+        maximum: 0,
+        minimum: 0
+      };
+
+      let trends = [];
+
+      if (analyticsType === 'attendance' && payload?.trends) {
+        const attendanceTrends = payload.trends;
+        const periods = attendanceTrends.byPeriod || {};
+        const periodEntries = Object.entries(periods);
+
+        const overallStats = attendanceTrends.overall || {};
+        const presentValues = periodEntries.map(([, val]) => val.present || 0);
+        const totalRecords = overallStats.totalDays || periodEntries.reduce((sum, [, val]) => sum + (val.recordCount || 0), 0);
+        const totalPresent = overallStats.present ?? presentValues.reduce((sum, value) => sum + value, 0);
+
+        summary = {
+          totalRecords,
+          average: totalRecords ? ((totalPresent / totalRecords) * 100).toFixed(1) : 0,
+          maximum: presentValues.length ? Math.max(...presentValues) : 0,
+          minimum: presentValues.length ? Math.min(...presentValues) : 0
+        };
+
+        trends = periodEntries.map(([periodLabel, details]) => ({
+          label: periodLabel,
+          value: details.present || 0,
+          description: `Present: ${details.present || 0} • Absent: ${details.absent || 0} • Avg Hours: ${(details.averageWorkingHours || 0).toFixed(2)}`,
+          change: details.presentPercentage ? details.presentPercentage.toFixed(1) : null
+        }));
+      } else if (analyticsType === 'leave' && payload?.patterns) {
+        const patternData = payload.patterns;
+        const leaveTypeEntries = Object.entries(patternData.byLeaveType || {});
+
+        const totalRequests = payload.totalRequests || 0;
+        const averageDuration = patternData.averageDuration || 0;
+        const totalDays = leaveTypeEntries.reduce((sum, [, val]) => sum + (val.totalDays || 0), 0);
+        const daysValues = leaveTypeEntries.map(([_, val]) => val.totalDays || 0);
+
+        summary = {
+          totalRecords: totalRequests,
+          average: averageDuration.toFixed(2),
+          maximum: daysValues.length ? Math.max(...daysValues) : 0,
+          minimum: daysValues.length ? Math.min(...daysValues) : 0
+        };
+
+        trends = leaveTypeEntries.map(([type, details]) => ({
+          label: type,
+          value: details.count || 0,
+          description: `Total days: ${details.totalDays || 0} • Avg duration: ${(details.averageDays || 0).toFixed(2)}`
+        }));
+      } else if (analyticsType === 'compliance' && payload?.metrics) {
+        const metrics = payload.metrics;
+        summary = {
+          totalRecords: metrics.documents?.total || 0,
+          average: metrics.documents?.expiring || 0,
+          maximum: metrics.compliances?.overdue || 0,
+          minimum: metrics.compliances?.completed || 0
+        };
+
+        trends = [
+          {
+            label: 'Documents',
+            value: metrics.documents?.total || 0,
+            description: `Expiring: ${metrics.documents?.expiring || 0} • Expired: ${metrics.documents?.expired || 0}`
+          },
+          {
+            label: 'Compliance Tasks',
+            value: metrics.compliances?.total || 0,
+            description: `Pending: ${metrics.compliances?.pending || 0} • Overdue: ${metrics.compliances?.overdue || 0}`
+          }
+        ];
+      } else {
+        summary = payload?.summary || summary;
+        trends = payload?.trends || [];
+      }
+
+      setAnalyticsData({ summary, trends });
     } catch (error) {
       toast.error('Failed to fetch analytics');
     } finally {

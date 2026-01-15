@@ -11,11 +11,13 @@ const AccrualPolicies = () => {
   const [formData, setFormData] = useState({
     leaveType: '',
     accrualFrequency: 'monthly',
-    accrualRate: 0,
-    maxAccrual: 0,
-    allowCarryForward: false,
+    accrualAmount: 0,
+    yearlyAllocation: 0,
+    maxAccumulation: 0,
+    carryForwardEnabled: false,
     maxCarryForward: 0,
-    proRataCalculation: true,
+    proRataEnabled: true,
+    proRataCalculation: 'calendar-days',
     isActive: true
   });
 
@@ -77,11 +79,13 @@ const AccrualPolicies = () => {
     setFormData({
       leaveType: '',
       accrualFrequency: 'monthly',
-      accrualRate: 0,
-      maxAccrual: 0,
-      allowCarryForward: false,
+      accrualAmount: 0,
+      yearlyAllocation: 0,
+      maxAccumulation: 0,
+      carryForwardEnabled: false,
       maxCarryForward: 0,
-      proRataCalculation: true,
+      proRataEnabled: true,
+      proRataCalculation: 'calendar-days',
       isActive: true
     });
   };
@@ -127,13 +131,13 @@ const AccrualPolicies = () => {
           <tbody className="divide-y divide-gray-700">
             {policies.map((policy) => (
               <tr key={policy._id} className="hover:bg-gray-750">
-                <td className="px-4 py-3 text-sm text-gray-300">{policy.leaveType}</td>
-                <td className="px-4 py-3 text-sm text-gray-300">{policy.accrualFrequency}</td>
-                <td className="px-4 py-3 text-sm text-gray-300">{policy.accrualRate}</td>
-                <td className="px-4 py-3 text-sm text-gray-300">{policy.maxAccrual}</td>
-                <td className="px-4 py-3 text-sm text-gray-300">
-                  {policy.allowCarryForward ? `Yes (Max: ${policy.maxCarryForward})` : 'No'}
-                </td>
+              <td className="px-4 py-3 text-sm text-gray-300">{policy.leaveType}</td>
+              <td className="px-4 py-3 text-sm text-gray-300 capitalize">{policy.accrualFrequency}</td>
+              <td className="px-4 py-3 text-sm text-gray-300">{policy.accrualAmount || 0}</td>
+              <td className="px-4 py-3 text-sm text-gray-300">{policy.maxAccumulation || 'Unlimited'}</td>
+              <td className="px-4 py-3 text-sm text-gray-300">
+                {policy.carryForwardEnabled ? `Yes (Max: ${policy.maxCarryForward || 0})` : 'No'}
+              </td>
                 <td className="px-4 py-3">
                   {policy.isActive ? (
                     <span className="flex items-center gap-1 text-green-400">
@@ -155,11 +159,13 @@ const AccrualPolicies = () => {
                         setFormData({
                           leaveType: policy.leaveType || '',
                           accrualFrequency: policy.accrualFrequency || 'monthly',
-                          accrualRate: policy.accrualRate || 0,
-                          maxAccrual: policy.maxAccrual || 0,
-                          allowCarryForward: policy.allowCarryForward || false,
+                          accrualAmount: policy.accrualAmount || 0,
+                          yearlyAllocation: policy.yearlyAllocation || 0,
+                          maxAccumulation: policy.maxAccumulation || 0,
+                          carryForwardEnabled: policy.carryForwardEnabled || false,
                           maxCarryForward: policy.maxCarryForward || 0,
-                          proRataCalculation: policy.proRataCalculation !== undefined ? policy.proRataCalculation : true,
+                          proRataEnabled: policy.proRataEnabled !== undefined ? policy.proRataEnabled : true,
+                          proRataCalculation: policy.proRataCalculation || 'calendar-days',
                           isActive: policy.isActive !== undefined ? policy.isActive : true
                         });
                         setShowModal(true);
@@ -191,14 +197,24 @@ const AccrualPolicies = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Leave Type</label>
-                <input
-                  type="text"
+                <select
                   name="leaveType"
                   value={formData.leaveType}
                   onChange={handleChange}
                   required
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                />
+                >
+                  <option value="">Select Leave Type</option>
+                  <option value="Personal Leave">Personal Leave</option>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Comp Offs">Comp Offs</option>
+                  <option value="Floater Leave">Floater Leave</option>
+                  <option value="Marriage Leave">Marriage Leave</option>
+                  <option value="Maternity Leave">Maternity Leave</option>
+                  <option value="Paternity Leave">Paternity Leave</option>
+                  <option value="Unpaid Leave">Unpaid Leave</option>
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -215,27 +231,40 @@ const AccrualPolicies = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Accrual Rate</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Accrual Amount (days)</label>
                   <input
                     type="number"
-                    name="accrualRate"
-                    value={formData.accrualRate}
+                    name="accrualAmount"
+                    value={formData.accrualAmount}
                     onChange={handleChange}
                     required
                     step="0.1"
+                    min="0"
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Max Accrual</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Yearly Allocation (optional)</label>
                   <input
                     type="number"
-                    name="maxAccrual"
-                    value={formData.maxAccrual}
+                    name="yearlyAllocation"
+                    value={formData.yearlyAllocation}
                     onChange={handleChange}
-                    required
+                    step="0.1"
+                    min="0"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Max Accumulation (0 = unlimited)</label>
+                  <input
+                    type="number"
+                    name="maxAccumulation"
+                    value={formData.maxAccumulation}
+                    onChange={handleChange}
+                    min="0"
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
                   />
                 </div>
@@ -254,23 +283,38 @@ const AccrualPolicies = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    name="allowCarryForward"
-                    checked={formData.allowCarryForward}
+                    name="carryForwardEnabled"
+                    checked={formData.carryForwardEnabled}
                     onChange={handleChange}
                     className="w-4 h-4"
                   />
-                  <label className="text-sm font-medium text-gray-300">Allow Carry Forward</label>
+                  <label className="text-sm font-medium text-gray-300">Enable Carry Forward</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    name="proRataCalculation"
-                    checked={formData.proRataCalculation}
+                    name="proRataEnabled"
+                    checked={formData.proRataEnabled}
                     onChange={handleChange}
                     className="w-4 h-4"
                   />
-                  <label className="text-sm font-medium text-gray-300">Pro-Rata Calculation</label>
+                  <label className="text-sm font-medium text-gray-300">Enable Pro-Rata Calculation</label>
                 </div>
+                {formData.proRataEnabled && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Pro-Rata Calculation Method</label>
+                    <select
+                      name="proRataCalculation"
+                      value={formData.proRataCalculation}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                    >
+                      <option value="calendar-days">Calendar Days</option>
+                      <option value="working-days">Working Days</option>
+                      <option value="months">Months</option>
+                    </select>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"

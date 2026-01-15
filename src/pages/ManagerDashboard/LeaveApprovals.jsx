@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../../components/BottomNavigation';
 import { ArrowLeft, CheckCircle, XCircle, Clock, Calendar, MessageSquare } from 'lucide-react';
+import { config } from '../../config/api.config';
+import toast from 'react-hot-toast';
 
 const LeaveApprovals = () => {
   const navigate = useNavigate();
@@ -11,13 +13,14 @@ const LeaveApprovals = () => {
   const [rejectReason, setRejectReason] = useState('');
 
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   // Fetch leave requests from API
   useEffect(() => {
     const fetchLeaveRequests = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/manager/pending-leaves`, {
+        const response = await fetch(`${config.apiBaseUrl}/manager/pending-leaves`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -25,27 +28,39 @@ const LeaveApprovals = () => {
         const data = await response.json();
         if (data.success) {
           setLeaveRequests(data.data);
+        } else {
+          toast.error(data.message || 'Failed to load leave requests');
         }
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching leave requests:', error);
+        toast.error('Failed to load leave requests');
+        setLoading(false);
       }
     };
 
     fetchLeaveRequests();
   }, []);
 
-  const filters = [
-    { id: 'pending', label: 'Pending', count: 2 },
-    { id: 'approved', label: 'Approved', count: 1 },
-    { id: 'rejected', label: 'Rejected', count: 0 }
-  ];
+  const filters = useMemo(() => {
+    const counts = leaveRequests.reduce((acc, leave) => {
+      acc[leave.status] = (acc[leave.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    return [
+      { id: 'pending', label: 'Pending', count: counts.pending || 0 },
+      { id: 'approved', label: 'Approved', count: counts.approved || 0 },
+      { id: 'rejected', label: 'Rejected', count: counts.rejected || 0 }
+    ];
+  }, [leaveRequests]);
 
   const filteredLeaves = leaveRequests.filter(leave => leave.status === activeFilter);
 
   const handleApprove = async (leaveId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/manager/leave/${leaveId}/approve`, {
+      const response = await fetch(`${config.apiBaseUrl}/manager/leave/${leaveId}/approve`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -57,14 +72,14 @@ const LeaveApprovals = () => {
       const data = await response.json();
       if (data.success) {
         // Remove from pending list
-        setLeaveRequests(leaveRequests.filter(leave => leave._id !== leaveId));
-        alert('Leave approved successfully!');
+        setLeaveRequests(prev => prev.filter(leave => leave._id !== leaveId));
+        toast.success('Leave approved successfully');
       } else {
-        alert(data.message || 'Failed to approve leave');
+        toast.error(data.message || 'Failed to approve leave');
       }
     } catch (error) {
       console.error('Error approving leave:', error);
-      alert('Failed to approve leave');
+      toast.error('Failed to approve leave');
     }
   };
 
@@ -76,7 +91,7 @@ const LeaveApprovals = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/manager/leave/${selectedLeave}/reject`, {
+      const response = await fetch(`${config.apiBaseUrl}/manager/leave/${selectedLeave}/reject`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -89,13 +104,13 @@ const LeaveApprovals = () => {
       if (data.success) {
         // Remove from pending list
         setLeaveRequests(leaveRequests.filter(leave => leave._id !== selectedLeave));
-        alert('Leave rejected successfully!');
+        toast.success('Leave rejected successfully');
       } else {
-        alert(data.message || 'Failed to reject leave');
+        toast.error(data.message || 'Failed to reject leave');
       }
     } catch (error) {
       console.error('Error rejecting leave:', error);
-      alert('Failed to reject leave');
+      toast.error('Failed to reject leave');
     }
     
     setShowRejectModal(false);
@@ -171,7 +186,13 @@ const LeaveApprovals = () => {
 
         {/* Leave Requests List */}
         <div className="space-y-4">
-          {filteredLeaves.length > 0 ? (
+          {loading ? (
+            <div className="bg-[#2A2A3A] rounded-2xl p-12 border border-gray-700 text-center">
+              <Clock className="w-16 h-16 text-gray-600 mx-auto mb-4 animate-spin" />
+              <h3 className="text-white text-lg font-semibold mb-2">Loading leave requests...</h3>
+              <p className="text-gray-400">Please wait while we fetch the latest data.</p>
+            </div>
+          ) : filteredLeaves.length > 0 ? (
             filteredLeaves.map((leave) => (
               <div key={leave._id} className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-700">
                 {/* Employee Info */}
@@ -281,7 +302,7 @@ const LeaveApprovals = () => {
           <div className="bg-[#2A2A3A] rounded-2xl p-6 max-w-md w-full border border-gray-700">
             <h3 className="text-white text-lg font-semibold mb-4">Reject Leave Request</h3>
             <p className="text-gray-400 text-sm mb-4">
-              Please provide a reason for rejecting {selectedLeave?.employeeName}'s leave request
+              Please provide a reason for rejecting this leave request.
             </p>
             <textarea
               value={rejectReason}

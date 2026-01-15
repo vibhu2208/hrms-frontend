@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigation from '../../components/BottomNavigation';
-import { ArrowLeft, Calendar, Clock, Users, MapPin, Video } from 'lucide-react';
+import { config } from '../../config/api.config';
+import { ArrowLeft, Calendar, Clock, Users, MapPin, Video, Link2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ScheduleMeeting = () => {
   const navigate = useNavigate();
@@ -13,17 +15,19 @@ const ScheduleMeeting = () => {
     duration: '30',
     meetingType: 'online',
     location: '',
+    meetingLink: '',
     selectedAttendees: []
   });
 
   const [teamMembers, setTeamMembers] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch team members from API
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/manager/team-members`, {
+        const response = await fetch(`${config.apiBaseUrl}/manager/team-members`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -55,10 +59,66 @@ const ScheduleMeeting = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Scheduling meeting:', formData);
-    navigate('/employee/manager/home');
+
+    if (formData.meetingType === 'online' && !formData.meetingLink.trim()) {
+      toast.error('Please provide a meeting link for online meetings');
+      return;
+    }
+
+    if (formData.meetingType === 'offline' && !formData.location.trim()) {
+      toast.error('Please specify meeting location for offline meetings');
+      return;
+    }
+
+    if (formData.selectedAttendees.length === 0) {
+      toast.error('Select at least one attendee');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication token missing');
+        return;
+      }
+
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        meetingDate: formData.date,
+        startTime: formData.time,
+        duration: Number(formData.duration),
+        meetingType: formData.meetingType,
+        location: formData.meetingType === 'offline' ? formData.location : undefined,
+        meetingLink: formData.meetingType === 'online' ? formData.meetingLink : undefined,
+        attendees: formData.selectedAttendees
+      };
+
+      const response = await fetch(`${config.apiBaseUrl}/manager/meetings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Meeting scheduled successfully');
+        navigate('/employee/manager/home');
+      } else {
+        toast.error(data.message || 'Failed to schedule meeting');
+      }
+    } catch (error) {
+      console.error('Error scheduling meeting:', error);
+      toast.error('Failed to schedule meeting');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -166,6 +226,22 @@ const ScheduleMeeting = () => {
                 />
               </div>
             )}
+            {formData.meetingType === 'online' && (
+              <div>
+                <label className="text-gray-400 text-sm mb-2 block">Meeting Link *</label>
+                <div className="flex items-center space-x-3 bg-[#1E1E2A] text-white p-4 rounded-xl border border-gray-700 focus-within:border-[#A88BFF]">
+                  <Link2 className="w-5 h-5 text-[#A88BFF]" />
+                  <input
+                    type="url"
+                    required
+                    value={formData.meetingLink}
+                    onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
+                    placeholder="https://meet.google.com/..."
+                    className="bg-transparent flex-1 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-700">
@@ -199,10 +275,18 @@ const ScheduleMeeting = () => {
 
           <button
             type="submit"
-            disabled={formData.selectedAttendees.length === 0}
-            className="w-full bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+            disabled={
+              submitting ||
+              formData.selectedAttendees.length === 0 ||
+              !formData.title.trim() ||
+              !formData.date ||
+              !formData.time ||
+              (formData.meetingType === 'online' && !formData.meetingLink.trim()) ||
+              (formData.meetingType === 'offline' && !formData.location.trim())
+            }
+            className="w-full bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Schedule Meeting
+            {submitting ? 'Scheduling...' : 'Schedule Meeting'}
           </button>
         </form>
       </div>

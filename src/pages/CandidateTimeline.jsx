@@ -36,7 +36,16 @@ const CandidateTimeline = () => {
       ]);
       
       setCandidate(candidateRes.data.data);
-      setTimeline(timelineRes.data.data);
+      // Backend returns: { timeline, interviews, notifications, hrCall, stage, status }
+      const timelineData = timelineRes.data.data;
+      setTimeline({
+        timeline: timelineData.timeline || [],
+        interviews: timelineData.interviews || [],
+        notifications: timelineData.notifications || {},
+        hrCall: timelineData.hrCall || {},
+        stage: timelineData.stage,
+        status: timelineData.status
+      });
     } catch (error) {
       toast.error('Failed to load candidate data');
       console.error(error);
@@ -182,12 +191,12 @@ const CandidateTimeline = () => {
                     {timeline.notifications?.interviewCall?.completed ? 'Call Done' : 'Mark Call Done'}
                   </button>
                 </div>
-                {timeline.notifications?.interviewEmail?.sent && (
+                {timeline.notifications?.interviewEmail?.sent && timeline.notifications.interviewEmail.sentAt && (
                   <p className="text-sm text-gray-400">
                     Email sent on {new Date(timeline.notifications.interviewEmail.sentAt).toLocaleString()}
                   </p>
                 )}
-                {timeline.notifications?.interviewCall?.completed && (
+                {timeline.notifications?.interviewCall?.completed && timeline.notifications.interviewCall.completedAt && (
                   <p className="text-sm text-gray-400">
                     Call completed on {new Date(timeline.notifications.interviewCall.completedAt).toLocaleString()}
                     {timeline.notifications.interviewCall.notes && ` - ${timeline.notifications.interviewCall.notes}`}

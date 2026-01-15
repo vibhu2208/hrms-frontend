@@ -1,42 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import BottomNavigation from '../../components/BottomNavigation';
 import { Briefcase, Users, Calendar, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { getEmployeeProjects } from '../../api/employeeDashboard';
+import toast from 'react-hot-toast';
 
 const ModernProjects = () => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const projects = [
-    {
-      id: 1,
-      name: 'HRMS Portal Development',
-      client: 'Internal',
-      status: 'active',
-      progress: 75,
-      team: 5,
-      deadline: 'Dec 31, 2024',
-      role: 'Full Stack Developer'
-    },
-    {
-      id: 2,
-      name: 'E-commerce Platform',
-      client: 'ABC Corp',
-      status: 'active',
-      progress: 45,
-      team: 8,
-      deadline: 'Jan 15, 2025',
-      role: 'Backend Developer'
-    },
-    {
-      id: 3,
-      name: 'Mobile App Redesign',
-      client: 'XYZ Ltd',
-      status: 'completed',
-      progress: 100,
-      team: 6,
-      deadline: 'Nov 20, 2024',
-      role: 'UI/UX Developer'
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await getEmployeeProjects();
+      
+      // Transform backend data to match component format
+      const transformedProjects = response.data.map(project => ({
+        id: project._id,
+        name: project.name,
+        projectCode: project.projectCode,
+        client: project.client?.name || project.client?.companyName || 'N/A',
+        status: project.status,
+        progress: calculateProgress(project.status),
+        team: project.teamSize || 0,
+        deadline: project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Ongoing',
+        role: project.myRole,
+        description: project.description,
+        startDate: project.startDate,
+        projectManager: project.projectManager
+      }));
+      
+      setProjects(transformedProjects);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast.error('Failed to load projects');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const calculateProgress = (status) => {
+    switch (status) {
+      case 'completed':
+        return 100;
+      case 'active':
+        return 60;
+      case 'on-hold':
+        return 40;
+      case 'planning':
+        return 20;
+      default:
+        return 0;
+    }
+  };
 
   const filters = [
     { id: 'all', label: 'All Projects' },
@@ -47,6 +67,17 @@ const ModernProjects = () => {
   const filteredProjects = activeFilter === 'all' 
     ? projects 
     : projects.filter(p => p.status === activeFilter);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1E1E2A] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#A88BFF] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-400 mt-4">Loading projects...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#1E1E2A] p-4 md:p-6 pb-24 md:pb-6">

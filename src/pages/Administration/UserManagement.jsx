@@ -46,7 +46,18 @@ const UserManagement = () => {
 
     setResetting(true);
     try {
-      await api.put(`/auth/admin/reset-password/${selectedUser.userId._id}`, {
+      // Use the correct user ID - either selectedUser._id or selectedUser.userId._id
+      const userId = selectedUser._id || selectedUser.userId?._id;
+      
+      if (!userId) {
+        toast.error('User ID not found');
+        setResetting(false);
+        return;
+      }
+
+      console.log('Resetting password for user ID:', userId);
+      
+      await api.put(`/auth/admin/reset-password/${userId}`, {
         newPassword: resetForm.newPassword,
         mustChangePassword: resetForm.mustChangePassword
       });
@@ -60,6 +71,7 @@ const UserManagement = () => {
         mustChangePassword: true
       });
     } catch (error) {
+      console.error('Password reset error:', error);
       toast.error(error.response?.data?.message || 'Failed to reset password');
     } finally {
       setResetting(false);
