@@ -19,7 +19,7 @@ const ModernAttendance = () => {
     { title: 'Logs & Shifts', subtitle: 'View attendance logs', icon: Clock, action: '/employee/attendance/logs' },
     { title: 'Requests History', subtitle: 'View past requests', icon: Calendar, action: '/employee/attendance/history' },
     { title: 'Leave', subtitle: 'Apply and manage leaves', icon: Calendar, action: '/employee/leave/balance' },
-    { title: 'Upcoming Holidays', subtitle: 'View holiday calendar', icon: Calendar, action: '/employee/holidays' }
+    { title: 'Upcoming Holidays', subtitle: 'View holiday calendar', icon: Calendar, action: '/employee/attendance/holidays' }
   ];
 
   return (

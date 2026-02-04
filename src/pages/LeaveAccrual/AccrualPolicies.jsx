@@ -207,13 +207,7 @@ const AccrualPolicies = () => {
                   <option value="">Select Leave Type</option>
                   <option value="Personal Leave">Personal Leave</option>
                   <option value="Sick Leave">Sick Leave</option>
-                  <option value="Casual Leave">Casual Leave</option>
                   <option value="Comp Offs">Comp Offs</option>
-                  <option value="Floater Leave">Floater Leave</option>
-                  <option value="Marriage Leave">Marriage Leave</option>
-                  <option value="Maternity Leave">Maternity Leave</option>
-                  <option value="Paternity Leave">Paternity Leave</option>
-                  <option value="Unpaid Leave">Unpaid Leave</option>
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-4">

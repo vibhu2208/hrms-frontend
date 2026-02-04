@@ -25,7 +25,10 @@ const EmployeeRequests = () => {
     try {
       setLoading(true);
       const response = await getEmployeeRequests();
-      setRequests(response.data);
+      console.log('📄 Frontend received response:', response);
+      const list = response?.data?.data || response?.data || [];
+      console.log('📄 Frontend parsed list:', list);
+      setRequests(list);
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast.error('Failed to load requests');
@@ -182,6 +185,9 @@ const EmployeeRequests = () => {
           <FileText className={`w-16 h-16 mx-auto mb-4 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} />
           <p className={`text-lg ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             No requests submitted yet
+          </p>
+          <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+            Debug: requests.length = {requests.length}
           </p>
         </div>
       )}

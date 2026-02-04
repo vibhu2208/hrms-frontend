@@ -16,31 +16,50 @@ const LeaveApprovals = () => {
   const [loading, setLoading] = useState(true);
   
   // Fetch leave requests from API
-  useEffect(() => {
-    const fetchLeaveRequests = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${config.apiBaseUrl}/manager/pending-leaves`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setLeaveRequests(data.data);
-        } else {
-          toast.error(data.message || 'Failed to load leave requests');
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching leave requests:', error);
-        toast.error('Failed to load leave requests');
-        setLoading(false);
+  const fetchLeaveRequests = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      let url;
+      
+      if (activeFilter === 'pending') {
+        url = `${config.apiBaseUrl}/manager/pending-leaves`;
+      } else if (activeFilter === 'approved' || activeFilter === 'rejected') {
+        url = `${config.apiBaseUrl}/manager/approval-history`;
+      } else {
+        url = `${config.apiBaseUrl}/manager/approval-history`;
       }
-    };
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        let filteredData = data.data;
+        
+        // Filter by status if needed
+        if (activeFilter === 'approved') {
+          filteredData = data.data.filter(item => item.status === 'approved');
+        } else if (activeFilter === 'rejected') {
+          filteredData = data.data.filter(item => item.status === 'rejected');
+        }
+        
+        setLeaveRequests(filteredData);
+      } else {
+        toast.error(data.message || 'Failed to load leave requests');
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+      toast.error('Failed to load leave requests');
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchLeaveRequests();
-  }, []);
+  }, [activeFilter]);
 
   const filters = useMemo(() => {
     const counts = leaveRequests.reduce((acc, leave) => {
@@ -51,11 +70,11 @@ const LeaveApprovals = () => {
     return [
       { id: 'pending', label: 'Pending', count: counts.pending || 0 },
       { id: 'approved', label: 'Approved', count: counts.approved || 0 },
-      { id: 'rejected', label: 'Rejected', count: counts.rejected || 0 }
+      { id: 'rejected', label: 'Rejected', count: counts.rejected || 0 },
     ];
   }, [leaveRequests]);
 
-  const filteredLeaves = leaveRequests.filter(leave => leave.status === activeFilter);
+  const filteredLeaves = leaveRequests; // Data is already filtered by API call
 
   const handleApprove = async (leaveId) => {
     try {
@@ -71,8 +90,8 @@ const LeaveApprovals = () => {
       
       const data = await response.json();
       if (data.success) {
-        // Remove from pending list
-        setLeaveRequests(prev => prev.filter(leave => leave._id !== leaveId));
+        // Refresh the data to show updated counts
+        fetchLeaveRequests();
         toast.success('Leave approved successfully');
       } else {
         toast.error(data.message || 'Failed to approve leave');

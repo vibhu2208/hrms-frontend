@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, DollarSign, Info } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const EncashmentRequests = () => {
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [eligibility, setEligibility] = useState(null);
-  const [checkingEligibility, setCheckingEligibility] = useState(false);
-  const [formData, setFormData] = useState({
-    leaveType: '',
-    numberOfDays: 0,
-    reason: ''
-  });
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchRequests();
@@ -28,57 +22,6 @@ const EncashmentRequests = () => {
       toast.error('Failed to fetch encashment requests');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
-    }));
-  };
-
-  const checkEligibility = async () => {
-    if (!formData.leaveType || !formData.numberOfDays) {
-      toast.error('Please select leave type and enter number of days');
-      return;
-    }
-    try {
-      setCheckingEligibility(true);
-      const response = await api.post('/leave-encashment/check-eligibility', {
-        leaveType: formData.leaveType,
-        numberOfDays: formData.numberOfDays
-      });
-      setEligibility(response.data.data);
-      toast.success('Eligibility checked successfully');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to check eligibility');
-      setEligibility(null);
-    } finally {
-      setCheckingEligibility(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!eligibility || !eligibility.isEligible) {
-      toast.error('Please check eligibility first');
-      return;
-    }
-    try {
-      await api.post('/leave-encashment/requests', formData);
-      toast.success('Encashment request created successfully');
-      setShowModal(false);
-      setEligibility(null);
-      setFormData({
-        leaveType: '',
-        numberOfDays: 0,
-        reason: ''
-      });
-      fetchRequests();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create encashment request');
     }
   };
 
@@ -110,14 +53,21 @@ const EncashmentRequests = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Leave Encashment Requests</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <Plus size={20} />
-          New Request
-        </button>
+        <h1 className="text-2xl font-bold text-white">Leave Encashment History</h1>
+      </div>
+
+      {/* Automatic Encashment Notice */}
+      <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <Info size={20} className="text-blue-400 mt-0.5" />
+          <div>
+            <h3 className="text-white font-medium mb-1">Automatic Leave Encashment</h3>
+            <p className="text-gray-300 text-sm">
+              Leave encashment is processed automatically as per company policy. 
+              You will be notified when encashment is processed based on your leave balance and eligibility.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-gray-800 rounded-lg overflow-hidden">
@@ -128,6 +78,7 @@ const EncashmentRequests = () => {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Days</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Amount</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Status</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Type</th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Request Date</th>
             </tr>
           </thead>
@@ -137,9 +88,20 @@ const EncashmentRequests = () => {
                 <td className="px-4 py-3 text-sm text-gray-300">{request.leaveType}</td>
                 <td className="px-4 py-3 text-sm text-gray-300">{request.numberOfDays}</td>
                 <td className="px-4 py-3 text-sm text-gray-300">
-                  ₹{request.encashmentAmount?.toLocaleString() || '0'}
+                  ₹{request.totalAmount?.toLocaleString() || '0'}
                 </td>
                 <td className="px-4 py-3">{getStatusBadge(request.status)}</td>
+                <td className="px-4 py-3">
+                  {request.isAutomatic ? (
+                    <span className="text-xs px-2 py-1 bg-blue-900/50 text-blue-300 rounded-full">
+                      Automatic
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-1 bg-gray-600 text-gray-300 rounded-full">
+                      Manual
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-300">
                   {new Date(request.createdAt).toLocaleDateString()}
                 </td>
@@ -147,102 +109,12 @@ const EncashmentRequests = () => {
             ))}
           </tbody>
         </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-white mb-4">Create Encashment Request</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Leave Type</label>
-                <input
-                  type="text"
-                  name="leaveType"
-                  value={formData.leaveType}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                  placeholder="e.g., Personal Leave"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Number of Days</label>
-                <input
-                  type="number"
-                  name="numberOfDays"
-                  value={formData.numberOfDays}
-                  onChange={handleChange}
-                  required
-                  min="1"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                />
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={checkEligibility}
-                  disabled={checkingEligibility}
-                  className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
-                >
-                  {checkingEligibility ? 'Checking...' : 'Check Eligibility'}
-                </button>
-              </div>
-              {eligibility && (
-                <div className={`p-4 rounded-lg ${eligibility.isEligible ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
-                  <div className="text-sm font-medium text-white mb-2">
-                    {eligibility.isEligible ? '✓ Eligible' : '✗ Not Eligible'}
-                  </div>
-                  {eligibility.isEligible && (
-                    <div className="space-y-1 text-sm text-gray-300">
-                      <div>Estimated Amount: ₹{eligibility.estimatedAmount?.toLocaleString() || '0'}</div>
-                      <div>Available Balance: {eligibility.availableBalance || 0} days</div>
-                    </div>
-                  )}
-                  {eligibility.reason && (
-                    <div className="text-sm text-gray-400 mt-2">{eligibility.reason}</div>
-                  )}
-                </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Reason</label>
-                <textarea
-                  name="reason"
-                  value={formData.reason}
-                  onChange={handleChange}
-                  required
-                  rows={3}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                />
-              </div>
-              <div className="flex gap-3 justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setEligibility(null);
-                    setFormData({
-                      leaveType: '',
-                      numberOfDays: 0,
-                      reason: ''
-                    });
-                  }}
-                  className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!eligibility || !eligibility.isEligible}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Submit Request
-                </button>
-              </div>
-            </form>
+        {requests.length === 0 && (
+          <div className="text-center py-8 text-gray-400">
+            No encashment requests found
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

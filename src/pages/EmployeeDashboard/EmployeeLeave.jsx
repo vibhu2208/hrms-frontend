@@ -352,12 +352,9 @@ const EmployeeLeave = () => {
                     }`}
                     required
                   >
-                    <option value="casual">Casual Leave</option>
-                    <option value="sick">Sick Leave</option>
-                    <option value="earned">Earned Leave</option>
-                    <option value="maternity">Maternity Leave</option>
-                    <option value="paternity">Paternity Leave</option>
-                    <option value="unpaid">Unpaid Leave</option>
+                    <option value="Personal Leave">Personal Leave</option>
+                    <option value="Sick Leave">Sick Leave</option>
+                    <option value="Comp Offs">Comp Offs</option>
                   </select>
                 </div>
 
