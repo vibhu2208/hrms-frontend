@@ -17,15 +17,9 @@ import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
 const LEAVE_TYPES = [
-  'Personal Leave',
-  'Sick Leave',
-  'Casual Leave',
   'Comp Offs',
-  'Floater Leave',
-  'Marriage Leave',
-  'Maternity Leave',
-  'Paternity Leave',
-  'Unpaid Leave'
+  'Personal Leave',
+  'Sick Leave'
 ];
 
 const LeaveManagement = () => {

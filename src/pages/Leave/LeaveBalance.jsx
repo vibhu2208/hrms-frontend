@@ -3,11 +3,9 @@ import { Calendar, TrendingUp } from 'lucide-react';
 
 const LeaveBalance = () => {
   const leaveBalances = [
-    { type: 'Casual Leave', total: 12, used: 5, remaining: 7, color: 'bg-blue-500' },
-    { type: 'Sick Leave', total: 10, used: 2, remaining: 8, color: 'bg-red-500' },
-    { type: 'Earned Leave', total: 15, used: 8, remaining: 7, color: 'bg-green-500' },
-    { type: 'Maternity Leave', total: 90, used: 0, remaining: 90, color: 'bg-purple-500' },
-    { type: 'Paternity Leave', total: 15, used: 0, remaining: 15, color: 'bg-yellow-500' }
+    { type: 'Comp Offs', total: 5, used: 2, remaining: 3, color: 'bg-blue-500' },
+    { type: 'Personal Leave', total: 12, used: 5, remaining: 7, color: 'bg-green-500' },
+    { type: 'Sick Leave', total: 7, used: 2, remaining: 5, color: 'bg-red-500' }
   ];
 
   return (
@@ -93,9 +91,9 @@ const LeaveBalance = () => {
         <h2 className="text-lg font-semibold text-white mb-4">Recent Leave History</h2>
         <div className="space-y-4">
           {[
-            { type: 'Casual Leave', dates: 'Jan 15 - Jan 17, 2024', days: 3, status: 'Approved' },
+            { type: 'Personal Leave', dates: 'Jan 15 - Jan 17, 2024', days: 3, status: 'Approved' },
             { type: 'Sick Leave', dates: 'Dec 20 - Dec 21, 2023', days: 2, status: 'Approved' },
-            { type: 'Earned Leave', dates: 'Nov 10 - Nov 15, 2023', days: 6, status: 'Approved' }
+            { type: 'Comp Offs', dates: 'Nov 10 - Nov 12, 2023', days: 3, status: 'Approved' }
           ].map((leave, index) => (
             <div key={index} className="flex items-center justify-between py-3 border-b border-dark-800 last:border-0">
               <div>

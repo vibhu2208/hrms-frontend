@@ -80,12 +80,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ] : []),
         ...(isAdmin ? [
           { label: 'Leave Encashment Rules', path: '/leave-encashment/rules' },
+          { label: 'Automatic Encashment', path: '/leave-encashment/automatic-settings' },
           { label: 'Leave Accrual Policies', path: '/leave-accrual/policies' },
           { label: 'Manual Accrual', path: '/leave-accrual/manual' }
         ] : isHR ? [
-          { label: 'Leave Encashment Rules', path: '/leave-encashment/rules' }
+          { label: 'Leave Encashment Rules', path: '/leave-encashment/rules' },
+          { label: 'Automatic Encashment', path: '/leave-encashment/automatic-settings' }
         ] : [
-          { label: 'Leave Encashment', path: '/leave-encashment/requests' },
           { label: 'Encashment History', path: '/leave-encashment/history' }
         ])
       ]

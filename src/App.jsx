@@ -105,6 +105,10 @@ import ModernEmployeeHome from './pages/EmployeeDashboard/ModernEmployeeHome';
 import ModernLeaveBalance from './pages/EmployeeDashboard/ModernLeaveBalance';
 import ModernApplyLeave from './pages/EmployeeDashboard/ModernApplyLeave';
 import ModernAttendance from './pages/EmployeeDashboard/ModernAttendance';
+import AttendanceRequest from './pages/EmployeeDashboard/AttendanceRequest';
+import AttendanceLogs from './pages/EmployeeDashboard/AttendanceLogs';
+import AttendanceHistory from './pages/EmployeeDashboard/AttendanceHistory';
+import AttendanceHolidays from './pages/EmployeeDashboard/AttendanceHolidays';
 import ModernMyTeam from './pages/EmployeeDashboard/ModernMyTeam';
 import ModernPayslips from './pages/EmployeeDashboard/ModernPayslips';
 import ModernProjects from './pages/EmployeeDashboard/ModernProjects';
@@ -149,6 +153,7 @@ import RosterChangeRequest from './pages/WorkSchedule/RosterChangeRequest';
 import EncashmentRules from './pages/LeaveEncashment/EncashmentRules';
 import EncashmentRequests from './pages/LeaveEncashment/EncashmentRequests';
 import EncashmentHistory from './pages/LeaveEncashment/EncashmentHistory';
+import AutomaticEncashmentSettings from './pages/LeaveEncashment/AutomaticEncashmentSettings';
 
 // Advanced Reports Pages
 import LeaveReports from './pages/Reports/LeaveReports';
@@ -313,6 +318,7 @@ function App() {
             <Route path="leave-encashment/rules" element={<EncashmentRules />} />
             <Route path="leave-encashment/requests" element={<EncashmentRequests />} />
             <Route path="leave-encashment/history" element={<EncashmentHistory />} />
+            <Route path="leave-encashment/automatic-settings" element={<AutomaticEncashmentSettings />} />
 
             {/* Leave Accrual Routes */}
             <Route path="leave-accrual/policies" element={<AccrualPolicies />} />
@@ -361,6 +367,10 @@ function App() {
             <Route path="leave/balance" element={<ModernLeaveBalance />} />
             <Route path="leave/apply" element={<ModernApplyLeave />} />
             <Route path="attendance" element={<ModernAttendance />} />
+            <Route path="attendance/request" element={<AttendanceRequest />} />
+            <Route path="attendance/logs" element={<AttendanceLogs />} />
+            <Route path="attendance/history" element={<AttendanceHistory />} />
+            <Route path="attendance/holidays" element={<AttendanceHolidays />} />
             <Route path="team" element={<ModernMyTeam />} />
             <Route path="payslips" element={<ModernPayslips />} />
             <Route path="projects" element={<ModernProjects />} />

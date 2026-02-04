@@ -119,11 +119,7 @@ const ModernApplyLeave = () => {
   const leaveTypes = [
     'Personal Leave',
     'Sick Leave',
-    'Comp Offs',
-    'Floater Leave',
-    'Marriage Leave',
-    'Maternity Leave',
-    'Unpaid Leave'
+    'Comp Offs'
   ];
 
   return (

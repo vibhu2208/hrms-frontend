@@ -18,13 +18,7 @@ const LeaveCalendar = () => {
   const leaveTypes = [
     'Personal Leave',
     'Sick Leave',
-    'Casual Leave',
-    'Comp Offs',
-    'Floater Leave',
-    'Marriage Leave',
-    'Maternity Leave',
-    'Paternity Leave',
-    'Unpaid Leave'
+    'Comp Offs'
   ];
 
   useEffect(() => {
