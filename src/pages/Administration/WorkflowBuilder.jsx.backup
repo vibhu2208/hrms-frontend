@@ -1,0 +1,1125 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  ArrowDown, 
+  Plus, 
+  X, 
+  GripVertical, 
+  Settings, 
+  Clock, 
+  Bell, 
+  AlertTriangle, 
+  CheckCircle, 
+  Play, 
+  Save,
+  Eye,
+  Copy,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  User,
+  Users,
+  Mail,
+  MessageSquare
+} from 'lucide-react';
+import api from '../../api/axios';
+import toast from 'react-hot-toast';
+
+const WorkflowBuilder = ({ workflow, onClose }) => {
+  const [activeTab, setActiveTab] = useState('configuration');
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [expandedSteps, setExpandedSteps] = useState(new Set([0]));
+  const [draggedStep, setDraggedStep] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    workflowName: '',
+    description: '',
+    entityType: 'leave_request',
+    status: 'draft',
+    effectiveDate: '',
+    autoArchiveAfter: '',
+    approvalSteps: []
+  });
+
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [validationWarnings, setValidationWarnings] = useState([]);
+
+  const entityTypes = [
+    { value: 'leave', label: 'Leave Request', icon: '🏖️' },
+    { value: 'attendance', label: 'Attendance Request', icon: '⏰' },
+    { value: 'expense', label: 'Expense Claim', icon: '💰' },
+    { value: 'payroll', label: 'Payroll Approval', icon: '💵' },
+    { value: 'asset', label: 'Asset Request', icon: '💻' },
+    { value: 'document', label: 'Document Approval', icon: '📄' },
+    { value: 'offboarding', label: 'Employee Offboarding', icon: '🚪' },
+    { value: 'onboarding_approval', label: 'Employee Onboarding', icon: '👤' },
+    { value: 'roster_change', label: 'Roster Change', icon: '📅' },
+    { value: 'profile_update', label: 'Profile Update', icon: '✏️' },
+    { value: 'attendance_regularization', label: 'Attendance Regularization', icon: '⚖️' },
+    { value: 'project', label: 'Project Approval', icon: '📋' },
+    { value: 'other', label: 'Other', icon: '📌' }
+  ];
+
+  const hierarchyLevels = [
+    { value: 'employee', label: 'Employee', level: 1 },
+    { value: 'hr', label: 'HR', level: 2 },
+    { value: 'manager', label: 'Manager', level: 3 },
+    { value: 'admin', label: 'Admin', level: 4 }
+  ];
+
+  const approvalModes = [
+    { value: 'sequential', label: 'Sequential', description: 'One approver at a time' },
+    { value: 'parallel', label: 'Parallel', description: 'All approvers must approve' },
+    { value: 'any_one', label: 'Any One', description: 'First approval passes' }
+  ];
+
+  useEffect(() => {
+    if (workflow) {
+      setFormData({
+        workflowName: workflow.name || workflow.workflowName || '',
+        description: workflow.description || '',
+        entityType: workflow.entityType || 'leave',
+        requestType: workflow.requestType || 'leave',
+        status: workflow.isActive ? 'active' : workflow.isDraft ? 'draft' : 'archived',
+        effectiveDate: workflow.effectiveDate || '',
+        autoArchiveAfter: workflow.autoArchiveAfter || '',
+        approvalSteps: workflow.approvalSteps || workflow.levels || []
+      });
+    } else {
+      // Initialize with default approval step
+      setFormData(prev => ({
+        ...prev,
+        entityType: 'leave',
+        requestType: 'leave',
+        approvalSteps: [
+          {
+            level: 1,
+            approverType: 'manager',
+            isRequired: true,
+            canDelegate: true,
+            slaHours: 24
+          }
+        ]
+      }));
+    }
+  }, [workflow]);
+
+  useEffect(() => {
+    validateWorkflow();
+  }, [formData.approvalSteps]);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (!workflow) {
+      // For new workflows, check if any field has been modified
+      const hasChanges = 
+        formData.workflowName.trim() !== '' ||
+        formData.description.trim() !== '' ||
+        formData.approvalSteps.length > 0;
+      setHasUnsavedChanges(hasChanges);
+    } else {
+      // For existing workflows, we'd need to compare with original data
+      // For now, we'll assume any modification means unsaved changes
+      setHasUnsavedChanges(true);
+    }
+  }, [formData, workflow]);
+
+  const validateWorkflow = useCallback(() => {
+    const errors = [];
+    const warnings = [];
+
+    if (!formData.workflowName.trim()) {
+      errors.push('Workflow name is required');
+    }
+
+    if (formData.approvalSteps.length === 0) {
+      errors.push('Workflow must have at least one approval step');
+    }
+
+    // Check each approval step has required fields
+    formData.approvalSteps.forEach((step, index) => {
+      if (!step.approverType) {
+        errors.push(`Step ${index + 1}: Approver type is required`);
+      }
+      if (!step.level || step.level < 1) {
+        errors.push(`Step ${index + 1}: Level must be a positive number`);
+      }
+      if (step.slaHours && step.slaHours < 0) {
+        errors.push(`Step ${index + 1}: SLA hours must be positive`);
+      }
+    });
+
+    // Check for duplicate levels
+    const levels = formData.approvalSteps.map(step => step.level);
+    const uniqueLevels = [...new Set(levels)];
+    if (levels.length !== uniqueLevels.length) {
+      errors.push('Workflow steps must have unique levels');
+    }
+
+    // Check hierarchy order (levels should be in ascending order)
+    const sortedLevels = [...levels].sort((a, b) => a - b);
+    if (JSON.stringify(levels) !== JSON.stringify(sortedLevels)) {
+      errors.push('Workflow steps must be in ascending order by level');
+    }
+
+    setValidationErrors(errors);
+    setValidationWarnings(warnings);
+  }, [formData.approvalSteps, formData.workflowName]);
+
+  const addApprovalStep = () => {
+    const newStep = {
+      level: formData.approvalSteps.length + 1,
+      approverType: 'manager',
+      isRequired: true,
+      canDelegate: true,
+      slaHours: 24,
+      escalationHours: 36
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      approvalSteps: [...prev.approvalSteps, newStep]
+    }));
+    
+    setExpandedSteps(prev => new Set([...prev, formData.approvalSteps.length]));
+  };
+
+  const removeStep = (index) => {
+    if (formData.approvalSteps[index].type === 'requester') {
+      toast.error('Cannot remove the requester step');
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      approvalSteps: prev.approvalSteps.filter((_, i) => i !== index).map((step, i) => ({
+        ...step,
+        level: i + 1,
+        name: step.type === 'requester' ? 'Requester' : `Step ${i + 1}`
+      }))
+    }));
+  };
+
+  const updateStep = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      approvalSteps: prev.approvalSteps.map((step, i) => 
+        i === index ? { ...step, [field]: value } : step
+      )
+    }));
+  };
+
+  const moveStep = (fromIndex, toIndex) => {
+    if (formData.approvalSteps[fromIndex].type === 'requester' || 
+        formData.approvalSteps[toIndex].type === 'requester') {
+      toast.error('Cannot move the requester step');
+      return;
+    }
+
+    const newSteps = [...formData.approvalSteps];
+    const [movedStep] = newSteps.splice(fromIndex, 1);
+    newSteps.splice(toIndex, 0, movedStep);
+
+    setFormData(prev => ({
+      ...prev,
+      approvalSteps: newSteps.map((step, i) => ({
+        ...step,
+        level: i + 1,
+        name: step.type === 'requester' ? 'Requester' : `Step ${i + 1}`
+      }))
+    }));
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedStep(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedStep !== null && draggedStep !== dropIndex) {
+      moveStep(draggedStep, dropIndex);
+    }
+    setDraggedStep(null);
+  };
+
+  const duplicateStep = (index) => {
+    const stepToDuplicate = formData.approvalSteps[index];
+    const newStep = {
+      ...stepToDuplicate,
+      id: `step_${Date.now()}`,
+      name: `${stepToDuplicate.name} (Copy)`,
+      level: formData.approvalSteps.length + 1
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      approvalSteps: [...prev.approvalSteps, newStep]
+    }));
+  };
+
+  const handleSave = async () => {
+    if (validationErrors.length > 0) {
+      toast.error('Please fix validation errors before saving');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        name: formData.workflowName || formData.name,
+        description: formData.description,
+        entityType: formData.entityType,
+        requestType: formData.requestType,
+        approvalSteps: formData.approvalSteps.map(step => ({
+          level: step.level,
+          approverType: step.approverType,
+          approverId: step.approverId || null,
+          approverRole: step.approverRole || null,
+          approverEmail: step.approverEmail || null,
+          isRequired: step.isRequired !== false,
+          canDelegate: step.canDelegate !== false,
+          slaHours: step.slaHours || 24,
+          escalationHours: step.escalationHours || 36
+        })),
+        isActive: formData.status === 'active',
+        isDraft: formData.status === 'draft',
+        isArchived: formData.status === 'archived'
+      };
+
+      if (workflow) {
+        await api.put(`/approval/workflows/${workflow._id}`, payload);
+        toast.success('Workflow updated successfully');
+      } else {
+        await api.post('/approval/workflows', payload);
+        toast.success('Workflow created successfully');
+      }
+      
+      setHasUnsavedChanges(false);
+      onClose();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save workflow');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async () => {
+    if (validationErrors.length > 0) {
+      toast.error('Please fix validation errors before testing');
+      return;
+    }
+
+    setTesting(true);
+    try {
+      await api.post('/approval/test', {
+        workflow: formData
+      });
+      toast.success('Workflow test completed successfully');
+    } catch (error) {
+      toast.error('Failed to test workflow');
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setShowCloseConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleConfirmClose = () => {
+    setHasUnsavedChanges(false);
+    setShowCloseConfirm(false);
+    onClose();
+  };
+
+  const toggleStepExpanded = (index) => {
+    setExpandedSteps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const calculateEstimatedDuration = () => {
+    return formData.approvalSteps.reduce((total, step) => total + (step.slaHours || 0), 0);
+  };
+            {/* Step Header */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                {!isRequester && (
+                  <GripVertical className="text-gray-400 cursor-move" size={20} />
+                )}
+                <div className="flex items-center gap-2">
+                  {isRequester ? (
+                    <div className="p-2 bg-gray-200 rounded">
+                      <User size={20} className="text-gray-600" />
+                    </div>
+                  ) : (
+                    <div className="p-2 bg-blue-100 rounded">
+                      <Users size={20} className="text-blue-600" />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{step.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {isRequester ? 'Auto-assigned based on user' : `Level ${step.level}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {step.slaHours > 0 && (
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <Clock size={14} />
+                    {step.slaHours}h
+                  </div>
+                )}
+                <button
+                  onClick={() => toggleStepExpanded(index)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                >
+                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {!isRequester && (
+                  <button
+                    onClick={() => removeStep(index)}
+                    className="p-1 text-red-400 hover:text-red-600"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Collapsed Summary */}
+            {!isExpanded && !isRequester && (
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <User size={14} />
+                  {roleConfig?.label || step.role}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Settings size={14} />
+                  {step.approvalMode}
+                </span>
+                {step.escalateTo && (
+                  <span className="flex items-center gap-1">
+                    <AlertTriangle size={14} />
+                    Escalates to {step.escalateTo}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Expanded Details */}
+            {isExpanded && (
+              <div className="space-y-4 mt-4 pt-4 border-t border-gray-200">
+                {isRequester ? (
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Requester Step:</strong> This is the starting point where employees submit their {entityTypeConfig?.label.toLowerCase()} requests.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Role Selection */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Role *
+                        </label>
+                        <select
+                          value={step.role}
+                          onChange={(e) => updateStep(index, 'role', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {hierarchyLevels.map(level => (
+                            <option key={level.value} value={level.value}>
+                              {level.label} (Level {level.level})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Approval Mode
+                        </label>
+                        <select
+                          value={step.approvalMode}
+                          onChange={(e) => updateStep(index, 'approvalMode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {approvalModes.map(mode => (
+                            <option key={mode.value} value={mode.value}>
+                              {mode.label} - {mode.description}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Permissions */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Permissions
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.canReject}
+                            onChange={(e) => updateStep(index, 'canReject', e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm text-gray-700">Can Reject</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.canSendBack}
+                            onChange={(e) => updateStep(index, 'canSendBack', e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm text-gray-700">Can Send Back to Previous Step</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.canDelegate}
+                            onChange={(e) => updateStep(index, 'canDelegate', e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm text-gray-700">Can Delegate to Another User</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.canAddComments}
+                            onChange={(e) => updateStep(index, 'canAddComments', e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <span className="text-sm text-gray-700">Can Add Comments</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* SLA Configuration */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          SLA (Hours)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={step.slaHours}
+                          onChange={(e) => updateStep(index, 'slaHours', parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Escalate To
+                        </label>
+                        <select
+                          value={step.escalateTo}
+                          onChange={(e) => updateStep(index, 'escalateTo', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">No Escalation</option>
+                          {hierarchyLevels
+                            .filter(level => level.level > (roleConfig?.level || 0))
+                            .map(level => (
+                              <option key={level.value} value={level.value}>
+                                {level.label}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Notifications */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Notifications
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.notifications?.email}
+                            onChange={(e) => updateStep(index, 'notifications', {
+                              ...step.notifications,
+                              email: e.target.checked
+                            })}
+                            className="rounded border-gray-300"
+                          />
+                          <Mail size={14} className="text-gray-500" />
+                          <span className="text-sm text-gray-700">Email Notification</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.notifications?.inApp}
+                            onChange={(e) => updateStep(index, 'notifications', {
+                              ...step.notifications,
+                              inApp: e.target.checked
+                            })}
+                            className="rounded border-gray-300"
+                          />
+                          <MessageSquare size={14} className="text-gray-500" />
+                          <span className="text-sm text-gray-700">In-App Notification</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={step.notifications?.sms}
+                            onChange={(e) => updateStep(index, 'notifications', {
+                              ...step.notifications,
+                              sms: e.target.checked
+                            })}
+                            className="rounded border-gray-300"
+                          />
+                          <Bell size={14} className="text-gray-500" />
+                          <span className="text-sm text-gray-700">SMS Notification</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-2 border-t border-gray-200">
+                      <button
+                        onClick={() => duplicateStep(index)}
+                        className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        <Copy size={14} />
+                        Duplicate
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleClose}
+                className="p-2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {workflow ? 'Edit Workflow' : 'Create New Workflow'}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Design approval flows with drag-and-drop interface
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleTest}
+                disabled={testing || validationErrors.length > 0}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Play size={16} />
+                {testing ? 'Testing...' : 'Test Workflow'}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || validationErrors.length > 0}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save size={16} />
+                {saving ? 'Saving...' : 'Save Workflow'}
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-6 mt-4">
+            <button
+              onClick={() => setActiveTab('configuration')}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'configuration'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Configuration
+            </button>
+            <button
+              onClick={() => setActiveTab('validation')}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'validation'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Validation
+              {validationErrors.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded-full">
+                  {validationErrors.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('preview')}
+              className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'preview'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Preview
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex">
+        {/* Main Content */}
+        <div className="flex-1 p-6">
+          {activeTab === 'configuration' && (
+            <div className="max-w-4xl mx-auto">
+              {/* Basic Configuration */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Configuration</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Workflow Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.workflowName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, workflowName: e.target.value }))}
+                      maxLength={50}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="e.g., Leave Request Approval"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.workflowName.length}/50 characters
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Applies To *
+                    </label>
+                    <select
+                      value={formData.entityType}
+                      onChange={(e) => setFormData(prev => ({ ...prev, entityType: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {entityTypes.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.icon} {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      maxLength={200}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Optional description of this workflow..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.description.length}/200 characters
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="active">Active</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Effective Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.effectiveDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, effectiveDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Auto-Archive After (Days)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.autoArchiveAfter}
+                      onChange={(e) => setFormData(prev => ({ ...prev, autoArchiveAfter: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Approval Flow Builder */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Approval Flow Builder</h2>
+                  <button
+                    onClick={addApprovalStep}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                  >
+                    <Plus size={16} />
+                    Add Approval Step
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {formData.approvalSteps.map((step, index) => (
+                    <StepCard key={step.id || index} step={step} index={index} />
+                  ))}
+                </div>
+
+                {formData.approvalSteps.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <Users size={48} className="mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg font-medium mb-2">No approval steps yet</p>
+                    <p className="text-sm mb-4">Add your first approval step to get started</p>
+                    <button
+                      onClick={addApprovalStep}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <Plus size={16} />
+                      Add First Step
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'validation' && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Real-time Validation</h2>
+                
+                {validationErrors.length === 0 && validationWarnings.length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle size={48} className="mx-auto mb-4 text-green-500" />
+                    <p className="text-lg font-medium text-green-800">All validations passed!</p>
+                    <p className="text-sm text-green-600">Your workflow is ready to use.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {validationErrors.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-medium text-red-800 mb-2">Errors (Must Fix)</h3>
+                        <div className="space-y-2">
+                          {validationErrors.map((error, index) => (
+                            <div key={index} className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <X size={16} className="text-red-600 mt-0.5" />
+                              <span className="text-sm text-red-800">{error}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {validationWarnings.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-medium text-yellow-800 mb-2">Warnings (Recommended)</h3>
+                        <div className="space-y-2">
+                          {validationWarnings.map((warning, index) => (
+                            <div key={index} className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                              <AlertTriangle size={16} className="text-yellow-600 mt-0.5" />
+                              <span className="text-sm text-yellow-800">{warning}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Workflow Statistics */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Workflow Statistics</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {formData.approvalSteps.length}
+                      </div>
+                      <div className="text-sm text-gray-500">Total Steps</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {calculateEstimatedDuration()}h
+                      </div>
+                      <div className="text-sm text-gray-500">Est. Duration</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {formData.approvalSteps.filter(step => step.escalateTo).length}
+                      </div>
+                      <div className="text-sm text-gray-500">Escalation Points</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {formData.approvalSteps.filter(step => step.notifications?.email).length}
+                      </div>
+                      <div className="text-sm text-gray-500">Email Triggers</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'preview' && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Execution Preview</h2>
+                
+                <div className="space-y-6">
+                  {/* Visual Timeline */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Visual Timeline Simulation</h3>
+                    <div className="space-y-3">
+                      {formData.approvalSteps.map((step, index) => {
+                        const duration = step.slaHours || 0;
+                        const dayNumber = index + 1;
+                        
+                        return (
+                          <div key={step.id || index} className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-20 text-sm text-gray-600">
+                              Day {dayNumber}
+                            </div>
+                            <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-800">{index + 1}</span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm text-gray-900">
+                                {step.type === 'requester' ? 'Requester submits' : `${step.role} approves`}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                → {index < formData.approvalSteps.length - 1 
+                                  ? formData.approvalSteps[index + 1].role 
+                                  : 'Request Complete ✓'}
+                              </div>
+                            </div>
+                            {duration > 0 && (
+                              <div className="flex-shrink-0 text-sm text-gray-500">
+                                {duration}h SLA
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Example Scenarios */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3">Example Scenarios</h3>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle size={16} className="text-green-600" />
+                          <span className="text-sm font-medium text-green-800">Happy Path (All Approve)</span>
+                        </div>
+                        <p className="text-xs text-green-700">
+                          Request moves through all steps smoothly, completing in {calculateEstimatedDuration()} hours
+                        </p>
+                      </div>
+
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <X size={16} className="text-red-600" />
+                          <span className="text-sm font-medium text-red-800">Rejection at Step 2</span>
+                        </div>
+                        <p className="text-xs text-red-700">
+                          Request is rejected and returned to requester with feedback
+                        </p>
+                      </div>
+
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock size={16} className="text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-800">Escalation at Step 3</span>
+                        </div>
+                        <p className="text-xs text-yellow-700">
+                          SLA timeout triggers escalation to next level approver
+                        </p>
+                      </div>
+
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ArrowDown size={16} className="text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Send-back Scenario</span>
+                        </div>
+                        <p className="text-xs text-blue-700">
+                          Request is sent back to previous step for additional information
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Sidebar - Quick Stats */}
+        {activeTab === 'configuration' && (
+          <div className="w-80 bg-white border-l border-gray-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Stats</h3>
+            
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-gray-900">
+                  {formData.approvalSteps.length}
+                </div>
+                <div className="text-sm text-gray-600">Total Steps</div>
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-900">
+                  {calculateEstimatedDuration()}h
+                </div>
+                <div className="text-sm text-blue-600">Est. Duration</div>
+              </div>
+
+              <div className="p-3 bg-yellow-50 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-900">
+                  {formData.approvalSteps.filter(step => step.escalateTo).length}
+                </div>
+                <div className="text-sm text-yellow-600">Escalation Points</div>
+              </div>
+
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-900">
+                  {formData.approvalSteps.filter(step => step.notifications?.email).length}
+                </div>
+                <div className="text-sm text-green-600">Email Triggers</div>
+              </div>
+            </div>
+
+            {validationErrors.length > 0 && (
+              <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <X size={16} className="text-red-600" />
+                  <span className="text-sm font-medium text-red-800">
+                    {validationErrors.length} Error{validationErrors.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-red-700">
+                  Fix issues before saving
+                </p>
+              </div>
+            )}
+
+            {validationWarnings.length > 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle size={16} className="text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-800">
+                    {validationWarnings.length} Warning{validationWarnings.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-yellow-700">
+                  Review recommendations
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Close Confirmation Dialog */}
+      {showCloseConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <AlertTriangle className="text-yellow-600" size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Unsaved Changes</h3>
+                <p className="text-sm text-gray-600">You have unsaved changes. Are you sure you want to close?</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmClose}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Discard Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default WorkflowBuilder;

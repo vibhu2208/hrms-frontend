@@ -145,6 +145,8 @@ const ClientList = () => {
     }
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone is required';
+    } else if (!/^[0-9+\-\s()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Phone must contain only numbers';
     }
 
     setErrors(newErrors);
@@ -487,8 +489,16 @@ const ClientModal = ({ formData, errors, submitting, onChange, onSubmit, onClose
                   name="phone"
                   value={formData.phone}
                   onChange={onChange}
+                  onKeyPress={(e) => {
+                    // Allow only numbers, +, -, (, ), space, and backspace
+                    const char = String.fromCharCode(e.which);
+                    if (!/[0-9+\-\s()]/.test(char) && e.which !== 8 && e.which !== 46) {
+                      e.preventDefault();
+                    }
+                  }}
                   className={`input-field w-full ${errors.phone ? 'border-red-500' : ''}`}
                   required
+                  placeholder="Enter phone number (numbers only)"
                 />
                 {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
               </div>
@@ -660,7 +670,15 @@ const ClientModal = ({ formData, errors, submitting, onChange, onSubmit, onClose
                   name="contactPerson.phone"
                   value={formData.contactPerson.phone}
                   onChange={onChange}
+                  onKeyPress={(e) => {
+                    // Allow only numbers, +, -, (, ), space, and backspace
+                    const char = String.fromCharCode(e.which);
+                    if (!/[0-9+\-\s()]/.test(char) && e.which !== 8 && e.which !== 46) {
+                      e.preventDefault();
+                    }
+                  }}
                   className="input-field w-full"
+                  placeholder="Enter phone number (numbers only)"
                 />
               </div>
             </div>

@@ -50,6 +50,15 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // For phone field, only allow numbers, +, -, (, ), and spaces
+    if (name === 'phone') {
+      const phoneRegex = /^[0-9+\-\s()]*$/;
+      if (!phoneRegex.test(value)) {
+        return; // Don't update if invalid characters are entered
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -318,12 +327,20 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    onKeyPress={(e) => {
+                      // Allow only numbers, +, -, (, ), space, and backspace
+                      const char = String.fromCharCode(e.which);
+                      if (!/[0-9+\-\s()]/.test(char) && e.which !== 8 && e.which !== 46) {
+                        e.preventDefault();
+                      }
+                    }}
                     className={`w-full pl-10 px-3 py-2 rounded-lg border ${
                       theme === 'dark' 
                         ? 'bg-gray-700 border-gray-600' 
                         : 'bg-white border-gray-300'
                     }`}
                     required
+                    placeholder="Enter phone number (numbers only)"
                   />
                 </div>
               </div>

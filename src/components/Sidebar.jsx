@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 import {
   LayoutDashboard,
   Briefcase,
@@ -26,10 +27,31 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { user } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [activeWorkflowCount, setActiveWorkflowCount] = useState(null);
   
   const isAdmin = user?.role === 'admin' || user?.role === 'company_admin';
   const isHR = user?.role === 'hr';
   const isManager = user?.role === 'manager';
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchWorkflowStats = async () => {
+      if (!isAdmin) return;
+      try {
+        const res = await api.get('/approval-workflow/workflows/stats');
+        const count = res?.data?.data?.totalActiveWorkflows;
+        if (isMounted) setActiveWorkflowCount(Number.isFinite(count) ? count : 0);
+      } catch (e) {
+        // Silent failure: don't break navigation if stats fail
+        if (isMounted) setActiveWorkflowCount(null);
+      }
+    };
+
+    fetchWorkflowStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdmin]);
 
   const toggleMenu = (key) => {
     setExpandedMenus(prev => {
@@ -185,19 +207,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           { label: 'Roles & Permissions', path: '/administration/roles' },
           { label: 'Policies', path: '/administration/policies' },
           { label: 'User Management', path: '/administration/users' },
-          { label: 'Leave Management', path: '/administration/leave-management' }
+          { label: 'Leave Management', path: '/administration/leave-management' },
+          { label: 'Project Approval', path: '/administration/project-approval' }
         ] : []),
         ...(isHR ? [
           { label: 'Onboarding', path: '/employees/onboarding' },
           { label: 'Offboarding', path: '/employees/offboarding' }
         ] : []),
         ...(isAdmin ? [
-          { label: 'Approval Workflows', path: '/approval-workflow/workflows' },
-          { label: 'Pending Approvals', path: '/approval-workflow/pending' }
+          { label: 'Workflow Management', path: '/approval-workflow/workflows', badge: activeWorkflowCount },
+          { label: 'Pending Approvals', path: '/approval-workflow/pending' },
+          { label: 'Approval Matrix', path: '/approval-workflow/matrix' },
+          { label: 'SLA Monitoring', path: '/approval-workflow/sla' }
         ] : []),
-        { label: 'Approval Matrix', path: '/approval-workflow/matrix' },
         { label: 'Delegations', path: '/approval-workflow/delegations' },
-        { label: 'SLA Monitoring', path: '/approval-workflow/sla' },
         ...(isAdmin ? [
           { label: 'Biometric Devices', path: '/biometric/devices' },
           { label: 'Biometric Employee Sync', path: '/biometric/employee-sync' },
@@ -322,7 +345,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                           onMouseEnter={(e) => e.currentTarget.classList.add('hover:bg-gray-800', 'hover:text-white')}
                           onMouseLeave={(e) => e.currentTarget.classList.remove('hover:bg-gray-800', 'hover:text-white')}
                         >
-                          {subItem.label}
+                          <div className="flex items-center justify-between gap-2">
+                            <span>{subItem.label}</span>
+                            {typeof subItem.badge === 'number' && (
+                              <span className="badge badge-info">{subItem.badge}</span>
+                            )}
+                          </div>
                         </Link>
                       ))}
                     </div>

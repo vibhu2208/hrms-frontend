@@ -129,6 +129,17 @@ const SuperAdminLogin = () => {
             >
               {loading ? 'Signing in...' : 'Sign In as Super Admin'}
             </button>
+
+            {/* Forgot Password */}
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-sm text-purple-400 hover:text-purple-300"
+              >
+                Forgot password?
+              </button>
+            </div>
           </form>
         </div>
 

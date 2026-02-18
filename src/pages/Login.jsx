@@ -43,7 +43,14 @@ const Login = () => {
         navigate('/dashboard');
       }
     } else {
-      toast.error(result.message);
+      // Handle lockout specifically
+      if (result.lockoutRemaining) {
+        toast.error(`Account locked. Try again in ${result.lockoutRemaining} minutes.`, {
+          duration: 5000,
+        });
+      } else {
+        toast.error(result.message);
+      }
     }
 
     setLoading(false);

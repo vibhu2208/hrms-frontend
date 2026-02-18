@@ -15,6 +15,8 @@ import LoginLanding from './pages/LoginLanding';
 import CompanySelect from './pages/CompanySelect';
 import CompanyLogin from './pages/CompanyLogin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Public Pages
 import CareersPage from './pages/Public/CareersPage';
@@ -58,6 +60,7 @@ import Roles from './pages/Administration/Roles';
 import Policies from './pages/Administration/Policies';
 import UserManagement from './pages/Administration/UserManagement';
 import LeaveManagement from './pages/Administration/LeaveManagement';
+import ProjectApproval from './pages/Administration/ProjectApproval';
 
 // Assets Page
 import Assets from './pages/Assets';
@@ -118,6 +121,7 @@ import ModernProfile from './pages/EmployeeDashboard/ModernProfile';
 import ManagerHome from './pages/ManagerDashboard/ManagerHome';
 import LeaveApprovals from './pages/ManagerDashboard/LeaveApprovals';
 import AssignProject from './pages/ManagerDashboard/AssignProject';
+import ManagerProjects from './pages/ManagerDashboard/ManagerProjects';
 import ScheduleMeeting from './pages/ManagerDashboard/ScheduleMeeting';
 import Announcements from './pages/ManagerDashboard/Announcements';
 import TeamReports from './pages/ManagerDashboard/TeamReports';
@@ -169,6 +173,9 @@ import ManualAccrual from './pages/LeaveAccrual/ManualAccrual';
 
 // Approval Workflow Pages
 import Workflows from './pages/ApprovalWorkflow/Workflows';
+import WorkflowBuilderPage from './pages/ApprovalWorkflow/WorkflowBuilderPage';
+import WorkflowHistoryPage from './pages/ApprovalWorkflow/WorkflowHistoryPage';
+import WorkflowAnalyticsPage from './pages/ApprovalWorkflow/WorkflowAnalyticsPage';
 import ApprovalMatrix from './pages/ApprovalWorkflow/ApprovalMatrix';
 import Delegations from './pages/ApprovalWorkflow/Delegations';
 import PendingApprovals from './pages/ApprovalWorkflow/PendingApprovals';
@@ -222,6 +229,8 @@ function App() {
           <Route path="/login/super-admin" element={<SuperAdminLogin />} />
           <Route path="/login/old" element={<Login />} />
           <Route path="/login/:companySlug" element={<CompanyLogin />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/jobs" element={<CareersPage />} />
           <Route path="/candidate-documents" element={<CandidateDocuments />} />
@@ -281,6 +290,7 @@ function App() {
             <Route path="administration/policies" element={<Policies />} />
             <Route path="administration/users" element={<UserManagement />} />
             <Route path="administration/leave-management" element={<LeaveManagement />} />
+            <Route path="administration/project-approval" element={<ProjectApproval />} />
 
             {/* Assets Route */}
             <Route path="assets" element={<Assets />} />
@@ -326,11 +336,78 @@ function App() {
             <Route path="leave-accrual/manual" element={<ManualAccrual />} />
 
             {/* Approval Workflow Routes */}
-            <Route path="approval-workflow/workflows" element={<Workflows />} />
-            <Route path="approval-workflow/matrix" element={<ApprovalMatrix />} />
-            <Route path="approval-workflow/delegations" element={<Delegations />} />
-            <Route path="approval-workflow/pending" element={<PendingApprovals />} />
-            <Route path="approval-workflow/sla" element={<SLAMonitoring />} />
+            <Route
+              path="approval-workflow/workflows"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <Workflows />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/workflows/new"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <WorkflowBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/workflows/:id/edit"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <WorkflowBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/workflows/:id/history"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <WorkflowHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/workflows/:id/analytics"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <WorkflowAnalyticsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/matrix"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <ApprovalMatrix />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/delegations"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin', 'hr', 'manager']}>
+                  <Delegations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/pending"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin', 'hr', 'manager']}>
+                  <PendingApprovals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="approval-workflow/sla"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin', 'hr']}>
+                  <SLAMonitoring />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Biometric Integration Routes */}
             <Route path="biometric/devices" element={<DeviceManagement />} />
@@ -389,6 +466,7 @@ function App() {
             <Route path="manager/leave-approvals" element={<LeaveApprovals />} />
             <Route path="manager/team-reports" element={<TeamReports />} />
             <Route path="manager/assign-project" element={<AssignProject />} />
+            <Route path="manager/projects" element={<ManagerProjects />} />
             <Route path="manager/schedule-meeting" element={<ScheduleMeeting />} />
             <Route path="manager/announcements" element={<Announcements />} />
             
@@ -413,8 +491,22 @@ function App() {
             {/* HR Management Routes (accessible from employee dashboard) */}
             <Route path="hr/leave-encashment-rules" element={<EncashmentRules />} />
             <Route path="hr/leave-accrual-policies" element={<AccrualPolicies />} />
-            <Route path="hr/approval-workflows" element={<Workflows />} />
-            <Route path="hr/pending-approvals" element={<PendingApprovals />} />
+            <Route
+              path="hr/approval-workflows"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin']}>
+                  <Workflows />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="hr/pending-approvals"
+              element={
+                <ProtectedRoute roles={['admin', 'company_admin', 'hr', 'manager']}>
+                  <PendingApprovals />
+                </ProtectedRoute>
+              }
+            />
             <Route path="hr/reports/analytics" element={<AnalyticsDashboard />} />
             <Route path="hr/attendance-reports" element={<AdvancedAttendanceReports />} />
           </Route>

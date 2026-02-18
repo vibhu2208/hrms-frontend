@@ -15,14 +15,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken'));
 
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('token');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
       const storedUser = localStorage.getItem('user');
 
       if (storedToken && storedUser) {
         setToken(storedToken);
+        setRefreshToken(storedRefreshToken);
         setUser(JSON.parse(storedUser));
       }
       setLoading(false);
@@ -38,9 +41,10 @@ export const AuthProvider = ({ children }) => {
         password,
         ...(companyId && { companyId })
       });
-      const { token, user } = response.data.data;
+      const { token, refreshToken, user } = response.data.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       
       // Apply user's theme preference
@@ -49,13 +53,15 @@ export const AuthProvider = ({ children }) => {
       }
       
       setToken(token);
+      setRefreshToken(refreshToken);
       setUser(user);
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed'
+        message: error.response?.data?.message || 'Login failed',
+        lockoutRemaining: error.response?.data?.lockoutRemaining
       };
     }
   };
@@ -105,11 +111,79 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
+  const refreshAccessToken = async () => {
+    try {
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+      const storedCompanyId = JSON.parse(localStorage.getItem('user'))?.companyId;
+      
+      if (!storedRefreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await api.post('/auth/refresh-token', {
+        refreshToken: storedRefreshToken,
+        ...(storedCompanyId && { companyId: storedCompanyId })
+      });
+      
+      const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
+
+      localStorage.setItem('token', accessToken);
+      if (newRefreshToken) {
+        localStorage.setItem('refreshToken', newRefreshToken);
+        setRefreshToken(newRefreshToken);
+      }
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      setToken(accessToken);
+      setUser(user);
+
+      return { success: true, accessToken };
+    } catch (error) {
+      // Refresh token failed, clear auth state
+      logout();
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Token refresh failed'
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+      
+      if (storedRefreshToken) {
+        // Call backend logout endpoint to revoke refresh token
+        await api.post('/auth/logout', { refreshToken: storedRefreshToken });
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Clear local storage regardless of API call success
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setToken(null);
+      setRefreshToken(null);
+      setUser(null);
+    }
+  };
+
+  const logoutAll = async () => {
+    try {
+      // Call backend logout-all endpoint to revoke all refresh tokens
+      await api.post('/auth/logout-all');
+    } catch (error) {
+      console.error('Error during logout all:', error);
+    } finally {
+      // Clear local storage regardless of API call success
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setToken(null);
+      setRefreshToken(null);
+      setUser(null);
+    }
   };
 
   const updateUser = (updatedUser) => {
@@ -120,11 +194,14 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
+    refreshToken,
     loading,
     login,
     googleLogin,
     register,
     logout,
+    logoutAll,
+    refreshAccessToken,
     updateUser,
     isAuthenticated: !!token
   };
