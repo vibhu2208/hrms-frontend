@@ -262,6 +262,7 @@ const CompanyLogin = () => {
                 </label>
                 <button
                   type="button"
+                  onClick={() => navigate('/forgot-password')}
                   className="text-sm text-primary-500 hover:text-primary-400"
                 >
                   Forgot password?

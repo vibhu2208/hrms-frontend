@@ -123,10 +123,10 @@ const AssignProject = () => {
 
       const data = await response.json();
       if (data.success) {
-        toast.success('Project assigned successfully');
-        navigate('/employee/manager/home');
+        toast.success('Project submitted for approval successfully');
+        navigate('/employee/manager/projects');
       } else {
-        toast.error(data.message || 'Failed to assign project');
+        toast.error(data.message || 'Failed to submit project for approval');
       }
     } catch (error) {
       console.error('Error assigning project:', error);
@@ -148,8 +148,8 @@ const AssignProject = () => {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-white">Assign Project</h1>
-            <p className="text-gray-400 text-sm">Create and assign new project to team</p>
+            <h1 className="text-xl font-bold text-white">Submit Project for Approval</h1>
+            <p className="text-gray-400 text-sm">Create project and submit for admin approval</p>
           </div>
         </div>
       </div>
@@ -320,7 +320,7 @@ const AssignProject = () => {
             }
             className="w-full bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] text-white py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Assigning Project...' : 'Assign Project to Team'}
+            {submitting ? 'Submitting for Approval...' : 'Submit Project for Approval'}
           </button>
         </form>
       </div>

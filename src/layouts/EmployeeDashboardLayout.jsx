@@ -58,8 +58,10 @@ const EmployeeDashboardLayout = () => {
   const managerNavigation = [
     { name: 'Manager Home', href: '/employee/manager/home', icon: Shield },
     { name: 'Leave Approvals', href: '/employee/manager/leave-approvals', icon: CheckCircle },
+    { name: 'Pending Approvals', href: '/employee/hr/pending-approvals', icon: CheckCircle },
     { name: 'Team Reports', href: '/employee/manager/team-reports', icon: FileText },
     { name: 'Assign Project', href: '/employee/manager/assign-project', icon: UserPlus },
+    { name: 'My Projects', href: '/employee/manager/projects', icon: Briefcase },
     { name: 'Schedule Meeting', href: '/employee/manager/schedule-meeting', icon: CalendarPlus },
     { name: 'Announcements', href: '/employee/manager/announcements', icon: MessageSquare },
   ];
@@ -68,6 +70,7 @@ const EmployeeDashboardLayout = () => {
   const hrNavigation = [
     { name: 'HR Dashboard', href: '/employee/hr/dashboard', icon: ClipboardList },
     { name: 'Employee Management', href: '/employee/hr/employees', icon: Users },
+    { name: 'Pending Approvals', href: '/employee/hr/pending-approvals', icon: CheckCircle },
     { name: 'Leave Encashment Rules', href: '/employee/hr/leave-encashment-rules', icon: DollarSign },
     { name: 'Onboarding', href: '/employee/hr/onboarding', icon: LogIn },
     { name: 'Offboarding', href: '/employee/hr/offboarding', icon: LogOut },

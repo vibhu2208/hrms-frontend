@@ -9,6 +9,7 @@ const ModernApplyLeave = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [leaveTypes, setLeaveTypes] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -20,8 +21,53 @@ const ModernApplyLeave = () => {
   });
 
   useEffect(() => {
+    fetchLeaveTypes();
     fetchUpcomingLeaves();
   }, []);
+
+  const fetchLeaveTypes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/employee/leaves/types', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success && data.data) {
+        // Use leave types from admin configuration
+        setLeaveTypes(data.data);
+        console.log(`📋 Loaded ${data.data.length} leave types:`, data.data);
+      } else {
+        // Fallback to default leave types
+        setLeaveTypes([
+          'Personal Leave',
+          'Sick Leave',
+          'Casual Leave',
+          'Comp Offs',
+          'Floater Leave',
+          'Marriage Leave',
+          'Maternity Leave',
+          'Paternity Leave',
+          'Unpaid Leave'
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching leave types:', error);
+      // Fallback to default leave types
+      setLeaveTypes([
+        'Personal Leave',
+        'Sick Leave',
+        'Casual Leave',
+        'Comp Offs',
+        'Floater Leave',
+        'Marriage Leave',
+        'Maternity Leave',
+        'Paternity Leave',
+        'Unpaid Leave'
+      ]);
+    }
+  };
 
   const fetchUpcomingLeaves = async () => {
     try {
@@ -115,12 +161,6 @@ const ModernApplyLeave = () => {
 
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  const leaveTypes = [
-    'Personal Leave',
-    'Sick Leave',
-    'Comp Offs'
-  ];
 
   return (
     <div className="min-h-screen bg-[#1E1E2A] p-4 md:p-6 pb-24 md:pb-6">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Building2, Shield, ArrowRight } from 'lucide-react';
 
 const LoginLanding = () => {
@@ -66,9 +66,15 @@ const LoginLanding = () => {
 
         {/* Footer */}
         <div className="text-center mt-12">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm mb-2">
             Need help? Contact your system administrator
           </p>
+          <Link
+            to="/forgot-password"
+            className="text-primary-500 hover:text-primary-400 text-sm"
+          >
+            Forgot your password?
+          </Link>
         </div>
       </div>
     </div>

@@ -21,27 +21,46 @@ const PendingApprovals = () => {
       const params = {};
       if (filters.entityType) params.entityType = filters.entityType;
       if (filters.status) params.status = filters.status;
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/55260818-aa6f-4194-8f1a-a7b791aff845', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runId: 'baseline', hypothesisId: 'H5', location: 'hrms-frontend/src/pages/ApprovalWorkflow/PendingApprovals.jsx:fetchApprovals:before', message: 'Fetching pending approvals (frontend)', data: { path: '/approval-workflow/pending', params }, timestamp: Date.now() }) }).catch(() => {});
+      // #endregion
       
-      // This would need to be implemented in the backend
       const response = await api.get('/approval-workflow/pending', { params });
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/55260818-aa6f-4194-8f1a-a7b791aff845', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runId: 'baseline', hypothesisId: 'H5', location: 'hrms-frontend/src/pages/ApprovalWorkflow/PendingApprovals.jsx:fetchApprovals:after', message: 'Fetched pending approvals (frontend)', data: { httpOk: Boolean(response?.status && response.status >= 200 && response.status < 300), status: response?.status || null, count: Array.isArray(response?.data?.data) ? response.data.data.length : null, success: response?.data?.success ?? null }, timestamp: Date.now() }) }).catch(() => {});
+      // #endregion
       setApprovals(response.data.data || []);
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/55260818-aa6f-4194-8f1a-a7b791aff845', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runId: 'baseline', hypothesisId: 'H5', location: 'hrms-frontend/src/pages/ApprovalWorkflow/PendingApprovals.jsx:fetchApprovals:error', message: 'Failed fetching pending approvals (frontend)', data: { status: error?.response?.status || null, message: String(error?.response?.data?.message || error?.message || error) }, timestamp: Date.now() }) }).catch(() => {});
+      // #endregion
       toast.error('Failed to fetch pending approvals');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApproval = async (entityType, entityId, action, comments = '') => {
+  const handleApproval = async (entityType, entityId, action, comments = '', instanceId, currentLevel) => {
     try {
-      await api.post(`/approval-workflow/${entityType}/${entityId}/approve`, {
-        action,
-        comments
-      });
+      if (entityType === 'leave_request' || entityType === 'project') {
+        // Use approval workflow endpoint with instance ID
+        await api.post(`/approval-workflow/${entityType}/${instanceId}/approve`, {
+          action,
+          comments,
+          level: currentLevel
+        });
+      } else {
+        // Use generic approval workflow endpoint
+        await api.post(`/approval-workflow/${entityType}/${entityId}/approve`, {
+          action,
+          comments,
+          level: currentLevel
+        });
+      }
       toast.success(`Request ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
       fetchApprovals();
     } catch (error) {
-      toast.error(`Failed to ${action} request`);
+      toast.error(`Failed to ${action} request: ${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -78,6 +97,7 @@ const PendingApprovals = () => {
             >
               <option value="">All</option>
               <option value="leave_request">Leave Request</option>
+              <option value="project">Project</option>
               <option value="leave_encashment">Leave Encashment</option>
             </select>
           </div>
@@ -107,7 +127,7 @@ const PendingApprovals = () => {
                   {approval.details || approval.description || '-'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-300">
-                  {new Date(approval.createdAt).toLocaleDateString()}
+                  {approval.requestDate ? new Date(approval.requestDate).toLocaleDateString() : '-'}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-300">
                   {approval.slaDeadline ? new Date(approval.slaDeadline).toLocaleDateString() : '-'}
@@ -115,14 +135,14 @@ const PendingApprovals = () => {
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleApproval(approval.entityType, approval.entityId, 'approve')}
+                      onClick={() => handleApproval(approval.entityType, approval.entityId, 'approve', '', approval.instanceId, approval.currentLevel)}
                       className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                     >
                       <CheckCircle size={16} />
                       Approve
                     </button>
                     <button
-                      onClick={() => handleApproval(approval.entityType, approval.entityId, 'reject')}
+                      onClick={() => handleApproval(approval.entityType, approval.entityId, 'reject', '', approval.instanceId, approval.currentLevel)}
                       className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                     >
                       <XCircle size={16} />

@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { getLeaveBalance, getLeaveApplications } from '../../api/employeeDashboard';
 import toast from 'react-hot-toast';
 import BottomNavigation from '../../components/BottomNavigation';
-import { ArrowLeft, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 
 const ModernLeaveBalance = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('balance');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [leaveBalances, setLeaveBalances] = useState([]);
   const [leaveHistory, setLeaveHistory] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -32,6 +33,68 @@ const ModernLeaveBalance = () => {
       toast.error(error.response?.data?.message || 'Failed to load leave data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshLeaveBalances = async () => {
+    try {
+      setRefreshing(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/employee/leaves/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        toast.success(data.message);
+        // Refresh the leave balance data
+        if (activeTab === 'balance') {
+          const balanceResponse = await getLeaveBalance(selectedYear);
+          setLeaveBalances(balanceResponse.data);
+        }
+      } else {
+        toast.error(data.message || 'Failed to refresh leave balances');
+      }
+    } catch (error) {
+      console.error('Error refreshing leave balances:', error);
+      toast.error('Failed to refresh leave balances');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const fixNegativeBalances = async () => {
+    try {
+      setRefreshing(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/employee/leaves/fix-negative', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        toast.success(data.message);
+        // Refresh the leave balance data
+        if (activeTab === 'balance') {
+          const balanceResponse = await getLeaveBalance(selectedYear);
+          setLeaveBalances(balanceResponse.data);
+        }
+      } else {
+        toast.error(data.message || 'Failed to fix negative balances');
+      }
+    } catch (error) {
+      console.error('Error fixing negative balances:', error);
+      toast.error('Failed to fix negative balances');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -114,6 +177,29 @@ const ModernLeaveBalance = () => {
           >
             Leave History
           </button>
+          
+          {/* Refresh Button - Only show on balance tab */}
+          {activeTab === 'balance' && (
+            <>
+              <button
+                onClick={refreshLeaveBalances}
+                disabled={refreshing}
+                className="ml-4 px-4 py-3 rounded-xl font-semibold transition-all bg-gray-600 hover:bg-gray-500 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
+              
+              <button
+                onClick={fixNegativeBalances}
+                disabled={refreshing}
+                className="ml-2 px-4 py-3 rounded-xl font-semibold transition-all bg-red-600 hover:bg-red-500 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'Fixing...' : 'Fix Negative'}</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Year Selector for History */}
