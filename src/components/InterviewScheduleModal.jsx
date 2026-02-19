@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, Video, Users, Loader } from 'lucide-react';
+import { X, Calendar, Clock, Video, Users, Loader, Plus, RefreshCw } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
@@ -15,9 +15,12 @@ const InterviewScheduleModal = ({ candidateId, onClose, onSuccess }) => {
   });
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [creatingMeet, setCreatingMeet] = useState(false);
+  const [googleAuthenticated, setGoogleAuthenticated] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
+    checkGoogleAuth();
   }, []);
 
   const fetchEmployees = async () => {
@@ -29,11 +32,84 @@ const InterviewScheduleModal = ({ candidateId, onClose, onSuccess }) => {
     }
   };
 
+  const handleCreateGoogleMeet = async () => {
+    setCreatingMeet(true);
+    try {
+      // Create a temporary interview to trigger Google Meet creation
+      const tempData = {
+        ...formData,
+        createGoogleMeet: true
+      };
+
+      const response = await api.post(`/candidates/${candidateId}/interview`, tempData);
+      
+      if (response.data.success && response.data.googleMeetData) {
+        setFormData(prev => ({
+          ...prev,
+          meetingLink: response.data.googleMeetData.joinUrl
+        }));
+        toast.success('Google Meet created successfully!');
+        
+        // Show additional info if calendar event was created
+        if (response.data.calendarEventData) {
+          toast.success('Calendar invitation also sent to interviewers');
+        }
+      } else {
+        toast.error('Failed to create Google Meet');
+      }
+    } catch (error) {
+      console.error('Failed to create Google Meet:', error);
+      toast.error(error.response?.data?.message || 'Failed to create Google Meet');
+    } finally {
+      setCreatingMeet(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      // Redirect to Google OAuth2 flow using backend callback
+      const authUrl = `https://accounts.google.com/oauth/authorize?` +
+        `client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent('http://localhost:5001/api/auth/google/callback')}&` +
+        `scope=${encodeURIComponent('https://www.googleapis.com/auth/meetings.space.created https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events')}&` +
+        `response_type=code&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+      
+      // Store current URL for redirect back
+      sessionStorage.setItem('returnTo', window.location.pathname);
+      
+      // Redirect to Google
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Google auth error:', error);
+      toast.error('Failed to authenticate with Google');
+    }
+  };
+
+  const checkGoogleAuth = async () => {
+    try {
+      const response = await api.get('/auth/google-status');
+      if (response.data.hasGoogleAccess) {
+        setGoogleAuthenticated(true);
+        toast.success('Google Meet access granted!');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.scheduledDate || !formData.scheduledTime) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Check if Google Meet is selected but no link is provided
+    if (formData.meetingPlatform === 'Google Meet' && !formData.meetingLink) {
+      toast.error('Please create a Google Meet link or provide a manual meeting link');
       return;
     }
 
@@ -52,6 +128,11 @@ const InterviewScheduleModal = ({ candidateId, onClose, onSuccess }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear meeting link when platform changes
+    if (name === 'meetingPlatform') {
+      setFormData(prev => ({ ...prev, meetingLink: '' }));
+    }
   };
 
   const handleInterviewerChange = (e) => {
@@ -159,19 +240,60 @@ const InterviewScheduleModal = ({ candidateId, onClose, onSuccess }) => {
             </select>
           </div>
 
-          {/* Meeting Link */}
+          {/* Meeting Link with Google Meet Creation */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Meeting Link
             </label>
-            <input
-              type="url"
-              name="meetingLink"
-              value={formData.meetingLink}
-              onChange={handleChange}
-              placeholder="https://meet.google.com/..."
-              className="input-field"
-            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                name="meetingLink"
+                value={formData.meetingLink}
+                onChange={handleChange}
+                placeholder="https://meet.google.com/..."
+                className="input-field flex-1"
+                disabled={formData.meetingPlatform !== 'Google Meet' && formData.meetingPlatform !== 'Microsoft Teams' && formData.meetingPlatform !== 'Zoom'}
+              />
+              {formData.meetingPlatform === 'Google Meet' && (
+                <button
+                  type="button"
+                  onClick={handleCreateGoogleMeet}
+                  disabled={creatingMeet || !formData.scheduledDate || !formData.scheduledTime}
+                  className="btn-primary flex items-center space-x-2 px-4 py-2 whitespace-nowrap"
+                >
+                  {creatingMeet ? (
+                    <>
+                      <Loader size={16} className="animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      <span>Create Meet</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            {formData.meetingPlatform === 'Google Meet' && (
+              <p className="text-xs text-gray-500 mt-1">
+                Click "Create Meet" to generate a real Google Meet link. Make sure you logged in with Google and granted Meet permissions.
+              </p>
+            )}
+            {formData.meetingLink && (
+              <div className="mt-2 p-2 bg-dark-800 rounded border border-dark-700">
+                <p className="text-xs text-gray-400">Meeting link ready:</p>
+                <a 
+                  href={formData.meetingLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-400 hover:text-blue-300 break-all"
+                >
+                  {formData.meetingLink}
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Interviewers */}

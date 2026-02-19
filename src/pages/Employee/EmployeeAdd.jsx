@@ -32,6 +32,7 @@ const EmployeeAdd = () => {
     employmentType: 'full-time',
     status: 'active', // Added status field with default value
     salary: {
+      currency: 'INR',
       basic: '',
       hra: '',
       allowances: '',
@@ -133,6 +134,7 @@ const EmployeeAdd = () => {
       ...formData,
       ...(formData.employeeCode && formData.employeeCode.trim() ? { employeeCode: formData.employeeCode } : {}),
       salary: {
+        currency: formData.salary.currency,
         basic: parseFloat(formData.salary.basic) || 0,
         hra: parseFloat(formData.salary.hra) || 0,
         allowances: parseFloat(formData.salary.allowances) || 0,
@@ -415,6 +417,21 @@ const EmployeeAdd = () => {
         <div className="card">
           <h2 className="text-lg font-semibold text-white mb-4">Salary Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Currency Type
+              </label>
+              <select
+                name="salary.currency"
+                value={formData.salary.currency}
+                onChange={handleChange}
+                className="input-field"
+              >
+                <option value="INR">INR (Indian Rupee)</option>
+                <option value="USD">USD (US Dollar)</option>
+                <option value="AED">AED (UAE Dirham)</option>
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Basic Salary

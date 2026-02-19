@@ -1,1 +1,0 @@
-import{a as t}from"./index-DC3XTUy4.js";import"./vendor-Q3K9tvtn.js";import"./router-s1y5QMC8.js";import"./ui-B1466kFN.js";const m=(r={})=>t.get("/super-admin/subscriptions",{params:r});export{m as getSubscriptions};
