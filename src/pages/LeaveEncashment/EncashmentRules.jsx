@@ -13,7 +13,7 @@ const EncashmentRules = () => {
     minBalance: 0,
     maxDaysPerRequest: 0,
     maxDaysPerYear: 0,
-    calculationMethod: 'daily_rate',
+    calculationMethod: 'basic_salary',
     calculationRate: 0,
     isActive: true,
     eligibilityCriteria: {
@@ -84,7 +84,7 @@ const EncashmentRules = () => {
       minBalance: rule.minBalance || 0,
       maxDaysPerRequest: rule.maxDaysPerRequest || 0,
       maxDaysPerYear: rule.maxDaysPerYear || 0,
-      calculationMethod: rule.calculationMethod || 'daily_rate',
+      calculationMethod: rule.calculationMethod || 'basic_salary',
       calculationRate: rule.calculationRate || 0,
       isActive: rule.isActive !== undefined ? rule.isActive : true,
       eligibilityCriteria: rule.eligibilityCriteria || {
@@ -103,7 +103,9 @@ const EncashmentRules = () => {
       toast.success('Encashment rule deleted successfully');
       fetchRules();
     } catch (error) {
-      toast.error('Failed to delete encashment rule');
+      const errorMessage = error.response?.data?.message || 'Failed to delete encashment rule';
+      toast.error(errorMessage);
+      console.error('Delete error:', error);
     }
   };
 
@@ -113,7 +115,7 @@ const EncashmentRules = () => {
       minBalance: 0,
       maxDaysPerRequest: 0,
       maxDaysPerYear: 0,
-      calculationMethod: 'daily_rate',
+      calculationMethod: 'basic_salary',
       calculationRate: 0,
       isActive: true,
       eligibilityCriteria: {
@@ -212,14 +214,24 @@ const EncashmentRules = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Leave Type</label>
-                <input
-                  type="text"
+                <select
                   name="leaveType"
                   value={formData.leaveType}
                   onChange={handleChange}
                   required
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                />
+                >
+                  <option value="">Select Leave Type</option>
+                  <option value="Personal Leave">Personal Leave</option>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Comp Offs">Comp Offs</option>
+                  <option value="Floater Leave">Floater Leave</option>
+                  <option value="Marriage Leave">Marriage Leave</option>
+                  <option value="Maternity Leave">Maternity Leave</option>
+                  <option value="Paternity Leave">Paternity Leave</option>
+                  <option value="Unpaid Leave">Unpaid Leave</option>
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -265,9 +277,10 @@ const EncashmentRules = () => {
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
                   >
-                    <option value="daily_rate">Daily Rate</option>
-                    <option value="monthly_salary">Monthly Salary</option>
-                    <option value="fixed_amount">Fixed Amount</option>
+                    <option value="basic_salary">Basic Salary</option>
+                    <option value="gross_salary">Gross Salary</option>
+                    <option value="fixed_rate">Fixed Rate</option>
+                    <option value="custom">Custom</option>
                   </select>
                 </div>
               </div>
