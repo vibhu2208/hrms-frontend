@@ -1,56 +1,3 @@
-  const openCreateModal = () => {
-    setNewFeedback({
-      employee: '',
-      project: '',
-      feedbackType: 'quarterly',
-      feedbackBy: 'manager',
-      overallRating: '',
-      comments: ''
-    });
-    setCreateError('');
-    setShowCreateModal(true);
-  };
-
-  const handleFeedbackFieldChange = (e) => {
-    const { name, value } = e.target;
-    setNewFeedback(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCreateFeedback = async (e) => {
-    e.preventDefault();
-    if (!newFeedback.employee || !newFeedback.feedbackType || !newFeedback.feedbackBy) {
-      setCreateError('Please fill in all required fields.');
-      return;
-    }
-
-    setCreating(true);
-    setCreateError('');
-
-    try {
-      const payload = {
-        employee: newFeedback.employee,
-        project: newFeedback.project || undefined,
-        feedbackType: newFeedback.feedbackType,
-        feedbackBy: newFeedback.feedbackBy,
-        overallRating: newFeedback.overallRating ? Number(newFeedback.overallRating) : undefined,
-        comments: newFeedback.comments || undefined,
-        ratings: newFeedback.overallRating
-          ? [{ category: 'overall', rating: Number(newFeedback.overallRating), comments: newFeedback.comments }]
-          : []
-      };
-
-      await api.post('/feedback', payload);
-      toast.success('Feedback added successfully');
-      setShowCreateModal(false);
-      fetchFeedbacks();
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to create feedback';
-      setCreateError(message);
-      toast.error(message);
-    } finally {
-      setCreating(false);
-    }
-  };
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Plus,
@@ -213,6 +160,60 @@ const FeedbackList = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const openCreateModal = () => {
+    setNewFeedback({
+      employee: '',
+      project: '',
+      feedbackType: 'quarterly',
+      feedbackBy: 'manager',
+      overallRating: '',
+      comments: ''
+    });
+    setCreateError('');
+    setShowCreateModal(true);
+  };
+
+  const handleFeedbackFieldChange = (e) => {
+    const { name, value } = e.target;
+    setNewFeedback(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateFeedback = async (e) => {
+    e.preventDefault();
+    if (!newFeedback.employee || !newFeedback.feedbackType || !newFeedback.feedbackBy) {
+      setCreateError('Please fill in all required fields.');
+      return;
+    }
+
+    setCreating(true);
+    setCreateError('');
+
+    try {
+      const payload = {
+        employee: newFeedback.employee,
+        project: newFeedback.project || undefined,
+        feedbackType: newFeedback.feedbackType,
+        feedbackBy: newFeedback.feedbackBy,
+        overallRating: newFeedback.overallRating ? Number(newFeedback.overallRating) : undefined,
+        comments: newFeedback.comments || undefined,
+        ratings: newFeedback.overallRating
+          ? [{ category: 'overall', rating: Number(newFeedback.overallRating), comments: newFeedback.comments }]
+          : []
+      };
+
+      await api.post('/feedback', payload);
+      toast.success('Feedback added successfully');
+      setShowCreateModal(false);
+      fetchFeedbacks();
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to create feedback';
+      setCreateError(message);
+      toast.error(message);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const summaryCards = useMemo(() => {
