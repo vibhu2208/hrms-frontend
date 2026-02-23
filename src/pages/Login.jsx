@@ -1,18 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-
-// Load Google OAuth2 script
-const loadGoogleScript = () => {
-  const script = document.createElement('script');
-  script.src = 'https://accounts.google.com/gsi/client';
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
-};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,11 +14,6 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Load script when component mounts
-  useEffect(() => {
-    loadGoogleScript();
-  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -73,55 +59,27 @@ const Login = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
     
-    try {
-      // Get access token using Google's token client
-      const tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/meetings.space.created https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
-        callback: async (tokenResponse) => {
-          if (tokenResponse.access_token) {
-            // Send both ID token and access token to backend
-            const result = await googleLogin(
-              credentialResponse.credential,
-              tokenResponse.access_token,
-              tokenResponse.refresh_token
-            );
-            
-            if (result.success) {
-              toast.success('Login successful! Google Meet access granted.');
-              navigate('/dashboard');
-            } else {
-              toast.error(result.message || 'Login failed');
-            }
-          } else {
-            // Fallback to ID token only
-            const result = await googleLogin(credentialResponse.credential);
-            
-            if (result.success) {
-              toast.success('Login successful! Some Google features may be limited.');
-              navigate('/dashboard');
-            } else {
-              toast.error(result.message || 'Login failed');
-            }
-          }
-          setLoading(false);
-        }
-      });
+    const result = await googleLogin(credentialResponse.credential);
+    
+    if (result.success) {
+      toast.success('Login successful!');
       
-      tokenClient.requestAccessToken();
-    } catch (error) {
-      console.error('Google auth error:', error);
-      // Fallback to ID token only
-      const result = await googleLogin(credentialResponse.credential);
+      // Get user from localStorage to check role
+      const userData = JSON.parse(localStorage.getItem('user'));
       
-      if (result.success) {
-        toast.success('Login successful!');
-        navigate('/dashboard');
+      // Role-based redirection
+      if (userData?.role === 'superadmin') {
+        navigate('/super-admin/dashboard');
+      } else if (userData?.role === 'employee') {
+        navigate('/employee/dashboard');
       } else {
-        toast.error(result.message || 'Login failed');
+        navigate('/dashboard');
       }
-      setLoading(false);
+    } else {
+      toast.error(result.message);
     }
+    
+    setLoading(false);
   };
 
   const handleGoogleError = () => {
@@ -240,8 +198,9 @@ const Login = () => {
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
               theme="filled_black"
-              text="Sign in with Google"
+              size="large"
               width="100%"
+              text="signin_with"
             />
           </div>
 

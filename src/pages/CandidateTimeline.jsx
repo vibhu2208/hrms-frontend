@@ -67,6 +67,16 @@ const CandidateTimeline = () => {
     }
   };
 
+  const handleUpdateMeetingLink = async (interviewId, meetingLink) => {
+    try {
+      await api.patch(`/candidates/${candidateId}/interviews/${interviewId}`, { meetingLink });
+      toast.success('Meeting link updated successfully');
+      fetchCandidateData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update meeting link');
+    }
+  };
+
   const getStageIcon = (stage) => {
     const icons = {
       'applied': User,
@@ -252,11 +262,26 @@ const CandidateTimeline = () => {
                             {new Date(interview.scheduledDate).toLocaleDateString()} at {interview.scheduledTime}
                           </p>
                           <p><Video size={14} className="inline mr-2" />{interview.meetingPlatform}</p>
-                          {interview.meetingLink && (
+                          {interview.meetingLink ? (
                             <a href={interview.meetingLink} target="_blank" rel="noopener noreferrer" 
                                className="text-primary-500 hover:underline">
                               Join Meeting
                             </a>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-yellow-400">No meeting link</span>
+                              <button
+                                onClick={() => {
+                                  const link = prompt('Enter meeting link:');
+                                  if (link) {
+                                    handleUpdateMeetingLink(interview._id, link);
+                                  }
+                                }}
+                                className="text-xs btn-outline px-2 py-1"
+                              >
+                                Add Link
+                              </button>
+                            </div>
                           )}
                         </div>
                         {interview.feedback && (

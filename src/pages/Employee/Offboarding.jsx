@@ -17,6 +17,18 @@ const stageLabels = [
   { key: 'success', label: 'Completed' }
 ];
 
+const DEFAULT_STAGE_KEYS = stageLabels.map(s => s.key);
+
+/** Safe .find: never throws; returns undefined if arr is not an array. */
+function safeFind(arr, predicate) {
+  if (arr == null || typeof arr.find !== 'function') return undefined;
+  try {
+    return arr.find(predicate);
+  } catch {
+    return undefined;
+  }
+}
+
 const statusLabels = {
   'in-progress': { label: 'In Progress', color: 'bg-blue-500', badge: 'badge-info' },
   'completed': { label: 'Completed', color: 'bg-green-500', badge: 'badge-success' },
@@ -38,7 +50,8 @@ const resignationReasonToTypeMap = {
 };
 
 const StageProgress = ({ stages, currentStage, status }) => {
-  const stageArray = stages || stageLabels.map(s => s.key);
+  const labels = Array.isArray(stageLabels) ? stageLabels : [];
+  const stageArray = Array.isArray(stages) && stages.length > 0 ? stages : DEFAULT_STAGE_KEYS;
   const currentIndex = stageArray.indexOf(currentStage);
   
   return (
@@ -47,6 +60,8 @@ const StageProgress = ({ stages, currentStage, status }) => {
         const done = status === 'completed' || idx < currentIndex;
         const current = idx === currentIndex && status !== 'completed';
         const isLast = idx === stageArray.length - 1;
+        const labelEntry = safeFind(labels, x => x && x.key === stage);
+        const stageLabel = (labelEntry && labelEntry.label) || (typeof stage === 'string' ? stage : '');
         
         return (
           <div key={stage} className="flex items-center flex-shrink-0">
@@ -61,7 +76,7 @@ const StageProgress = ({ stages, currentStage, status }) => {
               <div className={`mt-1 text-xs font-medium text-center max-w-[80px] ${
                 done ? 'text-green-400' : current ? 'text-blue-400' : 'text-gray-500'
               }`}>
-                {stageLabels.find(x => x.key === stage)?.label || stage}
+                {stageLabel}
               </div>
             </div>
             {!isLast && (
@@ -111,8 +126,9 @@ const Offboarding = () => {
       params.append('limit', '10');
       
       const res = await api.get(`/offboarding?${params.toString()}`);
-      setList(res?.data?.data || []);
-      setSummary(res?.data?.summary || {});
+      const rawList = res?.data?.data;
+      setList(Array.isArray(rawList) ? rawList : []);
+      setSummary(res?.data?.summary && typeof res.data.summary === 'object' ? res.data.summary : { total: 0, inProgress: 0, completed: 0, cancelled: 0 });
       setTotalPages(res?.data?.pagination?.pages || 1);
     } catch (e) {
       toast.error(e?.response?.data?.message || 'Failed to load offboarding list');
@@ -442,7 +458,7 @@ const Offboarding = () => {
 
       {/* Offboarding List */}
       <div className="space-y-4">
-        {list.map((item) => (
+        {list.filter(Boolean).map((item) => (
           <OffboardingCard
             key={item._id}
             item={item}

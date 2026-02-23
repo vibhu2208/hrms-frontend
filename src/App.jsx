@@ -17,8 +17,6 @@ import CompanyLogin from './pages/CompanyLogin';
 import SuperAdminLogin from './pages/SuperAdminLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import GoogleAuthCallback from './pages/GoogleAuthCallback';
-import TestGoogleAuth from './pages/TestGoogleAuth';
 
 // Public Pages
 import CareersPage from './pages/Public/CareersPage';
@@ -233,8 +231,6 @@ function App() {
           <Route path="/login/:companySlug" element={<CompanyLogin />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/auth/callback" element={<GoogleAuthCallback />} />
-          <Route path="/test-google" element={<TestGoogleAuth />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/jobs" element={<CareersPage />} />
           <Route path="/candidate-documents" element={<CandidateDocuments />} />
