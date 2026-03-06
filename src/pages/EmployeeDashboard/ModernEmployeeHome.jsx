@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDashboardOverview } from '../../api/employeeDashboard';
+import { getDashboardOverview, getTodayAttendance, checkIn, checkOut } from '../../api/employeeDashboard';
+import { checkOfficeNetwork, onNetworkChange } from '../../utils/networkUtils';
 import toast from 'react-hot-toast';
 import BottomNavigation from '../../components/BottomNavigation';
 import {
@@ -9,7 +10,12 @@ import {
   Clock,
   Bell,
   Cake,
-  Award
+  Award,
+  LogIn,
+  LogOut,
+  Wifi,
+  WifiOff,
+  AlertTriangle
 } from 'lucide-react';
 
 const ModernEmployeeHome = () => {
@@ -17,6 +23,104 @@ const ModernEmployeeHome = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [networkStatus, setNetworkStatus] = useState({
+    isOnline: navigator.onLine,
+    isOfficeNetwork: false,
+    isLoading: true,
+    lastChecked: null,
+    error: null,
+    ip: null,
+    network: null
+  });
+
+  // Network verification
+  useEffect(() => {
+    const checkNetwork = async () => {
+      try {
+        setNetworkStatus(prev => ({ ...prev, isLoading: true }));
+        const { isOfficeNetwork, reason, ip, network } = await checkOfficeNetwork();
+        setNetworkStatus({
+          isOnline: navigator.onLine,
+          isOfficeNetwork,
+          isLoading: false,
+          lastChecked: new Date(),
+          error: isOfficeNetwork ? null : (reason || 'Not connected to office network'),
+          ip: ip || null,
+          network: network || null
+        });
+      } catch (error) {
+        console.error('Network check failed:', error);
+        setNetworkStatus(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Failed to verify network. Please try again.'
+        }));
+      }
+    };
+
+    checkNetwork();
+    const cleanup = onNetworkChange(({ isOnline, isOfficeNetwork, reason, ip, network }) => {
+      setNetworkStatus({
+        isOnline,
+        isOfficeNetwork: !!isOfficeNetwork,
+        isLoading: false,
+        lastChecked: new Date(),
+        error: isOnline ? (isOfficeNetwork ? null : (reason || 'Not connected to office network')) : 'You are offline',
+        ip: ip || null,
+        network: network || null
+      });
+    });
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => {
+      cleanup();
+      clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchTodayAttendance();
+  }, [networkStatus.isOfficeNetwork]);
+
+  const fetchTodayAttendance = async () => {
+    try {
+      const response = await getTodayAttendance();
+      setTodayAttendance(response.data);
+    } catch (error) {
+      console.error('Error fetching today attendance:', error);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    try {
+      const deviceInfo = navigator.userAgent || '';
+      await checkIn({ location: 'office', notes: '', deviceInfo });
+      toast.success('Checked in successfully!');
+      fetchTodayAttendance();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to check in');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    try {
+      const deviceInfo = navigator.userAgent || '';
+      await checkOut({ notes: '', deviceInfo });
+      toast.success('Checked out successfully!');
+      fetchTodayAttendance();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to check out');
+    }
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '--:--';
+    return new Date(date).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -89,6 +193,92 @@ const ModernEmployeeHome = () => {
             <Clock className="w-6 h-6 text-[#A88BFF]" />
             <span className="font-semibold">Leave Balance</span>
           </button>
+        </div>
+
+        {/* Quick Attendance Action */}
+        <div className="bg-gradient-to-r from-[#A88BFF] to-[#8B6FE8] rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-primary-100 text-sm">Quick Attendance</p>
+              <p className="text-2xl font-bold">
+                {currentTime.toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-primary-100 text-sm">Today</p>
+              <p className="text-primary-200 text-sm">
+                {todayAttendance?.checkIn ? `In: ${formatTime(todayAttendance.checkIn)}` : 'Not checked in'}
+                {todayAttendance?.checkOut ? ` / Out: ${formatTime(todayAttendance.checkOut)}` : ''}
+              </p>
+            </div>
+          </div>
+
+          {/* Network status */}
+          <div className={`p-3 rounded-lg mb-4 bg-white/10 ${
+            networkStatus.isLoading ? 'bg-yellow-100/20' :
+            networkStatus.isOfficeNetwork ? 'bg-green-100/20' : 'bg-red-100/20'
+          }`}>
+            <div className="flex items-start space-x-2">
+              {networkStatus.isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-300 mt-0.5"></div>
+              ) : networkStatus.isOfficeNetwork ? (
+                <Wifi className="w-5 h-5 text-green-300 mt-0.5" />
+              ) : (
+                <WifiOff className="w-5 h-5 text-red-300 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  {networkStatus.isLoading ? 'Checking network...' :
+                   networkStatus.isOfficeNetwork ? 'Connected to Office Network' :
+                   'Network Access Required'}
+                </p>
+                {(networkStatus.network || networkStatus.ip) && networkStatus.isOfficeNetwork && (
+                  <p className="text-xs text-primary-200 mt-1">
+                    {networkStatus.network ? `${networkStatus.network}` : 'Verified'}
+                    {networkStatus.ip ? ` • ${networkStatus.ip}` : ''}
+                  </p>
+                )}
+                {!networkStatus.isOfficeNetwork && networkStatus.error && (
+                  <p className="text-xs text-red-200 mt-1">{networkStatus.error}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action button */}
+          {!networkStatus.isOfficeNetwork ? (
+            <button
+              disabled
+              className="w-full bg-white/20 text-white p-3 rounded-xl font-medium cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <AlertTriangle className="w-5 h-5" />
+              <span>Connect to Office Network</span>
+            </button>
+          ) : !todayAttendance?.checkIn ? (
+            <button
+              onClick={handleCheckIn}
+              className="w-full bg-white text-[#A88BFF] p-3 rounded-xl font-semibold hover:bg-primary-50 transition-all flex items-center justify-center space-x-2"
+            >
+              <LogIn className="w-5 h-5" />
+              <span>Check In</span>
+            </button>
+          ) : !todayAttendance?.checkOut ? (
+            <button
+              onClick={handleCheckOut}
+              className="w-full bg-white text-[#A88BFF] p-3 rounded-xl font-semibold hover:bg-primary-50 transition-all flex items-center justify-center space-x-2"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Check Out</span>
+            </button>
+          ) : (
+            <div className="w-full bg-green-500 text-white p-3 rounded-xl font-semibold flex items-center justify-center space-x-2">
+              <Clock className="w-5 h-5" />
+              <span>Attendance Marked</span>
+            </div>
+          )}
         </div>
 
         <div className="bg-[#2A2A3A] rounded-2xl p-6 border border-gray-700">

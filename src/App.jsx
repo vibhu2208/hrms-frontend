@@ -63,6 +63,7 @@ import Profile from './pages/Settings/Profile';
 import Security from './pages/Settings/Security';
 import Preferences from './pages/Settings/Preferences';
 import ThemeSettings from './pages/Settings/ThemeSettings';
+import AllowedNetworks from './pages/Settings/AllowedNetworks';
 
 // Client & Project Pages
 import ClientList from './pages/Clients/ClientList';
@@ -249,6 +250,11 @@ function App() {
             <Route path="settings/security" element={<Security />} />
             <Route path="settings/preferences" element={<Preferences />} />
             <Route path="settings/theme" element={<ThemeSettings />} />
+            <Route path="settings/allowed-networks" element={
+              <ProtectedRoute roles={['admin', 'hr', 'company_admin']}>
+                <AllowedNetworks />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* Employee Dashboard Routes (includes Manager and HR) */}
