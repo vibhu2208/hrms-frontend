@@ -36,7 +36,9 @@ const EmployeeAttendance = () => {
     isOfficeNetwork: false,
     isLoading: true,
     lastChecked: null,
-    error: null
+    error: null,
+    ip: null,
+    network: null
   });
 
   // Check network status on component mount and when network changes
@@ -44,13 +46,15 @@ const EmployeeAttendance = () => {
     const checkNetwork = async () => {
       try {
         setNetworkStatus(prev => ({ ...prev, isLoading: true }));
-        const { isOfficeNetwork, reason } = await checkOfficeNetwork();
+        const { isOfficeNetwork, reason, ip, network } = await checkOfficeNetwork();
         setNetworkStatus({
           isOnline: navigator.onLine,
           isOfficeNetwork,
           isLoading: false,
           lastChecked: new Date(),
-          error: isOfficeNetwork ? null : (reason || 'Not connected to office network')
+          error: isOfficeNetwork ? null : (reason || 'Not connected to office network'),
+          ip: ip || null,
+          network: network || null
         });
       } catch (error) {
         console.error('Network check failed:', error);
@@ -66,13 +70,15 @@ const EmployeeAttendance = () => {
     checkNetwork();
 
     // Set up network change listener
-    const cleanup = onNetworkChange(({ isOnline, isOfficeNetwork, reason }) => {
+    const cleanup = onNetworkChange(({ isOnline, isOfficeNetwork, reason, ip, network }) => {
       setNetworkStatus({
         isOnline,
         isOfficeNetwork: !!isOfficeNetwork,
         isLoading: false,
         lastChecked: new Date(),
-        error: isOnline ? (isOfficeNetwork ? null : (reason || 'Not connected to office network')) : 'You are offline'
+        error: isOnline ? (isOfficeNetwork ? null : (reason || 'Not connected to office network')) : 'You are offline',
+        ip: ip || null,
+        network: network || null
       });
     });
 
@@ -120,7 +126,25 @@ const EmployeeAttendance = () => {
 
   const handleCheckIn = async () => {
     try {
-      await checkIn({ location, notes: '' });
+      const deviceInfo = navigator.userAgent || '';
+      let locationLat;
+      let locationLong;
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 8000
+            });
+          });
+          locationLat = pos?.coords?.latitude;
+          locationLong = pos?.coords?.longitude;
+        } catch (e) {
+          // ignore location errors
+        }
+      }
+
+      await checkIn({ location, notes: '', deviceInfo, locationLat, locationLong });
       toast.success('Checked in successfully!');
       fetchTodayAttendance();
       fetchAttendanceSummary();
@@ -131,7 +155,25 @@ const EmployeeAttendance = () => {
 
   const handleCheckOut = async () => {
     try {
-      await checkOut({ notes: '' });
+      const deviceInfo = navigator.userAgent || '';
+      let locationLat;
+      let locationLong;
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 8000
+            });
+          });
+          locationLat = pos?.coords?.latitude;
+          locationLong = pos?.coords?.longitude;
+        } catch (e) {
+          // ignore location errors
+        }
+      }
+
+      await checkOut({ notes: '', deviceInfo, locationLat, locationLong });
       toast.success('Checked out successfully!');
       fetchTodayAttendance();
       fetchAttendanceSummary();
@@ -281,6 +323,12 @@ const EmployeeAttendance = () => {
                       <p className="text-sm font-medium text-green-800 dark:text-green-200">
                         Connected to Office Network
                       </p>
+                      {(networkStatus.network || networkStatus.ip) && (
+                        <p className="text-xs mt-1 text-green-700 dark:text-green-300">
+                          {networkStatus.network ? `${networkStatus.network}` : 'Verified'}
+                          {networkStatus.ip ? ` • ${networkStatus.ip}` : ''}
+                        </p>
+                      )}
                       {networkStatus.reason && (
                         <p className="text-xs mt-1 text-green-700 dark:text-green-300">
                           {networkStatus.reason}
@@ -301,14 +349,21 @@ const EmployeeAttendance = () => {
                       <button 
                         onClick={async () => {
                           try {
+                            setNetworkStatus(prev => ({ ...prev, isLoading: true }));
                             const result = await checkOfficeNetwork();
                             setNetworkStatus({
-                              ...result,
+                              isOnline: navigator.onLine,
+                              isOfficeNetwork: !!result.isOfficeNetwork,
+                              isLoading: false,
                               lastChecked: new Date(),
-                              isLoading: false
+                              error: result.isOfficeNetwork ? null : (result.reason || 'Not connected to office network'),
+                              ip: result.ip || null,
+                              network: result.network || null,
+                              reason: result.reason
                             });
                           } catch (e) {
                             console.error('Network check failed:', e);
+                            setNetworkStatus(prev => ({ ...prev, isLoading: false }));
                           }
                         }}
                         className="mt-2 text-xs bg-white dark:bg-dark-700 px-2 py-1 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"

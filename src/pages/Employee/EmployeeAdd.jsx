@@ -28,6 +28,7 @@ const EmployeeAdd = () => {
     },
     department: '',
     designation: '',
+    role: 'employee', // Added role field with default value
     joiningDate: '',
     employmentType: 'full-time',
     status: 'active', // Added status field with default value
@@ -123,7 +124,7 @@ const EmployeeAdd = () => {
     setLoading(true);
 
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.department || !formData.designation || !formData.joiningDate) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.department || !formData.designation || !formData.role || !formData.joiningDate) {
       toast.error('Please fill in all required fields');
       setLoading(false);
       return;
@@ -380,6 +381,23 @@ const EmployeeAdd = () => {
                 className="input-field"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Role *
+              </label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="input-field"
+                required
+              >
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="hr">HR</option>
+                <option value="company_admin">Company Admin</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">

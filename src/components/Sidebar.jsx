@@ -265,7 +265,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { label: 'Profile', path: '/settings/profile' },
         { label: 'Security', path: '/settings/security' },
         { label: 'Theme', path: '/settings/theme' },
-        { label: 'Preferences', path: '/settings/preferences' }
+        { label: 'Preferences', path: '/settings/preferences' },
+        { label: 'Allowed Networks', path: '/settings/allowed-networks' }
       ]
     }
   ];

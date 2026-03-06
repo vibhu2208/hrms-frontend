@@ -14,7 +14,7 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
     phone: '',
     address: '',
     contactPerson: '',
-    subscriptionPlan: 'basic',
+    subscriptionPlan: 'trial',
     subscriptionStartDate: new Date().toISOString().split('T')[0],
     subscriptionEndDate: '',
     maxUsers: 10,
@@ -106,7 +106,15 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
       onClose();
     } catch (error) {
       console.error('Error saving client:', error);
-      toast.error(error.response?.data?.message || 'Failed to save client');
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+      const fallback = 'Failed to save client';
+      
+      if (status === 409) {
+        toast.error(message || 'Company already exists');
+      } else {
+        toast.error(message || fallback);
+      }
     }
   };
 
@@ -310,7 +318,7 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
                 <p className={`text-xs mt-1 ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                 }`}>
-                  This email will be used to create the admin user account (password: password123)
+                  This email will be used to create the admin user account (credentials will be emailed)
                 </p>
               </div>
 
@@ -389,11 +397,11 @@ const ClientForm = ({ client, onClose, onSuccess }) => {
                       : 'bg-white border-gray-300'
                   }`}
                 >
-                  <option value="free">Free</option>
+                  <option value="trial">Trial</option>
                   <option value="basic">Basic</option>
-                  <option value="standard">Standard</option>
-                  <option value="premium">Premium</option>
+                  <option value="professional">Professional</option>
                   <option value="enterprise">Enterprise</option>
+                  <option value="custom">Custom</option>
                 </select>
               </div>
 
